@@ -165,6 +165,7 @@
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-alunos-panel">Alunos</a>
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-professores-panel">Professores</a>
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-turmas-panel">Turmas</a>
+                        <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-calendario-panel">Calendário</a>
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-relatorios-panel">Relatórios</a>
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-config-panel">Configurações</a>
                     </nav>
@@ -204,6 +205,11 @@
                         <div id="admin-turmas-panel" class="admin-panel hidden">
                             <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Turmas</h2><button id="add-turma-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Turma</button></div>
                             <div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome da Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Professores</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="turmas-table-body"></tbody></table></div>
+                        </div>
+                        
+                        <div id="admin-calendario-panel" class="admin-panel hidden">
+                            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Calendário de Eventos</h2><button id="add-evento-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Evento</button></div>
+                            <div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table></div>
                         </div>
 
                         <div id="admin-relatorios-panel" class="admin-panel hidden">
@@ -260,6 +266,23 @@
                                         <!-- Lista de e-mails adicionais -->
                                     </ul>
                                 </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold">Configurações de Alerta Automático</h3>
+                                    <div class="mt-2 space-y-2">
+                                        <div>
+                                            <label for="config-alerta-horario" class="block text-sm font-medium">Horário para verificação diária:</label>
+                                            <input type="time" id="config-alerta-horario" class="w-full mt-1 p-2 border rounded-md">
+                                        </div>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="config-alerta-faltas-ativo" class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                            <span class="ml-2">Ativar alerta para excesso de faltas de alunos.</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="config-alerta-chamada-ativo" class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                            <span class="ml-2">Ativar alerta para chamadas não realizadas.</span>
+                                        </label>
+                                    </div>
+                                </div>
                                 <div class="text-right">
                                     <button type="submit" class="px-6 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Salvar Configurações</button>
                                 </div>
@@ -274,6 +297,7 @@
         <div id="aluno-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="aluno-modal-title" class="text-xl font-bold mb-4">Adicionar Novo Aluno</h3><form id="aluno-form"><input type="hidden" id="aluno-id"><div class="space-y-4"><div><label for="aluno-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="aluno-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="aluno-turma" class="block text-sm font-medium text-gray-700">Turma</label><select id="aluno-turma" required class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="aluno-status" class="block text-sm font-medium text-gray-700">Status</label><select id="aluno-status" required class="w-full mt-1 p-2 border rounded-md"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div></div><div class="mt-6 flex justify-between gap-4"><button type="button" id="delete-aluno-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hidden">Excluir</button><div><button type="button" id="cancel-aluno-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
         <div id="professor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="professor-modal-title" class="text-xl font-bold mb-4">Adicionar Professor</h3><form id="professor-form"><input type="hidden" id="professor-id"><div class="space-y-4"><div><label for="professor-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="professor-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="professor-email" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="professor-email" required class="w-full mt-1 p-2 border rounded-md"></div><div id="password-field-container"> <label for="professor-password" class="block text-sm font-medium text-gray-700">Senha Temporária</label><input type="password" id="professor-password" class="w-full mt-1 p-2 border rounded-md"></div><div id="status-field-container" class="hidden"><label for="professor-status" class="block text-sm font-medium text-gray-700">Status</label><select id="professor-status" required class="w-full mt-1 p-2 border rounded-md"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div><p class="text-xs text-gray-500">O professor deverá confirmar seu e-mail antes do primeiro login.</p></div><div class="mt-6 flex justify-between gap-4"><button type="button" id="delete-professor-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hidden">Excluir</button><div><button type="button" id="cancel-professor-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
         <div id="turma-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="turma-modal-title" class="text-xl font-bold mb-4">Adicionar Nova Turma</h3><form id="turma-form"><input type="hidden" id="turma-id"><div class="space-y-4"><div><label for="turma-nome" class="block text-sm font-medium text-gray-700">Nome da Turma</label><input type="text" id="turma-nome" required class="w-full mt-1 p-2 border rounded-md" placeholder="Ex: 3º Ano A - Matutino"></div><div><label class="block text-sm font-medium text-gray-700">Professores</label><div id="turma-professores-list" class="mt-1 max-h-40 overflow-y-auto space-y-2 rounded-md border p-2"></div></div></div><div class="mt-6 flex justify-between gap-4"><button type="button" id="delete-turma-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hidden">Excluir</button><div><button type="button" id="cancel-turma-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
+        <div id="evento-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="evento-modal-title" class="text-xl font-bold mb-4">Adicionar Evento</h3><form id="evento-form"><input type="hidden" id="evento-id"><div class="space-y-4"><div><label for="evento-data" class="block text-sm font-medium text-gray-700">Data</label><input type="date" id="evento-data" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="evento-descricao" class="block text-sm font-medium text-gray-700">Descrição</label><input type="text" id="evento-descricao" required class="w-full mt-1 p-2 border rounded-md" placeholder="Ex: Feriado Nacional"></div></div><div class="mt-6 flex justify-between gap-4"><button type="button" id="delete-evento-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hidden">Excluir</button><div><button type="button" id="cancel-evento-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
         <div id="reset-password-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">Redefinir Senha</h3><form id="reset-password-form"><div class="space-y-4"><div><label for="new-password" class="block text-sm font-medium text-gray-700">Nova Senha</label><input type="password" id="new-password" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirme a Nova Senha</label><input type="password" id="confirm-password" required class="w-full mt-1 p-2 border rounded-md"></div></div><p id="reset-password-error" class="text-sm text-center text-red-600 mt-4"></p><div class="mt-6 flex justify-end gap-4"><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar Nova Senha</button></div></form></div></div>
         <div id="delete-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4 text-red-600">Confirmar Exclusão</h3><p id="delete-confirm-message" class="mb-4">Você tem certeza que deseja excluir este item? Esta ação é irreversível.</p><div class="mb-4"><label class="flex items-center"><input type="checkbox" id="delete-confirm-checkbox" class="form-checkbox h-5 w-5 text-red-600"><span class="ml-2 text-sm">Sim, eu entendo e quero continuar.</span></label></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-delete-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="button" id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md disabled:bg-red-300" disabled>Excluir Permanentemente</button></div></div></div>
 
@@ -312,16 +336,19 @@
         const alunosTableBody = document.getElementById('alunos-table-body');
         const professoresTableBody = document.getElementById('professores-table-body');
         const turmasTableBody = document.getElementById('turmas-table-body');
+        const eventosTableBody = document.getElementById('eventos-table-body');
         const dashboardDatePicker = document.getElementById('dashboard-date-picker');
         // Modals
         const alunoModal = document.getElementById('aluno-modal');
         const professorModal = document.getElementById('professor-modal');
         const turmaModal = document.getElementById('turma-modal');
+        const eventoModal = document.getElementById('evento-modal');
         const resetPasswordModal = document.getElementById('reset-password-modal');
         const deleteConfirmModal = document.getElementById('delete-confirm-modal');
         const alunoForm = document.getElementById('aluno-form');
         const professorForm = document.getElementById('professor-form');
         const turmaForm = document.getElementById('turma-form');
+        const eventoForm = document.getElementById('evento-form');
         const resetPasswordForm = document.getElementById('reset-password-form');
         const alunoTurmaSelect = document.getElementById('aluno-turma');
         const turmaProfessoresList = document.getElementById('turma-professores-list');
@@ -554,15 +581,13 @@
             };
 
             const { error } = id ? await db.from('alunos').update(alunoData).eq('id', id) : await db.from('alunos').insert(alunoData);
-            if (error) alert('Não foi possível salvar o aluno.');
-            else {
+            if (error) {
+                alert('Erro ao salvar o aluno: ' + error.message);
+            } else {
+                alert('Aluno salvo com sucesso!');
                 alunoModal.classList.add('hidden');
                 await renderAlunosPanel();
             }
-        }
-
-        async function handleDeleteAluno(alunoId) {
-            openDeleteConfirmModal('aluno', alunoId);
         }
 
         // --- Gerenciamento de Professores ---
@@ -852,9 +877,13 @@
             document.getElementById('config-faltas-consecutivas').value = data.faltas_consecutivas_limite;
             document.getElementById('config-faltas-intercaladas').value = data.faltas_intercaladas_limite;
             document.getElementById('config-faltas-dias').value = data.faltas_intercaladas_dias;
+            document.getElementById('config-alerta-horario').value = data.alerta_horario;
+            document.getElementById('config-alerta-faltas-ativo').checked = data.alerta_faltas_ativo;
+            document.getElementById('config-alerta-chamada-ativo').checked = data.alerta_chamada_nao_feita_ativo;
             
             configEmailList.innerHTML = '';
-            (data.emails_notificacao || []).forEach(email => {
+            const emails = Array.isArray(data.emails_notificacao) ? data.emails_notificacao : [];
+            emails.forEach(email => {
                 configEmailList.innerHTML += `<li class="flex justify-between items-center bg-gray-100 p-1 rounded"><span>${email}</span><button class="text-red-500 remove-email-btn">&times;</button></li>`;
             });
         }
@@ -866,15 +895,74 @@
                 faltas_consecutivas_limite: document.getElementById('config-faltas-consecutivas').value,
                 faltas_intercaladas_limite: document.getElementById('config-faltas-intercaladas').value,
                 faltas_intercaladas_dias: document.getElementById('config-faltas-dias').value,
-                emails_notificacao: emails
+                emails_notificacao: emails,
+                alerta_horario: document.getElementById('config-alerta-horario').value,
+                alerta_faltas_ativo: document.getElementById('config-alerta-faltas-ativo').checked,
+                alerta_chamada_nao_feita_ativo: document.getElementById('config-alerta-chamada-ativo').checked
             };
 
-            const { error } = await db.from('configuracoes').update(configData).eq('id', 1); // Assumindo que a config tem id 1
+            const { error } = await db.from('configuracoes').update(configData).eq('id', 1);
             if (error) {
-                alert('Erro ao salvar configurações.');
+                alert('Erro ao salvar configurações: ' + error.message);
             } else {
                 alert('Configurações salvas com sucesso!');
             }
+        }
+        
+        // --- Gerenciamento de Calendário ---
+        async function renderCalendarioPanel() {
+            eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
+            const { data, error } = await db.from('eventos').select('*').order('data', { ascending: false });
+            if (error) {
+                eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+                return;
+            }
+            if (data.length === 0) {
+                eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhum evento cadastrado.</td></tr>';
+                return;
+            }
+            eventosTableBody.innerHTML = data.map(evento => `
+                <tr class="border-b">
+                    <td class="p-3">${new Date(evento.data + 'T00:00:00').toLocaleDateString()}</td>
+                    <td class="p-3">${evento.descricao}</td>
+                    <td class="p-3"><button class="text-blue-600 hover:underline edit-evento-btn" data-id="${evento.id}" data-data="${evento.data}" data-descricao="${evento.descricao}">Editar</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function openEventoModal(editData = null) {
+            eventoForm.reset();
+            document.getElementById('delete-evento-btn').classList.add('hidden');
+            if (editData) {
+                document.getElementById('evento-modal-title').textContent = 'Editar Evento';
+                document.getElementById('evento-id').value = editData.id;
+                document.getElementById('evento-data').value = editData.data;
+                document.getElementById('evento-descricao').value = editData.descricao;
+                document.getElementById('delete-evento-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('evento-modal-title').textContent = 'Adicionar Evento';
+                document.getElementById('evento-id').value = '';
+            }
+            eventoModal.classList.remove('hidden');
+        }
+
+        async function handleEventoFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('evento-id').value;
+            const eventoData = {
+                data: document.getElementById('evento-data').value,
+                descricao: document.getElementById('evento-descricao').value
+            };
+            const { error } = id ? await db.from('eventos').update(eventoData).eq('id', id) : await db.from('eventos').insert(eventoData);
+            if (error) alert('Não foi possível salvar o evento.');
+            else {
+                eventoModal.classList.add('hidden');
+                await renderCalendarioPanel();
+            }
+        }
+        
+        async function handleDeleteEvento(eventoId) {
+            openDeleteConfirmModal('evento', eventoId);
         }
 
         // --- Lógica de Exclusão com Confirmação ---
@@ -917,6 +1005,10 @@
                     await loadAdminData();
                     await renderProfessoresPanel();
                 }
+            } else if (type === 'evento') {
+                const { error } = await db.from('eventos').delete().eq('id', id);
+                if (error) alert('Não foi possível excluir o evento.');
+                else await renderCalendarioPanel();
             }
             
             deleteConfirmModal.classList.add('hidden');
@@ -938,10 +1030,11 @@
                     const { error } = await db.auth.signInWithPassword({ email: email.value, password: password.value });
                     if (error) {
                         loginError.textContent = "Email ou senha inválidos.";
+                        loginButton.disabled = false;
+                        loginButton.textContent = originalButtonText;
                     }
                 } catch (err) {
                     loginError.textContent = "Ocorreu um erro de conexão.";
-                } finally {
                     loginButton.disabled = false;
                     loginButton.textContent = originalButtonText;
                 }
@@ -981,6 +1074,7 @@
                     if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel();
                     if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
                     if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
+                    if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
                     if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
                     if (targetPanelId === 'admin-config-panel') renderConfigPanel();
                     return;
@@ -989,9 +1083,11 @@
                 if (target.closest('#add-aluno-btn')) openAlunoModal();
                 if (target.closest('#add-professor-btn')) openProfessorModal();
                 if (target.closest('#add-turma-btn')) openTurmaModal();
+                if (target.closest('#add-evento-btn')) openEventoModal();
                 if (target.closest('#cancel-aluno-modal-btn')) alunoModal.classList.add('hidden');
                 if (target.closest('#cancel-professor-modal-btn')) professorModal.classList.add('hidden');
                 if (target.closest('#cancel-turma-modal-btn')) turmaModal.classList.add('hidden');
+                if (target.closest('#cancel-evento-modal-btn')) eventoModal.classList.add('hidden');
                 if (target.closest('#cancel-delete-modal-btn')) deleteConfirmModal.classList.add('hidden');
 
                 const editProfessorBtn = target.closest('.edit-professor-btn');
@@ -1002,6 +1098,9 @@
 
                 const editTurmaBtn = target.closest('.edit-turma-btn');
                 if (editTurmaBtn) openTurmaModal(editTurmaBtn.dataset);
+                
+                const editEventoBtn = target.closest('.edit-evento-btn');
+                if (editEventoBtn) openEventoModal(editEventoBtn.dataset);
 
                 const resetPasswordBtn = target.closest('.reset-password-btn');
                 if (resetPasswordBtn) handleResetPassword(resetPasswordBtn.dataset.email);
@@ -1014,6 +1113,9 @@
 
                 const deleteTurmaBtn = target.closest('#delete-turma-btn');
                 if(deleteTurmaBtn) handleDeleteTurma(document.getElementById('turma-id').value);
+                
+                const deleteEventoBtn = target.closest('#delete-evento-btn');
+                if(deleteEventoBtn) handleDeleteEvento(document.getElementById('evento-id').value);
 
                 if (target.closest('#config-add-email-btn')) {
                     const emailInput = document.getElementById('config-add-email-input');
@@ -1030,6 +1132,7 @@
             alunoForm.addEventListener('submit', handleAlunoFormSubmit);
             professorForm.addEventListener('submit', handleProfessorFormSubmit);
             turmaForm.addEventListener('submit', handleTurmaFormSubmit);
+            eventoForm.addEventListener('submit', handleEventoFormSubmit);
             configForm.addEventListener('submit', handleConfigFormSubmit);
             document.getElementById('confirm-delete-btn').addEventListener('click', handleConfirmDelete);
             document.getElementById('delete-confirm-checkbox').addEventListener('change', (e) => {
