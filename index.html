@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão de Faltas</title>
+    <title>Sistema de Faltas - APOIA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,7 +58,7 @@
         <!-- ==================================================== -->
         <div id="login-view" class="flex items-center justify-center min-h-screen">
             <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-                <h1 class="text-2xl font-bold text-center text-gray-900">Sistema de Faltas</h1>
+                <h1 class="text-2xl font-bold text-center text-gray-900">Sistema de Faltas - APOIA</h1>
                 <form id="login-form" class="space-y-6">
                     <div>
                         <label for="email" class="text-sm font-medium text-gray-700">Email</label>
@@ -214,11 +214,26 @@
                             <h2 class="text-2xl font-bold mb-4">Busca e Relatórios</h2>
                             <div class="bg-white p-6 rounded-lg shadow-md">
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-                                    <input type="date" id="relatorio-data-inicio" class="p-2 border rounded-md" title="Data de Início do Período">
-                                    <input type="date" id="relatorio-data-fim" class="p-2 border rounded-md" title="Data de Fim do Período">
-                                    <select id="relatorio-turma-select" class="p-2 border rounded-md"><option>Filtrar por Turma</option></select>
-                                    <select id="relatorio-aluno-select" class="p-2 border rounded-md"><option>Filtrar por Aluno</option></select>
-                                    <select id="relatorio-professor-select" class="p-2 border rounded-md"><option>Filtrar por Professor</option></select>
+                                    <div>
+                                        <label for="relatorio-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
+                                        <input type="date" id="relatorio-data-inicio" class="w-full mt-1 p-2 border rounded-md">
+                                    </div>
+                                    <div>
+                                        <label for="relatorio-data-fim" class="block text-sm font-medium text-gray-700">Data de Fim</label>
+                                        <input type="date" id="relatorio-data-fim" class="w-full mt-1 p-2 border rounded-md">
+                                    </div>
+                                    <div>
+                                        <label for="relatorio-turma-select" class="block text-sm font-medium text-gray-700">Turma</label>
+                                        <select id="relatorio-turma-select" class="w-full mt-1 p-2 border rounded-md"><option>Todas</option></select>
+                                    </div>
+                                     <div>
+                                        <label for="relatorio-aluno-select" class="block text-sm font-medium text-gray-700">Aluno</label>
+                                        <select id="relatorio-aluno-select" class="w-full mt-1 p-2 border rounded-md"><option>Todos</option></select>
+                                    </div>
+                                     <div>
+                                        <label for="relatorio-professor-select" class="block text-sm font-medium text-gray-700">Professor</label>
+                                        <select id="relatorio-professor-select" class="w-full mt-1 p-2 border rounded-md"><option>Todos</option></select>
+                                    </div>
                                 </div>
                                 <button id="gerar-relatorio-btn" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Gerar Relatório</button>
                             </div>
@@ -233,7 +248,7 @@
         <!-- Modals de Administração -->
         <div id="aluno-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="aluno-modal-title" class="text-xl font-bold mb-4">Adicionar Novo Aluno</h3><form id="aluno-form"><input type="hidden" id="aluno-id"><div class="space-y-4"><div><label for="aluno-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="aluno-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="aluno-turma" class="block text-sm font-medium text-gray-700">Turma</label><select id="aluno-turma" required class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="aluno-status" class="block text-sm font-medium text-gray-700">Status</label><select id="aluno-status" required class="w-full mt-1 p-2 border rounded-md"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-aluno-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
         <div id="professor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="professor-modal-title" class="text-xl font-bold mb-4">Adicionar Professor</h3><form id="professor-form"><input type="hidden" id="professor-id"><div class="space-y-4"><div><label for="professor-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="professor-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="professor-email" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="professor-email" required class="w-full mt-1 p-2 border rounded-md"></div><div id="password-field-container"> <label for="professor-password" class="block text-sm font-medium text-gray-700">Senha Temporária</label><input type="password" id="professor-password" class="w-full mt-1 p-2 border rounded-md"></div><div id="status-field-container" class="hidden"><label for="professor-status" class="block text-sm font-medium text-gray-700">Status</label><select id="professor-status" required class="w-full mt-1 p-2 border rounded-md"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div><p class="text-xs text-gray-500">O professor deverá confirmar seu e-mail antes do primeiro login.</p></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-professor-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
-        <div id="turma-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">Adicionar Nova Turma</h3><form id="turma-form"><div class="space-y-4"><div><label for="turma-nome" class="block text-sm font-medium text-gray-700">Nome da Turma</label><input type="text" id="turma-nome" required class="w-full mt-1 p-2 border rounded-md" placeholder="Ex: 3º Ano A - Matutino"></div><div><label for="turma-professor" class="block text-sm font-medium text-gray-700">Professor Responsável</label><select id="turma-professor" required class="w-full mt-1 p-2 border rounded-md"></select></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-turma-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
+        <div id="turma-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="turma-modal-title" class="text-xl font-bold mb-4">Adicionar Nova Turma</h3><form id="turma-form"><input type="hidden" id="turma-id"><div class="space-y-4"><div><label for="turma-nome" class="block text-sm font-medium text-gray-700">Nome da Turma</label><input type="text" id="turma-nome" required class="w-full mt-1 p-2 border rounded-md" placeholder="Ex: 3º Ano A - Matutino"></div><div><label for="turma-professor" class="block text-sm font-medium text-gray-700">Professor Responsável</label><select id="turma-professor" required class="w-full mt-1 p-2 border rounded-md"></select></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-turma-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
         <div id="reset-password-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">Redefinir Senha</h3><form id="reset-password-form"><div class="space-y-4"><div><label for="new-password" class="block text-sm font-medium text-gray-700">Nova Senha</label><input type="password" id="new-password" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirme a Nova Senha</label><input type="password" id="confirm-password" required class="w-full mt-1 p-2 border rounded-md"></div></div><p id="reset-password-error" class="text-sm text-center text-red-600 mt-4"></p><div class="mt-6 flex justify-end gap-4"><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar Nova Senha</button></div></form></div></div>
 
     </div>
@@ -321,7 +336,7 @@
                     document.getElementById('admin-info').textContent = nome || currentUser.email;
                     showView('admin-view');
                     await loadAdminData();
-                    renderDashboardPanel(); // Renderiza o dashboard do admin
+                    renderDashboardPanel();
                 } else if (papel === 'professor') {
                     document.getElementById('professor-info').textContent = nome || currentUser.email;
                     showView('professor-view');
@@ -618,7 +633,7 @@
         // --- Gerenciamento de Turmas ---
         async function renderTurmasPanel() {
             turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
-            const { data, error } = await db.from('turmas').select(`id, nome_turma, usuarios ( nome )`).order('nome_turma');
+            const { data, error } = await db.from('turmas').select(`id, nome_turma, professor_id, usuarios ( nome )`).order('nome_turma');
             if (error) {
                 turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
                 return;
@@ -631,25 +646,42 @@
                 <tr class="border-b">
                     <td class="p-3">${t.nome_turma}</td>
                     <td class="p-3">${t.usuarios ? t.usuarios.nome : 'Sem professor'}</td>
-                    <td class="p-3"><button class="text-red-600 hover:underline delete-turma-btn" data-id="${t.id}">Excluir</button></td>
+                    <td class="p-3">
+                        <button class="text-blue-600 hover:underline mr-4 edit-turma-btn" data-id="${t.id}" data-nome="${t.nome_turma}" data-professor_id="${t.professor_id || ''}">Editar</button>
+                        <button class="text-red-600 hover:underline delete-turma-btn" data-id="${t.id}">Excluir</button>
+                    </td>
                 </tr>
             `).join('');
         }
 
-        function openTurmaModal() {
+        function openTurmaModal(editData = null) {
             turmaForm.reset();
             turmaProfessorSelect.innerHTML = '<option value="">Selecione...</option>';
             professoresCache.forEach(p => turmaProfessorSelect.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
+
+            if (editData) {
+                document.getElementById('turma-modal-title').textContent = 'Editar Turma';
+                document.getElementById('turma-id').value = editData.id;
+                document.getElementById('turma-nome').value = editData.nome;
+                document.getElementById('turma-professor').value = editData.professor_id;
+            } else {
+                document.getElementById('turma-modal-title').textContent = 'Adicionar Turma';
+                document.getElementById('turma-id').value = '';
+            }
             turmaModal.classList.remove('hidden');
         }
 
         async function handleTurmaFormSubmit(e) {
             e.preventDefault();
-            const { error } = await db.from('turmas').insert({
+            const id = document.getElementById('turma-id').value;
+            const turmaData = {
                 nome_turma: document.getElementById('turma-nome').value,
                 professor_id: document.getElementById('turma-professor').value
-            });
-            if (error) alert('Não foi possível criar a turma.');
+            };
+            
+            const { error } = id ? await db.from('turmas').update(turmaData).eq('id', id) : await db.from('turmas').insert(turmaData);
+
+            if (error) alert('Não foi possível salvar a turma.');
             else {
                 turmaModal.classList.add('hidden');
                 await loadAdminData();
@@ -734,6 +766,9 @@
                 
                 const editAlunoBtn = target.closest('.edit-aluno-btn');
                 if (editAlunoBtn) openAlunoModal(editAlunoBtn.dataset);
+
+                const editTurmaBtn = target.closest('.edit-turma-btn');
+                if (editTurmaBtn) openTurmaModal(editTurmaBtn.dataset);
 
                 const resetPasswordBtn = target.closest('.reset-password-btn');
                 if (resetPasswordBtn) handleResetPassword(resetPasswordBtn.dataset.email);
