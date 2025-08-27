@@ -62,7 +62,7 @@
                         <label for="password" class="text-sm font-medium text-gray-700">Senha</label>
                         <input type="password" id="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="********">
                     </div>
-                    <button type="submit" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <button type="submit" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400">
                         Entrar
                     </button>
                     <p id="login-error" class="text-sm text-center text-red-600"></p>
@@ -217,13 +217,10 @@
                 currentUser = session.user;
                 const { data, error } = await db.from('usuarios').select('papel, nome').eq('user_uid', currentUser.id).single();
 
-                // CORREÇÃO: Adiciona uma mensagem de erro visível para o usuário se o perfil não for encontrado.
                 if (error || !data) {
                     console.error("Erro ao buscar perfil do usuário. Verifique se o UID e o papel estão corretos na tabela 'usuarios'.", error);
-                    // Mostra o erro na tela de login antes de deslogar
                     showView('login-view');
                     loginError.textContent = 'Login válido, mas perfil não encontrado. Contate o suporte.';
-                    // Desloga o usuário por segurança
                     setTimeout(signOutUser, 3000); 
                     return;
                 }
@@ -249,7 +246,6 @@
         
         // --- Lógica do Painel do Professor ---
         async function loadProfessorData(professorUid) {
-            // Buscar as turmas do professor logado
             const { data: turmas, error } = await db
                 .from('turmas')
                 .select('id, nome_turma')
@@ -281,7 +277,6 @@
 
             chamadaHeader.innerHTML = '<div class="loader mx-auto"></div>';
 
-            // 1. Buscar os alunos da turma
             const { data: alunos, error: alunosError } = await db
                 .from('alunos')
                 .select('id, nome_completo')
@@ -299,7 +294,6 @@
                 return;
             }
 
-            // 2. Buscar presenças já existentes para essa turma e data
             const { data: presencas, error: presencasError } = await db
                 .from('presencas')
                 .select('aluno_id, status')
@@ -308,7 +302,6 @@
             
             const presencasMap = new Map(presencas.map(p => [p.aluno_id, p.status]));
 
-            // 3. Renderizar a lista de alunos
             alunos.forEach(aluno => {
                 const statusAtual = presencasMap.get(aluno.id) || 'presente';
                 const alunoDiv = document.createElement('div');
@@ -357,8 +350,6 @@
                 });
             });
             
-            // Upsert: Insere se não existir, atualiza se já existir (baseado na chave primária ou constraint)
-            // Precisamos de uma constraint UNIQUE em (aluno_id, data) na tabela presencas para o upsert funcionar bem.
             const { error } = await db.from('presencas').upsert(registrosParaSalvar, { onConflict: 'aluno_id, data' });
 
             if (error) {
@@ -378,11 +369,26 @@
         // --- Event Listeners ---
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const loginButton = e.target.querySelector('button[type="submit"]');
+            const originalButtonText = loginButton.textContent;
+
+            // Desabilitar botão e mostrar feedback de carregamento
+            loginButton.disabled = true;
+            loginButton.innerHTML = `<div class="loader mx-auto" style="width: 20px; height: 20px;"></div>`;
+            loginError.textContent = '';
+
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            loginError.textContent = '';
+            
             const { error } = await db.auth.signInWithPassword({ email, password });
-            if (error) loginError.textContent = "Email ou senha inválidos.";
+
+            // Se houver um erro, reabilita o botão e mostra a mensagem
+            if (error) {
+                loginError.textContent = "Email ou senha inválidos.";
+                loginButton.disabled = false;
+                loginButton.textContent = originalButtonText;
+            }
+            // Se o login for bem-sucedido, o onAuthStateChange cuidará da mudança de tela.
         });
 
         document.getElementById('admin-logout-btn').addEventListener('click', signOutUser);
