@@ -159,7 +159,41 @@
                         </div>
                     </div>
                     <div id="admin-content">
-                        <div id="admin-dashboard-panel" class="admin-panel"><h2 class="text-2xl font-bold mb-4">Dashboard</h2></div>
+                        <div id="admin-dashboard-panel" class="admin-panel">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold">Resumo do Dia</h2>
+                                <input type="date" id="dashboard-date-picker" class="p-2 border rounded-md">
+                            </div>
+                            <div id="dashboard-summary" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Card de Presenças -->
+                                <div class="bg-white p-6 rounded-lg shadow-md flex items-center">
+                                    <div class="bg-green-100 rounded-full p-3 mr-4">
+                                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">Presenças</p>
+                                        <p id="dashboard-presencas" class="text-2xl font-bold">...</p>
+                                    </div>
+                                </div>
+                                <!-- Card de Faltas -->
+                                <div class="bg-white p-6 rounded-lg shadow-md flex items-center">
+                                    <div class="bg-red-100 rounded-full p-3 mr-4">
+                                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">Faltas</p>
+                                        <p id="dashboard-faltas" class="text-2xl font-bold">...</p>
+                                    </div>
+                                </div>
+                                <!-- Lista de Alunos Ausentes -->
+                                <div class="bg-white p-6 rounded-lg shadow-md md:col-span-3">
+                                    <h3 class="font-bold mb-2">Alunos Ausentes</h3>
+                                    <ul id="dashboard-ausentes-list" class="space-y-2 text-sm">
+                                        <!-- Nomes dos alunos ausentes serão inseridos aqui -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                         
                         <div id="admin-alunos-panel" class="admin-panel hidden">
                             <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Alunos</h2><button id="add-aluno-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Aluno</button></div>
@@ -198,8 +232,9 @@
 
         <!-- Modals de Administração -->
         <div id="aluno-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="aluno-modal-title" class="text-xl font-bold mb-4">Adicionar Novo Aluno</h3><form id="aluno-form"><input type="hidden" id="aluno-id"><div class="space-y-4"><div><label for="aluno-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="aluno-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="aluno-turma" class="block text-sm font-medium text-gray-700">Turma</label><select id="aluno-turma" required class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="aluno-status" class="block text-sm font-medium text-gray-700">Status</label><select id="aluno-status" required class="w-full mt-1 p-2 border rounded-md"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-aluno-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
-        <div id="professor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="professor-modal-title" class="text-xl font-bold mb-4">Adicionar Professor</h3><form id="professor-form"><input type="hidden" id="professor-id"><div class="space-y-4"><div><label for="professor-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="professor-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="professor-email" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="professor-email" required class="w-full mt-1 p-2 border rounded-md"></div><div id="password-field-container"> <label for="professor-password" class="block text-sm font-medium text-gray-700">Senha Temporária</label><input type="password" id="professor-password" required class="w-full mt-1 p-2 border rounded-md"></div><p class="text-xs text-gray-500">O professor deverá confirmar seu e-mail antes do primeiro login.</p></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-professor-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
+        <div id="professor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="professor-modal-title" class="text-xl font-bold mb-4">Adicionar Professor</h3><form id="professor-form"><input type="hidden" id="professor-id"><div class="space-y-4"><div><label for="professor-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="professor-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="professor-email" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="professor-email" required class="w-full mt-1 p-2 border rounded-md"></div><div id="password-field-container"> <label for="professor-password" class="block text-sm font-medium text-gray-700">Senha Temporária</label><input type="password" id="professor-password" class="w-full mt-1 p-2 border rounded-md"></div><div id="status-field-container" class="hidden"><label for="professor-status" class="block text-sm font-medium text-gray-700">Status</label><select id="professor-status" required class="w-full mt-1 p-2 border rounded-md"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div><p class="text-xs text-gray-500">O professor deverá confirmar seu e-mail antes do primeiro login.</p></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-professor-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
         <div id="turma-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">Adicionar Nova Turma</h3><form id="turma-form"><div class="space-y-4"><div><label for="turma-nome" class="block text-sm font-medium text-gray-700">Nome da Turma</label><input type="text" id="turma-nome" required class="w-full mt-1 p-2 border rounded-md" placeholder="Ex: 3º Ano A - Matutino"></div><div><label for="turma-professor" class="block text-sm font-medium text-gray-700">Professor Responsável</label><select id="turma-professor" required class="w-full mt-1 p-2 border rounded-md"></select></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-turma-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
+        <div id="reset-password-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">Redefinir Senha</h3><form id="reset-password-form"><div class="space-y-4"><div><label for="new-password" class="block text-sm font-medium text-gray-700">Nova Senha</label><input type="password" id="new-password" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirme a Nova Senha</label><input type="password" id="confirm-password" required class="w-full mt-1 p-2 border rounded-md"></div></div><p id="reset-password-error" class="text-sm text-center text-red-600 mt-4"></p><div class="mt-6 flex justify-end gap-4"><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar Nova Senha</button></div></form></div></div>
 
     </div>
 
@@ -235,13 +270,16 @@
         const alunosTableBody = document.getElementById('alunos-table-body');
         const professoresTableBody = document.getElementById('professores-table-body');
         const turmasTableBody = document.getElementById('turmas-table-body');
+        const dashboardDatePicker = document.getElementById('dashboard-date-picker');
         // Modals
         const alunoModal = document.getElementById('aluno-modal');
         const professorModal = document.getElementById('professor-modal');
         const turmaModal = document.getElementById('turma-modal');
+        const resetPasswordModal = document.getElementById('reset-password-modal');
         const alunoForm = document.getElementById('aluno-form');
         const professorForm = document.getElementById('professor-form');
         const turmaForm = document.getElementById('turma-form');
+        const resetPasswordForm = document.getElementById('reset-password-form');
         const alunoTurmaSelect = document.getElementById('aluno-turma');
         const turmaProfessorSelect = document.getElementById('turma-professor');
 
@@ -261,6 +299,12 @@
         // ================= LÓGICA DE AUTENTICAÇÃO ======================
         // ===============================================================
         db.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                showView('login-view');
+                resetPasswordModal.classList.remove('hidden');
+                return;
+            }
+
             if (session) {
                 currentUser = session.user;
                 const { data, error } = await db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single();
@@ -277,6 +321,7 @@
                     document.getElementById('admin-info').textContent = nome || currentUser.email;
                     showView('admin-view');
                     await loadAdminData();
+                    renderDashboardPanel(); // Renderiza o dashboard do admin
                 } else if (papel === 'professor') {
                     document.getElementById('professor-info').textContent = nome || currentUser.email;
                     showView('professor-view');
@@ -309,10 +354,10 @@
             if (!turmaId || !data) return;
 
             chamadaHeader.innerHTML = '<div class="loader mx-auto"></div>';
-            const { data: alunos, error } = await db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).order('nome_completo');
+            const { data: alunos, error } = await db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo');
             if (error || !alunos) return;
             if (alunos.length === 0) {
-                chamadaHeader.textContent = 'Nenhum aluno encontrado.';
+                chamadaHeader.textContent = 'Nenhum aluno ativo encontrado.';
                 return;
             }
 
@@ -364,10 +409,47 @@
             else professoresCache = profs;
         }
 
+        // --- Dashboard ---
+        function renderDashboardPanel() {
+            dashboardDatePicker.value = new Date().toISOString().split('T')[0];
+            loadDailySummary();
+        }
+
+        async function loadDailySummary() {
+            const selectedDate = dashboardDatePicker.value;
+            const presencasEl = document.getElementById('dashboard-presencas');
+            const faltasEl = document.getElementById('dashboard-faltas');
+            const ausentesListEl = document.getElementById('dashboard-ausentes-list');
+
+            presencasEl.textContent = '...';
+            faltasEl.textContent = '...';
+            ausentesListEl.innerHTML = '<li>Carregando...</li>';
+
+            const { data, error } = await db.from('presencas').select('status, alunos ( nome_completo )').eq('data', selectedDate);
+            if (error) {
+                console.error("Erro ao buscar resumo diário:", error);
+                ausentesListEl.innerHTML = '<li>Erro ao carregar dados.</li>';
+                return;
+            }
+
+            const presencas = data.filter(r => r.status === 'presente').length;
+            const faltas = data.filter(r => r.status === 'falta').length;
+            const ausentes = data.filter(r => r.status === 'falta' && r.alunos);
+
+            presencasEl.textContent = presencas;
+            faltasEl.textContent = faltas;
+
+            if (ausentes.length === 0) {
+                ausentesListEl.innerHTML = '<li>Nenhum aluno ausente.</li>';
+            } else {
+                ausentesListEl.innerHTML = ausentes.map(a => `<li>${a.alunos.nome_completo}</li>`).join('');
+            }
+        }
+
         // --- Gerenciamento de Alunos ---
         async function renderAlunosPanel() {
             alunosTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
-            const { data, error } = await db.from('alunos').select(`id, nome_completo, status, turmas ( nome_turma )`).order('nome_completo');
+            const { data, error } = await db.from('alunos').select(`id, nome_completo, status, turma_id, turmas ( nome_turma )`).order('nome_completo');
             if (error) {
                 alunosTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
                 return;
@@ -381,37 +463,43 @@
                     <td class="p-3">${aluno.nome_completo}</td>
                     <td class="p-3">${aluno.turmas ? aluno.turmas.nome_turma : 'Sem turma'}</td>
                     <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${aluno.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${aluno.status}</span></td>
-                    <td class="p-3"><button class="text-red-600 hover:underline delete-aluno-btn" data-id="${aluno.id}">Excluir</button></td>
+                    <td class="p-3"><button class="text-blue-600 hover:underline edit-aluno-btn" data-id="${aluno.id}" data-nome="${aluno.nome_completo}" data-status="${aluno.status}" data-turma_id="${aluno.turma_id || ''}">Editar</button></td>
                 </tr>
             `).join('');
         }
 
-        function openAlunoModal() {
+        function openAlunoModal(editData = null) {
             alunoForm.reset();
             alunoTurmaSelect.innerHTML = '<option value="">Selecione...</option>';
             turmasCache.forEach(t => alunoTurmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+
+            if (editData) {
+                document.getElementById('aluno-modal-title').textContent = 'Editar Aluno';
+                document.getElementById('aluno-id').value = editData.id;
+                document.getElementById('aluno-nome').value = editData.nome;
+                document.getElementById('aluno-turma').value = editData.turma_id;
+                document.getElementById('aluno-status').value = editData.status;
+            } else {
+                document.getElementById('aluno-modal-title').textContent = 'Adicionar Aluno';
+                document.getElementById('aluno-id').value = '';
+            }
             alunoModal.classList.remove('hidden');
         }
 
         async function handleAlunoFormSubmit(e) {
             e.preventDefault();
-            const { error } = await db.from('alunos').insert({
+            const id = document.getElementById('aluno-id').value;
+            const alunoData = {
                 nome_completo: document.getElementById('aluno-nome').value,
                 turma_id: document.getElementById('aluno-turma').value,
                 status: document.getElementById('aluno-status').value
-            });
-            if (error) alert('Não foi possível criar o aluno.');
+            };
+
+            const { error } = id ? await db.from('alunos').update(alunoData).eq('id', id) : await db.from('alunos').insert(alunoData);
+            if (error) alert('Não foi possível salvar o aluno.');
             else {
                 alunoModal.classList.add('hidden');
                 await renderAlunosPanel();
-            }
-        }
-
-        async function handleDeleteAluno(alunoId) {
-            if (confirm('Deseja excluir este aluno?')) {
-                const { error } = await db.from('alunos').delete().eq('id', alunoId);
-                if (error) alert('Não foi possível excluir o aluno.');
-                else await renderAlunosPanel();
             }
         }
 
@@ -434,7 +522,7 @@
                     <td class="p-3">${p.email || 'Não informado'}</td>
                     <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${p.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.status}</span></td>
                     <td class="p-3">
-                        <button class="text-blue-600 hover:underline mr-4 edit-professor-btn" data-id="${p.id}" data-nome="${p.nome}" data-email="${p.email || ''}" data-status="${p.status}" data-uid="${p.user_uid || ''}">Editar</button>
+                        <button class="text-blue-600 hover:underline mr-4 edit-professor-btn" data-id="${p.id}" data-nome="${p.nome}" data-email="${p.email || ''}" data-status="${p.status}">Editar</button>
                         <button class="text-orange-600 hover:underline reset-password-btn" data-email="${p.email}">Resetar Senha</button>
                     </td>
                 </tr>
@@ -444,16 +532,21 @@
         function openProfessorModal(editData = null) {
             professorForm.reset();
             const passwordContainer = document.getElementById('password-field-container');
+            const statusContainer = document.getElementById('status-field-container');
+            
             if (editData) {
                 document.getElementById('professor-modal-title').textContent = 'Editar Professor';
                 document.getElementById('professor-id').value = editData.id;
                 document.getElementById('professor-nome').value = editData.nome;
                 document.getElementById('professor-email').value = editData.email;
-                passwordContainer.classList.add('hidden'); // Esconde o campo de senha na edição
+                document.getElementById('professor-status').value = editData.status;
+                passwordContainer.classList.add('hidden');
+                statusContainer.classList.remove('hidden');
             } else {
                 document.getElementById('professor-modal-title').textContent = 'Adicionar Professor';
                 document.getElementById('professor-id').value = '';
-                passwordContainer.classList.remove('hidden'); // Mostra o campo de senha na criação
+                passwordContainer.classList.remove('hidden');
+                statusContainer.classList.add('hidden');
             }
             professorModal.classList.remove('hidden');
         }
@@ -465,7 +558,8 @@
             const email = document.getElementById('professor-email').value;
 
             if (id) { // Modo de Edição
-                const { error } = await db.from('usuarios').update({ nome, email }).eq('id', id);
+                const status = document.getElementById('professor-status').value;
+                const { error } = await db.from('usuarios').update({ nome, email, status }).eq('id', id);
                 if (error) {
                     alert('Erro ao atualizar professor: ' + error.message);
                 } else {
@@ -478,14 +572,12 @@
                     return;
                 }
                 
-                // 1. Cria o usuário no sistema de autenticação
                 const { data: authData, error: authError } = await db.auth.signUp({ email, password });
                 if (authError) {
                     alert('Erro ao criar login do professor: ' + authError.message);
                     return;
                 }
                 
-                // 2. Insere o perfil na tabela 'usuarios'
                 const { error: profileError } = await db.from('usuarios').insert({
                     user_uid: authData.user.id,
                     nome: nome,
@@ -513,7 +605,7 @@
             }
             if (confirm(`Deseja enviar um link de redefinição de senha para ${email}?`)) {
                 const { error } = await db.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.href.split('?')[0]
+                    redirectTo: window.location.href.split('#')[0]
                 });
                 if (error) {
                     alert('Erro ao enviar e-mail de redefinição: ' + error.message);
@@ -608,12 +700,11 @@
             turmaSelect.addEventListener('change', loadChamada);
             dataSelect.addEventListener('change', loadChamada);
             salvarChamadaBtn.addEventListener('click', saveChamada);
+            dashboardDatePicker.addEventListener('change', loadDailySummary);
 
-            // Listener central para todos os cliques, usando delegação de eventos
             document.body.addEventListener('click', (e) => {
                 const target = e.target;
                 
-                // Navegação da Sidebar
                 const navLink = target.closest('.admin-nav-link');
                 if (navLink) {
                     e.preventDefault();
@@ -624,25 +715,25 @@
                     document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
                     document.getElementById(targetPanelId)?.classList.remove('hidden');
 
+                    if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
                     if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel();
                     if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
                     if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
                     return;
                 }
 
-                // Botões de Abrir Modal
                 if (target.closest('#add-aluno-btn')) openAlunoModal();
                 if (target.closest('#add-professor-btn')) openProfessorModal();
                 if (target.closest('#add-turma-btn')) openTurmaModal();
-
-                // Botões de Cancelar Modal
                 if (target.closest('#cancel-aluno-modal-btn')) alunoModal.classList.add('hidden');
                 if (target.closest('#cancel-professor-modal-btn')) professorModal.classList.add('hidden');
                 if (target.closest('#cancel-turma-modal-btn')) turmaModal.classList.add('hidden');
 
-                // Botões de Ação na Tabela
                 const editProfessorBtn = target.closest('.edit-professor-btn');
                 if (editProfessorBtn) openProfessorModal(editProfessorBtn.dataset);
+                
+                const editAlunoBtn = target.closest('.edit-aluno-btn');
+                if (editAlunoBtn) openAlunoModal(editAlunoBtn.dataset);
 
                 const resetPasswordBtn = target.closest('.reset-password-btn');
                 if (resetPasswordBtn) handleResetPassword(resetPasswordBtn.dataset.email);
@@ -657,6 +748,33 @@
             alunoForm.addEventListener('submit', handleAlunoFormSubmit);
             professorForm.addEventListener('submit', handleProfessorFormSubmit);
             turmaForm.addEventListener('submit', handleTurmaFormSubmit);
+
+            resetPasswordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newPassword = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                const errorEl = document.getElementById('reset-password-error');
+                errorEl.textContent = '';
+
+                if (newPassword.length < 6) {
+                    errorEl.textContent = 'A senha deve ter no mínimo 6 caracteres.';
+                    return;
+                }
+                if (newPassword !== confirmPassword) {
+                    errorEl.textContent = 'As senhas não coincidem.';
+                    return;
+                }
+
+                const { error } = await db.auth.updateUser({ password: newPassword });
+
+                if (error) {
+                    errorEl.textContent = 'Erro ao atualizar a senha: ' + error.message;
+                } else {
+                    alert('Senha atualizada com sucesso! Por favor, faça o login com sua nova senha.');
+                    resetPasswordModal.classList.add('hidden');
+                    await signOutUser();
+                }
+            });
 
             dataSelect.value = new Date().toISOString().split('T')[0];
             console.log("Sistema de Gestão de Faltas (Supabase) inicializado.");
