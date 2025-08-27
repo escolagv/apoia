@@ -42,14 +42,20 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* Estilo para o Modal */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <!-- Container Principal -->
+    <!-- Container Principal da Aplicação -->
     <div id="app-container">
 
-        <!-- TELA DE LOGIN -->
+        <!-- ==================================================== -->
+        <!-- =============== TELA DE LOGIN ====================== -->
+        <!-- ==================================================== -->
         <div id="login-view" class="flex items-center justify-center min-h-screen">
             <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
                 <h1 class="text-2xl font-bold text-center text-gray-900">Sistema de Faltas</h1>
@@ -60,7 +66,18 @@
                     </div>
                     <div>
                         <label for="password" class="text-sm font-medium text-gray-700">Senha</label>
-                        <input type="password" id="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="********">
+                        <div class="relative">
+                            <input type="password" id="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10" placeholder="********">
+                            <button type="button" id="toggle-password-btn" class="absolute inset-y-0 right-0 top-1 flex items-center px-3 text-gray-500 hover:text-gray-700">
+                                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400">
                         Entrar
@@ -70,7 +87,9 @@
             </div>
         </div>
 
-        <!-- AMBIENTE DO PROFESSOR -->
+        <!-- ==================================================== -->
+        <!-- ============ AMBIENTE DO PROFESSOR ================= -->
+        <!-- ==================================================== -->
         <div id="professor-view" class="hidden">
             <header class="bg-white shadow-md p-4 flex justify-between items-center">
                 <div>
@@ -99,9 +118,7 @@
                             <h3 id="chamada-header" class="text-lg font-semibold">Selecione uma turma e data</h3>
                             <button id="marcar-todos-presentes-btn" class="hidden px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700">Marcar Todos como Presentes</button>
                         </div>
-                        <div id="chamada-lista-alunos" class="space-y-3">
-                            <!-- Alunos serão inseridos aqui dinamicamente -->
-                        </div>
+                        <div id="chamada-lista-alunos" class="space-y-3"></div>
                     </div>
                     <div class="mt-8 text-center">
                         <button id="salvar-chamada-btn" class="hidden w-full md:w-auto px-8 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400">
@@ -113,7 +130,9 @@
             </main>
         </div>
 
-        <!-- AMBIENTE DO ADMINISTRADOR -->
+        <!-- ==================================================== -->
+        <!-- ============ AMBIENTE DO ADMINISTRADOR ============= -->
+        <!-- ==================================================== -->
         <div id="admin-view" class="hidden">
             <div class="flex h-screen bg-gray-200">
                 <aside class="w-64 bg-gray-800 text-white flex flex-col">
@@ -121,7 +140,7 @@
                         <h1 class="text-xl font-bold">Painel Admin</h1>
                         <p id="admin-info" class="text-sm text-gray-400"></p>
                     </div>
-                    <nav class="flex-1 p-4 space-y-2">
+                    <nav id="admin-sidebar-nav" class="flex-1 p-4 space-y-2">
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md bg-gray-700" data-target="admin-dashboard-panel">Dashboard</a>
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-alunos-panel">Alunos</a>
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-professores-panel">Professores</a>
@@ -141,15 +160,28 @@
                     </div>
                     <div id="admin-content">
                         <div id="admin-dashboard-panel" class="admin-panel"><h2 class="text-2xl font-bold mb-4">Dashboard</h2></div>
-                        <div id="admin-alunos-panel" class="admin-panel hidden"><h2 class="text-2xl font-bold mb-4">Gerenciar Alunos</h2></div>
-                        <div id="admin-professores-panel" class="admin-panel hidden"><h2 class="text-2xl font-bold mb-4">Gerenciar Professores</h2></div>
-                        <div id="admin-turmas-panel" class="admin-panel hidden"><h2 class="text-2xl font-bold mb-4">Gerenciar Turmas</h2></div>
+                        
+                        <div id="admin-alunos-panel" class="admin-panel hidden">
+                            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Alunos</h2><button id="add-aluno-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Aluno</button></div>
+                            <div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome Completo</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="alunos-table-body"></tbody></table></div>
+                        </div>
+
+                        <div id="admin-professores-panel" class="admin-panel hidden">
+                            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Professores</h2><button id="add-professor-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Professor</button></div>
+                            <div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Email</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="professores-table-body"></tbody></table></div>
+                        </div>
+
+                        <div id="admin-turmas-panel" class="admin-panel hidden">
+                            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Turmas</h2><button id="add-turma-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Turma</button></div>
+                            <div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome da Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Professor Responsável</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="turmas-table-body"></tbody></table></div>
+                        </div>
+
                         <div id="admin-relatorios-panel" class="admin-panel hidden">
                             <h2 class="text-2xl font-bold mb-4">Busca e Relatórios</h2>
                             <div class="bg-white p-6 rounded-lg shadow-md">
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-                                    <input type="date" id="relatorio-data-inicio" class="p-2 border rounded-md">
-                                    <input type="date" id="relatorio-data-fim" class="p-2 border rounded-md">
+                                    <input type="date" id="relatorio-data-inicio" class="p-2 border rounded-md" title="Data de Início do Período">
+                                    <input type="date" id="relatorio-data-fim" class="p-2 border rounded-md" title="Data de Fim do Período">
                                     <select id="relatorio-turma-select" class="p-2 border rounded-md"><option>Filtrar por Turma</option></select>
                                     <select id="relatorio-aluno-select" class="p-2 border rounded-md"><option>Filtrar por Aluno</option></select>
                                     <select id="relatorio-professor-select" class="p-2 border rounded-md"><option>Filtrar por Professor</option></select>
@@ -163,40 +195,55 @@
                 </main>
             </div>
         </div>
+
+        <!-- Modals de Administração -->
+        <div id="aluno-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="aluno-modal-title" class="text-xl font-bold mb-4">Adicionar Novo Aluno</h3><form id="aluno-form"><input type="hidden" id="aluno-id"><div class="space-y-4"><div><label for="aluno-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="aluno-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="aluno-turma" class="block text-sm font-medium text-gray-700">Turma</label><select id="aluno-turma" required class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="aluno-status" class="block text-sm font-medium text-gray-700">Status</label><select id="aluno-status" required class="w-full mt-1 p-2 border rounded-md"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-aluno-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
+        <div id="professor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="professor-modal-title" class="text-xl font-bold mb-4">Adicionar Professor</h3><form id="professor-form"><input type="hidden" id="professor-id"><div class="space-y-4"><div><label for="professor-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="professor-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="professor-email" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="professor-email" required class="w-full mt-1 p-2 border rounded-md"></div><div id="password-field-container"> <label for="professor-password" class="block text-sm font-medium text-gray-700">Senha Temporária</label><input type="password" id="professor-password" required class="w-full mt-1 p-2 border rounded-md"></div><p class="text-xs text-gray-500">O professor deverá confirmar seu e-mail antes do primeiro login.</p></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-professor-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
+        <div id="turma-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">Adicionar Nova Turma</h3><form id="turma-form"><div class="space-y-4"><div><label for="turma-nome" class="block text-sm font-medium text-gray-700">Nome da Turma</label><input type="text" id="turma-nome" required class="w-full mt-1 p-2 border rounded-md" placeholder="Ex: 3º Ano A - Matutino"></div><div><label for="turma-professor" class="block text-sm font-medium text-gray-700">Professor Responsável</label><select id="turma-professor" required class="w-full mt-1 p-2 border rounded-md"></select></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" id="cancel-turma-modal-btn" class="px-4 py-2 bg-gray-200 rounded-md">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button></div></form></div></div>
+
     </div>
 
     <script type="module">
         const { createClient } = supabase;
-
-        // ***************************************************************
-        // ** CREDENCIAIS DA SUPABASE                     **
-        // ***************************************************************
         const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
 
-        // --- Validação de Credenciais ---
-        if (SUPABASE_URL === 'SUA_URL_DO_PROJETO' || SUPABASE_ANON_KEY === 'SUA_CHAVE_ANON_PUBLIC') {
-            const errorContainer = document.getElementById('login-form');
-            errorContainer.innerHTML = `<p class="text-center text-red-600 font-bold p-4">ERRO DE CONFIGURAÇÃO: <br>Você precisa inserir sua URL e Chave da Supabase no arquivo HTML para que o sistema possa se conectar.</p>`;
-            throw new Error("Credenciais da Supabase não configuradas. Edite o arquivo HTML.");
-        }
-
+        if (SUPABASE_URL === 'SUA_URL_DO_PROJETO') throw new Error("Credenciais da Supabase não configuradas.");
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- Estado Global da Aplicação ---
         let currentUser = null;
+        let turmasCache = [];
+        let professoresCache = [];
 
-        // --- Elementos da UI ---
+        // --- Mapeamento dos Elementos da UI ---
         const loginView = document.getElementById('login-view');
         const loginError = document.getElementById('login-error');
         const professorView = document.getElementById('professor-view');
         const adminView = document.getElementById('admin-view');
+        const passwordInput = document.getElementById('password');
+        const togglePasswordBtn = document.getElementById('toggle-password-btn');
+        const eyeIcon = document.getElementById('eye-icon');
+        const eyeOffIcon = document.getElementById('eye-off-icon');
+        // Professor UI
         const turmaSelect = document.getElementById('professor-turma-select');
         const dataSelect = document.getElementById('professor-data-select');
         const listaAlunosContainer = document.getElementById('chamada-lista-alunos');
         const chamadaHeader = document.getElementById('chamada-header');
         const salvarChamadaBtn = document.getElementById('salvar-chamada-btn');
         const chamadaStatus = document.getElementById('chamada-status');
+        // Admin UI
+        const alunosTableBody = document.getElementById('alunos-table-body');
+        const professoresTableBody = document.getElementById('professores-table-body');
+        const turmasTableBody = document.getElementById('turmas-table-body');
+        // Modals
+        const alunoModal = document.getElementById('aluno-modal');
+        const professorModal = document.getElementById('professor-modal');
+        const turmaModal = document.getElementById('turma-modal');
+        const alunoForm = document.getElementById('aluno-form');
+        const professorForm = document.getElementById('professor-form');
+        const turmaForm = document.getElementById('turma-form');
+        const alunoTurmaSelect = document.getElementById('aluno-turma');
+        const turmaProfessorSelect = document.getElementById('turma-professor');
 
         // --- Funções Auxiliares ---
         function showView(viewId) {
@@ -207,20 +254,20 @@
         }
 
         async function signOutUser() {
-            const { error } = await db.auth.signOut();
-            if (error) console.error('Erro ao sair:', error);
+            await db.auth.signOut();
         }
 
-        // --- Lógica de Autenticação ---
+        // ===============================================================
+        // ================= LÓGICA DE AUTENTICAÇÃO ======================
+        // ===============================================================
         db.auth.onAuthStateChange(async (event, session) => {
             if (session) {
                 currentUser = session.user;
-                const { data, error } = await db.from('usuarios').select('papel, nome').eq('user_uid', currentUser.id).single();
+                const { data, error } = await db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single();
 
-                if (error || !data) {
-                    console.error("Erro ao buscar perfil do usuário. Verifique se o UID e o papel estão corretos na tabela 'usuarios'.", error);
+                if (error || !data || data.status !== 'ativo') {
                     showView('login-view');
-                    loginError.textContent = 'Login válido, mas perfil não encontrado. Contate o suporte.';
+                    loginError.textContent = 'Login válido, mas perfil não encontrado ou inativo.';
                     setTimeout(signOutUser, 3000); 
                     return;
                 }
@@ -229,41 +276,28 @@
                 if (papel === 'admin') {
                     document.getElementById('admin-info').textContent = nome || currentUser.email;
                     showView('admin-view');
+                    await loadAdminData();
                 } else if (papel === 'professor') {
                     document.getElementById('professor-info').textContent = nome || currentUser.email;
                     showView('professor-view');
                     await loadProfessorData(currentUser.id);
                 } else {
-                    console.error(`Papel de usuário desconhecido: '${papel}'. Deslogando.`);
                     signOutUser();
                 }
-
             } else {
                 currentUser = null;
                 showView('login-view');
             }
         });
         
-        // --- Lógica do Painel do Professor ---
+        // ===============================================================
+        // ============= LÓGICA DO PAINEL DO PROFESSOR ===================
+        // ===============================================================
         async function loadProfessorData(professorUid) {
-            const { data: turmas, error } = await db
-                .from('turmas')
-                .select('id, nome_turma')
-                .eq('professor_id', professorUid);
-
-            if (error) {
-                console.error('Erro ao buscar turmas:', error);
-                turmaSelect.innerHTML = '<option>Erro ao carregar</option>';
-                return;
-            }
-
+            const { data, error } = await db.from('turmas').select('id, nome_turma').eq('professor_id', professorUid);
+            if (error) return;
             turmaSelect.innerHTML = '<option value="">Selecione uma turma</option>';
-            turmas.forEach(turma => {
-                const option = document.createElement('option');
-                option.value = turma.id;
-                option.textContent = turma.nome_turma;
-                turmaSelect.appendChild(option);
-            });
+            data.forEach(t => turmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
         }
 
         async function loadChamada() {
@@ -272,34 +306,17 @@
             listaAlunosContainer.innerHTML = '';
             chamadaHeader.textContent = 'Selecione uma turma e data';
             salvarChamadaBtn.classList.add('hidden');
-
             if (!turmaId || !data) return;
 
             chamadaHeader.innerHTML = '<div class="loader mx-auto"></div>';
-
-            const { data: alunos, error: alunosError } = await db
-                .from('alunos')
-                .select('id, nome_completo')
-                .eq('turma_id', turmaId)
-                .order('nome_completo');
-
-            if (alunosError) {
-                console.error("Erro ao buscar alunos:", alunosError);
-                chamadaHeader.textContent = 'Erro ao carregar alunos.';
-                return;
-            }
-
+            const { data: alunos, error } = await db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).order('nome_completo');
+            if (error || !alunos) return;
             if (alunos.length === 0) {
-                chamadaHeader.textContent = 'Nenhum aluno encontrado para esta turma.';
+                chamadaHeader.textContent = 'Nenhum aluno encontrado.';
                 return;
             }
 
-            const { data: presencas, error: presencasError } = await db
-                .from('presencas')
-                .select('aluno_id, status')
-                .eq('turma_id', turmaId)
-                .eq('data', data);
-            
+            const { data: presencas } = await db.from('presencas').select('aluno_id, status').eq('turma_id', turmaId).eq('data', data);
             const presencasMap = new Map(presencas.map(p => [p.aluno_id, p.status]));
 
             alunos.forEach(aluno => {
@@ -307,20 +324,7 @@
                 const alunoDiv = document.createElement('div');
                 alunoDiv.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
                 alunoDiv.dataset.alunoId = aluno.id;
-
-                alunoDiv.innerHTML = `
-                    <span class="font-medium">${aluno.nome_completo}</span>
-                    <div class="flex items-center gap-4">
-                        <label class="flex items-center cursor-pointer">
-                            <input type="radio" name="status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600" ${statusAtual === 'presente' ? 'checked' : ''}>
-                            <span class="ml-2 text-sm">Presente</span>
-                        </label>
-                        <label class="flex items-center cursor-pointer">
-                            <input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600" ${statusAtual === 'falta' ? 'checked' : ''}>
-                            <span class="ml-2 text-sm">Falta</span>
-                        </label>
-                    </div>
-                `;
+                alunoDiv.innerHTML = `<span class="font-medium">${aluno.nome_completo}</span><div class="flex items-center gap-4"><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600" ${statusAtual === 'presente' ? 'checked' : ''}><span class="ml-2 text-sm">Presente</span></label><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600" ${statusAtual === 'falta' ? 'checked' : ''}><span class="ml-2 text-sm">Falta</span></label></div>`;
                 listaAlunosContainer.appendChild(alunoDiv);
             });
 
@@ -331,90 +335,332 @@
         async function saveChamada() {
             salvarChamadaBtn.disabled = true;
             salvarChamadaBtn.textContent = 'Salvando...';
-            chamadaStatus.textContent = '';
-
-            const turmaId = turmaSelect.value;
-            const data = dataSelect.value;
-            const alunoRows = listaAlunosContainer.querySelectorAll('[data-aluno-id]');
-
-            const registrosParaSalvar = [];
-            alunoRows.forEach(row => {
-                const alunoId = row.dataset.alunoId;
-                const statusSelecionado = row.querySelector('input[type="radio"]:checked').value;
-                registrosParaSalvar.push({
-                    aluno_id: parseInt(alunoId),
-                    turma_id: parseInt(turmaId),
-                    data: data,
-                    status: statusSelecionado,
-                    registrado_por_uid: currentUser.id
-                });
-            });
+            const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => ({
+                aluno_id: parseInt(row.dataset.alunoId),
+                turma_id: parseInt(turmaSelect.value),
+                data: dataSelect.value,
+                status: row.querySelector('input[type="radio"]:checked').value,
+                registrado_por_uid: currentUser.id
+            }));
             
-            const { error } = await db.from('presencas').upsert(registrosParaSalvar, { onConflict: 'aluno_id, data' });
-
-            if (error) {
-                console.error("Erro ao salvar chamada:", error);
-                chamadaStatus.textContent = 'Erro ao salvar. Tente novamente.';
-                chamadaStatus.className = 'mt-2 text-sm text-red-600 font-medium';
-            } else {
-                chamadaStatus.textContent = 'Chamada salva com sucesso!';
-                chamadaStatus.className = 'mt-2 text-sm text-green-600 font-medium';
-            }
-            
+            const { error } = await db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' });
+            chamadaStatus.textContent = error ? 'Erro ao salvar.' : 'Chamada salva com sucesso!';
+            chamadaStatus.className = `mt-2 text-sm font-medium ${error ? 'text-red-600' : 'text-green-600'}`;
             salvarChamadaBtn.disabled = false;
             salvarChamadaBtn.textContent = 'Salvar Chamada';
             setTimeout(() => { chamadaStatus.textContent = '' }, 4000);
         }
 
-        // --- Event Listeners ---
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const loginButton = e.target.querySelector('button[type="submit"]');
-            const originalButtonText = loginButton.textContent;
+        // ===============================================================
+        // ============= LÓGICA DO PAINEL DO ADMINISTRADOR ===============
+        // ===============================================================
+        async function loadAdminData() {
+            const { data: turmas, error: turmasError } = await db.from('turmas').select('id, nome_turma');
+            if (turmasError) console.error('Erro ao carregar turmas:', turmasError);
+            else turmasCache = turmas;
 
-            // Desabilitar botão e mostrar feedback de carregamento
-            loginButton.disabled = true;
-            loginButton.innerHTML = `<div class="loader mx-auto" style="width: 20px; height: 20px;"></div>`;
-            loginError.textContent = '';
+            const { data: profs, error: profsError } = await db.from('usuarios').select('user_uid, nome').eq('papel', 'professor').eq('status', 'ativo');
+            if (profsError) console.error('Erro ao carregar professores:', profsError);
+            else professoresCache = profs;
+        }
 
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            const { error } = await db.auth.signInWithPassword({ email, password });
-
-            // Se houver um erro, reabilita o botão e mostra a mensagem
+        // --- Gerenciamento de Alunos ---
+        async function renderAlunosPanel() {
+            alunosTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
+            const { data, error } = await db.from('alunos').select(`id, nome_completo, status, turmas ( nome_turma )`).order('nome_completo');
             if (error) {
-                loginError.textContent = "Email ou senha inválidos.";
-                loginButton.disabled = false;
-                loginButton.textContent = originalButtonText;
+                alunosTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+                return;
             }
-            // Se o login for bem-sucedido, o onAuthStateChange cuidará da mudança de tela.
-        });
+            if (data.length === 0) {
+                alunosTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Nenhum aluno cadastrado.</td></tr>';
+                return;
+            }
+            alunosTableBody.innerHTML = data.map(aluno => `
+                <tr class="border-b">
+                    <td class="p-3">${aluno.nome_completo}</td>
+                    <td class="p-3">${aluno.turmas ? aluno.turmas.nome_turma : 'Sem turma'}</td>
+                    <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${aluno.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${aluno.status}</span></td>
+                    <td class="p-3"><button class="text-red-600 hover:underline delete-aluno-btn" data-id="${aluno.id}">Excluir</button></td>
+                </tr>
+            `).join('');
+        }
 
-        document.getElementById('admin-logout-btn').addEventListener('click', signOutUser);
-        document.getElementById('professor-logout-btn').addEventListener('click', signOutUser);
-        
-        turmaSelect.addEventListener('change', loadChamada);
-        dataSelect.addEventListener('change', loadChamada);
-        salvarChamadaBtn.addEventListener('click', saveChamada);
+        function openAlunoModal() {
+            alunoForm.reset();
+            alunoTurmaSelect.innerHTML = '<option value="">Selecione...</option>';
+            turmasCache.forEach(t => alunoTurmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+            alunoModal.classList.remove('hidden');
+        }
 
-        const adminNavLinks = document.querySelectorAll('.admin-nav-link');
-        const adminPanels = document.querySelectorAll('.admin-panel');
-        adminNavLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                adminNavLinks.forEach(l => l.classList.remove('bg-gray-700'));
-                link.classList.add('bg-gray-700');
-                const targetPanelId = link.getAttribute('data-target');
-                adminPanels.forEach(panel => {
-                    panel.id === targetPanelId ? panel.classList.remove('hidden') : panel.classList.add('hidden');
-                });
+        async function handleAlunoFormSubmit(e) {
+            e.preventDefault();
+            const { error } = await db.from('alunos').insert({
+                nome_completo: document.getElementById('aluno-nome').value,
+                turma_id: document.getElementById('aluno-turma').value,
+                status: document.getElementById('aluno-status').value
             });
+            if (error) alert('Não foi possível criar o aluno.');
+            else {
+                alunoModal.classList.add('hidden');
+                await renderAlunosPanel();
+            }
+        }
+
+        async function handleDeleteAluno(alunoId) {
+            if (confirm('Deseja excluir este aluno?')) {
+                const { error } = await db.from('alunos').delete().eq('id', alunoId);
+                if (error) alert('Não foi possível excluir o aluno.');
+                else await renderAlunosPanel();
+            }
+        }
+
+        // --- Gerenciamento de Professores ---
+        async function renderProfessoresPanel() {
+            professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
+            const { data, error } = await db.from('usuarios').select('id, user_uid, nome, email, status').eq('papel', 'professor').order('nome');
+            if (error) {
+                console.error("Erro ao carregar professores:", error);
+                professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-500">Erro ao carregar. Verifique o console.</td></tr>';
+                return;
+            }
+            if (data.length === 0) {
+                professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Nenhum professor cadastrado.</td></tr>';
+                return;
+            }
+            professoresTableBody.innerHTML = data.map(p => `
+                <tr class="border-b">
+                    <td class="p-3">${p.nome}</td>
+                    <td class="p-3">${p.email || 'Não informado'}</td>
+                    <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${p.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.status}</span></td>
+                    <td class="p-3">
+                        <button class="text-blue-600 hover:underline mr-4 edit-professor-btn" data-id="${p.id}" data-nome="${p.nome}" data-email="${p.email || ''}" data-status="${p.status}" data-uid="${p.user_uid || ''}">Editar</button>
+                        <button class="text-orange-600 hover:underline reset-password-btn" data-email="${p.email}">Resetar Senha</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function openProfessorModal(editData = null) {
+            professorForm.reset();
+            const passwordContainer = document.getElementById('password-field-container');
+            if (editData) {
+                document.getElementById('professor-modal-title').textContent = 'Editar Professor';
+                document.getElementById('professor-id').value = editData.id;
+                document.getElementById('professor-nome').value = editData.nome;
+                document.getElementById('professor-email').value = editData.email;
+                passwordContainer.classList.add('hidden'); // Esconde o campo de senha na edição
+            } else {
+                document.getElementById('professor-modal-title').textContent = 'Adicionar Professor';
+                document.getElementById('professor-id').value = '';
+                passwordContainer.classList.remove('hidden'); // Mostra o campo de senha na criação
+            }
+            professorModal.classList.remove('hidden');
+        }
+
+        async function handleProfessorFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('professor-id').value;
+            const nome = document.getElementById('professor-nome').value;
+            const email = document.getElementById('professor-email').value;
+
+            if (id) { // Modo de Edição
+                const { error } = await db.from('usuarios').update({ nome, email }).eq('id', id);
+                if (error) {
+                    alert('Erro ao atualizar professor: ' + error.message);
+                } else {
+                    alert('Professor atualizado com sucesso!');
+                }
+            } else { // Modo de Criação
+                const password = document.getElementById('professor-password').value;
+                if (password.length < 6) {
+                    alert('A senha temporária deve ter no mínimo 6 caracteres.');
+                    return;
+                }
+                
+                // 1. Cria o usuário no sistema de autenticação
+                const { data: authData, error: authError } = await db.auth.signUp({ email, password });
+                if (authError) {
+                    alert('Erro ao criar login do professor: ' + authError.message);
+                    return;
+                }
+                
+                // 2. Insere o perfil na tabela 'usuarios'
+                const { error: profileError } = await db.from('usuarios').insert({
+                    user_uid: authData.user.id,
+                    nome: nome,
+                    email: email,
+                    papel: 'professor',
+                    status: 'ativo'
+                });
+
+                if (profileError) {
+                    alert('Login criado, mas falha ao criar perfil. Vincule o UID manualmente.');
+                } else {
+                    alert('Professor criado! Um e-mail de confirmação foi enviado.');
+                }
+            }
+
+            professorModal.classList.add('hidden');
+            await loadAdminData();
+            await renderProfessoresPanel();
+        }
+
+        async function handleResetPassword(email) {
+            if (!email) {
+                alert('Este professor não tem um e-mail cadastrado para resetar a senha.');
+                return;
+            }
+            if (confirm(`Deseja enviar um link de redefinição de senha para ${email}?`)) {
+                const { error } = await db.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.href.split('?')[0]
+                });
+                if (error) {
+                    alert('Erro ao enviar e-mail de redefinição: ' + error.message);
+                } else {
+                    alert('E-mail de redefinição de senha enviado com sucesso!');
+                }
+            }
+        }
+        
+        // --- Gerenciamento de Turmas ---
+        async function renderTurmasPanel() {
+            turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
+            const { data, error } = await db.from('turmas').select(`id, nome_turma, usuarios ( nome )`).order('nome_turma');
+            if (error) {
+                turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+                return;
+            }
+            if (data.length === 0) {
+                turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhuma turma cadastrada.</td></tr>';
+                return;
+            }
+            turmasTableBody.innerHTML = data.map(t => `
+                <tr class="border-b">
+                    <td class="p-3">${t.nome_turma}</td>
+                    <td class="p-3">${t.usuarios ? t.usuarios.nome : 'Sem professor'}</td>
+                    <td class="p-3"><button class="text-red-600 hover:underline delete-turma-btn" data-id="${t.id}">Excluir</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function openTurmaModal() {
+            turmaForm.reset();
+            turmaProfessorSelect.innerHTML = '<option value="">Selecione...</option>';
+            professoresCache.forEach(p => turmaProfessorSelect.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
+            turmaModal.classList.remove('hidden');
+        }
+
+        async function handleTurmaFormSubmit(e) {
+            e.preventDefault();
+            const { error } = await db.from('turmas').insert({
+                nome_turma: document.getElementById('turma-nome').value,
+                professor_id: document.getElementById('turma-professor').value
+            });
+            if (error) alert('Não foi possível criar a turma.');
+            else {
+                turmaModal.classList.add('hidden');
+                await loadAdminData();
+                await renderTurmasPanel();
+            }
+        }
+
+        async function handleDeleteTurma(turmaId) {
+            if (confirm('Deseja excluir esta turma?')) {
+                const { error } = await db.from('turmas').delete().eq('id', turmaId);
+                if (error) alert('Não foi possível excluir a turma.');
+                else {
+                    await loadAdminData();
+                    await renderTurmasPanel();
+                }
+            }
+        }
+
+        // ===============================================================
+        // =================== EVENT LISTENERS ===========================
+        // ===============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const loginButton = e.target.querySelector('button[type="submit"]');
+                const originalButtonText = loginButton.textContent;
+                loginButton.disabled = true;
+                loginButton.innerHTML = `<div class="loader mx-auto" style="width: 20px; height: 20px;"></div>`;
+                loginError.textContent = '';
+                const { error } = await db.auth.signInWithPassword({ email: email.value, password: password.value });
+                if (error) {
+                    loginError.textContent = "Email ou senha inválidos.";
+                    loginButton.disabled = false;
+                    loginButton.textContent = originalButtonText;
+                }
+            });
+
+            togglePasswordBtn.addEventListener('click', () => {
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+                eyeIcon.classList.toggle('hidden', isPassword);
+                eyeOffIcon.classList.toggle('hidden', !isPassword);
+            });
+
+            document.getElementById('admin-logout-btn').addEventListener('click', signOutUser);
+            document.getElementById('professor-logout-btn').addEventListener('click', signOutUser);
+            
+            turmaSelect.addEventListener('change', loadChamada);
+            dataSelect.addEventListener('change', loadChamada);
+            salvarChamadaBtn.addEventListener('click', saveChamada);
+
+            // Listener central para todos os cliques, usando delegação de eventos
+            document.body.addEventListener('click', (e) => {
+                const target = e.target;
+                
+                // Navegação da Sidebar
+                const navLink = target.closest('.admin-nav-link');
+                if (navLink) {
+                    e.preventDefault();
+                    document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
+                    navLink.classList.add('bg-gray-700');
+                    
+                    const targetPanelId = navLink.dataset.target;
+                    document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+                    document.getElementById(targetPanelId)?.classList.remove('hidden');
+
+                    if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel();
+                    if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
+                    if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
+                    return;
+                }
+
+                // Botões de Abrir Modal
+                if (target.closest('#add-aluno-btn')) openAlunoModal();
+                if (target.closest('#add-professor-btn')) openProfessorModal();
+                if (target.closest('#add-turma-btn')) openTurmaModal();
+
+                // Botões de Cancelar Modal
+                if (target.closest('#cancel-aluno-modal-btn')) alunoModal.classList.add('hidden');
+                if (target.closest('#cancel-professor-modal-btn')) professorModal.classList.add('hidden');
+                if (target.closest('#cancel-turma-modal-btn')) turmaModal.classList.add('hidden');
+
+                // Botões de Ação na Tabela
+                const editProfessorBtn = target.closest('.edit-professor-btn');
+                if (editProfessorBtn) openProfessorModal(editProfessorBtn.dataset);
+
+                const resetPasswordBtn = target.closest('.reset-password-btn');
+                if (resetPasswordBtn) handleResetPassword(resetPasswordBtn.dataset.email);
+
+                const deleteAlunoBtn = target.closest('.delete-aluno-btn');
+                if(deleteAlunoBtn) handleDeleteAluno(deleteAlunoBtn.dataset.id);
+
+                const deleteTurmaBtn = target.closest('.delete-turma-btn');
+                if(deleteTurmaBtn) handleDeleteTurma(deleteTurmaBtn.dataset.id);
+            });
+
+            alunoForm.addEventListener('submit', handleAlunoFormSubmit);
+            professorForm.addEventListener('submit', handleProfessorFormSubmit);
+            turmaForm.addEventListener('submit', handleTurmaFormSubmit);
+
+            dataSelect.value = new Date().toISOString().split('T')[0];
+            console.log("Sistema de Gestão de Faltas (Supabase) inicializado.");
         });
-
-        dataSelect.value = new Date().toISOString().split('T')[0];
-        console.log("Sistema de Gestão de Faltas (Supabase) inicializado.");
-
     </script>
 </body>
 </html>
