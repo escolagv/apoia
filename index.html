@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- INSTRUÇÕES ANTI-CACHE PARA O NAVEGADOR -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
     <title>Sistema de Faltas - APOIA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,6 +51,20 @@
         /* Estilo para o Modal */
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5);
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #relatorio-para-impressao, #relatorio-para-impressao * {
+                visibility: visible;
+            }
+            #relatorio-para-impressao {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -192,15 +212,59 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
                                     <div><label for="relatorio-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label><input type="date" id="relatorio-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div>
                                     <div><label for="relatorio-data-fim" class="block text-sm font-medium text-gray-700">Data de Fim</label><input type="date" id="relatorio-data-fim" class="w-full mt-1 p-2 border rounded-md"></div>
-                                    <div><label for="relatorio-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="relatorio-turma-select" class="w-full mt-1 p-2 border rounded-md"><option>Todas</option></select></div>
-                                     <div><label for="relatorio-aluno-select" class="block text-sm font-medium text-gray-700">Aluno</label><select id="relatorio-aluno-select" class="w-full mt-1 p-2 border rounded-md"><option>Todos</option></select></div>
-                                     <div><label for="relatorio-professor-select" class="block text-sm font-medium text-gray-700">Professor</label><select id="relatorio-professor-select" class="w-full mt-1 p-2 border rounded-md"><option>Todos</option></select></div>
+                                    <div><label for="relatorio-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="relatorio-turma-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todas</option></select></div>
+                                     <div><label for="relatorio-aluno-select" class="block text-sm font-medium text-gray-700">Aluno</label><select id="relatorio-aluno-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option></select></div>
+                                     <div><label for="relatorio-professor-select" class="block text-sm font-medium text-gray-700">Professor</label><select id="relatorio-professor-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option></select></div>
                                 </div>
                                 <button id="gerar-relatorio-btn" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Gerar Relatório</button>
                             </div>
-                            <div id="relatorio-resultados" class="mt-6 bg-white p-6 rounded-lg shadow-md"></div>
+                            <div id="relatorio-resultados" class="mt-6 bg-white p-6 rounded-lg shadow-md">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-bold">Resultados</h3>
+                                    <button id="imprimir-relatorio-btn" class="hidden px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700">Imprimir</button>
+                                </div>
+                                <div id="relatorio-para-impressao">
+                                    <h2 id="relatorio-titulo-impressao" class="text-xl font-bold text-center mb-4 hidden"></h2>
+                                    <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Aluno</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table>
+                                </div>
+                            </div>
                         </div>
-                        <div id="admin-config-panel" class="admin-panel hidden"><h2 class="text-2xl font-bold mb-4">Configurações</h2></div>
+                        <div id="admin-config-panel" class="admin-panel hidden">
+                            <h2 class="text-2xl font-bold mb-4">Configurações de Alerta</h2>
+                            <form id="config-form" class="bg-white p-6 rounded-lg shadow-md space-y-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold">Regras de Faltas</h3>
+                                    <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="config-faltas-consecutivas" class="block text-sm font-medium">Alertar após X faltas consecutivas:</label>
+                                            <input type="number" id="config-faltas-consecutivas" class="w-full mt-1 p-2 border rounded-md">
+                                        </div>
+                                        <div>
+                                            <label for="config-faltas-intercaladas" class="block text-sm font-medium">Alertar após X faltas intercaladas:</label>
+                                            <input type="number" id="config-faltas-intercaladas" class="w-full mt-1 p-2 border rounded-md">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label for="config-faltas-dias" class="block text-sm font-medium">...dentro de um período de X dias:</label>
+                                            <input type="number" id="config-faltas-dias" class="w-full mt-1 p-2 border rounded-md">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold">Notificações por E-mail</h3>
+                                    <p class="text-sm text-gray-600">Adicione os e-mails que devem receber os alertas de faltas.</p>
+                                    <div class="flex mt-2">
+                                        <input type="email" id="config-add-email-input" class="flex-1 p-2 border rounded-l-md" placeholder="novo@email.com">
+                                        <button type="button" id="config-add-email-btn" class="px-4 py-2 font-semibold text-white bg-gray-600 rounded-r-md hover:bg-gray-700">Adicionar</button>
+                                    </div>
+                                    <ul id="config-email-list" class="mt-2 space-y-1 text-sm">
+                                        <!-- Lista de e-mails adicionais -->
+                                    </ul>
+                                </div>
+                                <div class="text-right">
+                                    <button type="submit" class="px-6 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Salvar Configurações</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </main>
             </div>
@@ -225,6 +289,7 @@
         let currentUser = null;
         let turmasCache = [];
         let professoresCache = [];
+        let alunosCache = [];
 
         // --- Mapeamento dos Elementos da UI ---
         const loginView = document.getElementById('login-view');
@@ -258,6 +323,13 @@
         const resetPasswordForm = document.getElementById('reset-password-form');
         const alunoTurmaSelect = document.getElementById('aluno-turma');
         const turmaProfessoresList = document.getElementById('turma-professores-list');
+        // Relatórios
+        const relatorioResultados = document.getElementById('relatorio-resultados');
+        const relatorioTableBody = document.getElementById('relatorio-table-body');
+        const imprimirRelatorioBtn = document.getElementById('imprimir-relatorio-btn');
+        // Configurações
+        const configForm = document.getElementById('config-form');
+        const configEmailList = document.getElementById('config-email-list');
 
         // --- Funções Auxiliares ---
         function showView(viewId) {
@@ -381,13 +453,14 @@
         // ============= LÓGICA DO PAINEL DO ADMINISTRADOR ===============
         // ===============================================================
         async function loadAdminData() {
-            const { data: turmas, error: turmasError } = await db.from('turmas').select('id, nome_turma');
-            if (turmasError) console.error('Erro ao carregar turmas:', turmasError);
-            else turmasCache = turmas;
+            const { data: turmas } = await db.from('turmas').select('id, nome_turma');
+            turmasCache = turmas || [];
 
-            const { data: profs, error: profsError } = await db.from('usuarios').select('id, user_uid, nome').eq('papel', 'professor').eq('status', 'ativo');
-            if (profsError) console.error('Erro ao carregar professores:', profsError);
-            else professoresCache = profs;
+            const { data: profs } = await db.from('usuarios').select('id, user_uid, nome').eq('papel', 'professor').eq('status', 'ativo');
+            professoresCache = profs || [];
+            
+            const { data: allAlunos } = await db.from('alunos').select('id, nome_completo');
+            alunosCache = allAlunos || [];
         }
 
         // --- Dashboard ---
@@ -691,6 +764,109 @@
             }
         }
 
+        // --- Gerenciamento de Relatórios ---
+        async function renderRelatoriosPanel() {
+            const turmaFilter = document.getElementById('relatorio-turma-select');
+            const alunoFilter = document.getElementById('relatorio-aluno-select');
+            const profFilter = document.getElementById('relatorio-professor-select');
+
+            turmaFilter.innerHTML = '<option value="">Todas</option>';
+            turmasCache.forEach(t => turmaFilter.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+
+            alunoFilter.innerHTML = '<option value="">Todos</option>';
+            alunosCache.forEach(a => alunoFilter.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
+
+            profFilter.innerHTML = '<option value="">Todos</option>';
+            professoresCache.forEach(p => profFilter.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
+        }
+
+        async function handleGerarRelatorio() {
+            relatorioTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Gerando relatório...</td></tr>';
+            imprimirRelatorioBtn.classList.add('hidden');
+
+            let query = db.from('presencas').select(`data, status, alunos ( nome_completo ), turmas ( nome_turma ), usuarios ( nome )`).order('data', { ascending: false });
+
+            const dataInicio = document.getElementById('relatorio-data-inicio').value;
+            const dataFim = document.getElementById('relatorio-data-fim').value;
+            const turmaId = document.getElementById('relatorio-turma-select').value;
+            const alunoId = document.getElementById('relatorio-aluno-select').value;
+            const profId = document.getElementById('relatorio-professor-select').value;
+
+            if (dataInicio) query = query.gte('data', dataInicio);
+            if (dataFim) query = query.lte('data', dataFim);
+            if (turmaId) query = query.eq('turma_id', turmaId);
+            if (alunoId) query = query.eq('aluno_id', alunoId);
+            if (profId) query = query.eq('registrado_por_uid', profId);
+
+            const { data, error } = await query;
+
+            if (error) {
+                relatorioTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
+                return;
+            }
+            if (data.length === 0) {
+                relatorioTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
+                return;
+            }
+
+            relatorioTableBody.innerHTML = data.map(r => `
+                <tr class="border-b">
+                    <td class="p-3">${new Date(r.data + 'T00:00:00').toLocaleDateString()}</td>
+                    <td class="p-3">${r.alunos.nome_completo}</td>
+                    <td class="p-3">${r.turmas.nome_turma}</td>
+                    <td class="p-3"><span class="font-semibold ${r.status === 'falta' ? 'text-red-600' : 'text-green-600'}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span></td>
+                    <td class="p-3">${r.usuarios.nome}</td>
+                </tr>
+            `).join('');
+            imprimirRelatorioBtn.classList.remove('hidden');
+        }
+
+        function handleImprimirRelatorio() {
+            const dataInicio = document.getElementById('relatorio-data-inicio').value;
+            const dataFim = document.getElementById('relatorio-data-fim').value;
+            const tituloEl = document.getElementById('relatorio-titulo-impressao');
+            
+            tituloEl.textContent = `Relatório de Frequência - ${dataInicio ? new Date(dataInicio + 'T00:00:00').toLocaleDateString() : ''} a ${dataFim ? new Date(dataFim + 'T00:00:00').toLocaleDateString() : ''}`;
+            tituloEl.classList.remove('hidden');
+            window.print();
+            tituloEl.classList.add('hidden');
+        }
+        
+        // --- Gerenciamento de Configurações ---
+        async function renderConfigPanel() {
+            const { data, error } = await db.from('configuracoes').select('*').limit(1).single();
+            if (error) {
+                console.error("Erro ao carregar configurações:", error);
+                return;
+            }
+            document.getElementById('config-faltas-consecutivas').value = data.faltas_consecutivas_limite;
+            document.getElementById('config-faltas-intercaladas').value = data.faltas_intercaladas_limite;
+            document.getElementById('config-faltas-dias').value = data.faltas_intercaladas_dias;
+            
+            configEmailList.innerHTML = '';
+            (data.emails_notificacao || []).forEach(email => {
+                configEmailList.innerHTML += `<li class="flex justify-between items-center bg-gray-100 p-1 rounded"><span>${email}</span><button class="text-red-500 remove-email-btn">&times;</button></li>`;
+            });
+        }
+
+        async function handleConfigFormSubmit(e) {
+            e.preventDefault();
+            const emails = Array.from(configEmailList.querySelectorAll('li span')).map(span => span.textContent);
+            const configData = {
+                faltas_consecutivas_limite: document.getElementById('config-faltas-consecutivas').value,
+                faltas_intercaladas_limite: document.getElementById('config-faltas-intercaladas').value,
+                faltas_intercaladas_dias: document.getElementById('config-faltas-dias').value,
+                emails_notificacao: emails
+            };
+
+            const { error } = await db.from('configuracoes').update(configData).eq('id', 1); // Assumindo que a config tem id 1
+            if (error) {
+                alert('Erro ao salvar configurações.');
+            } else {
+                alert('Configurações salvas com sucesso!');
+            }
+        }
+
         // ===============================================================
         // =================== EVENT LISTENERS ===========================
         // ===============================================================
@@ -724,6 +900,8 @@
             dataSelect.addEventListener('change', loadChamada);
             salvarChamadaBtn.addEventListener('click', saveChamada);
             dashboardDatePicker.addEventListener('change', loadDailySummary);
+            document.getElementById('gerar-relatorio-btn').addEventListener('click', handleGerarRelatorio);
+            imprimirRelatorioBtn.addEventListener('click', handleImprimirRelatorio);
 
             document.body.addEventListener('click', (e) => {
                 const target = e.target;
@@ -742,6 +920,8 @@
                     if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel();
                     if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
                     if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
+                    if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
+                    if (targetPanelId === 'admin-config-panel') renderConfigPanel();
                     return;
                 }
 
@@ -769,11 +949,23 @@
 
                 const deleteTurmaBtn = target.closest('.delete-turma-btn');
                 if(deleteTurmaBtn) handleDeleteTurma(deleteTurmaBtn.dataset.id);
+
+                if (target.closest('#config-add-email-btn')) {
+                    const emailInput = document.getElementById('config-add-email-input');
+                    if (emailInput.value) {
+                        configEmailList.innerHTML += `<li class="flex justify-between items-center bg-gray-100 p-1 rounded"><span>${emailInput.value}</span><button class="text-red-500 remove-email-btn">&times;</button></li>`;
+                        emailInput.value = '';
+                    }
+                }
+                if (target.closest('.remove-email-btn')) {
+                    target.closest('li').remove();
+                }
             });
 
             alunoForm.addEventListener('submit', handleAlunoFormSubmit);
             professorForm.addEventListener('submit', handleProfessorFormSubmit);
             turmaForm.addEventListener('submit', handleTurmaFormSubmit);
+            configForm.addEventListener('submit', handleConfigFormSubmit);
 
             resetPasswordForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
