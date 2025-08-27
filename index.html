@@ -590,6 +590,10 @@
             }
         }
 
+        async function handleDeleteAluno(alunoId) {
+            openDeleteConfirmModal('aluno', alunoId);
+        }
+
         // --- Gerenciamento de Professores ---
         async function renderProfessoresPanel() {
             professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
