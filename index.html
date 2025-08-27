@@ -212,12 +212,14 @@
 
         // --- Lógica de Autenticação ---
         db.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN' && session) {
+            // CORREÇÃO: A lógica agora verifica se existe uma 'session', 
+            // que funciona tanto para o login inicial quanto para recarregar a página.
+            if (session) {
                 currentUser = session.user;
                 const { data, error } = await db.from('usuarios').select('papel, nome').eq('user_uid', currentUser.id).single();
 
                 if (error || !data) {
-                    console.error("Erro ao buscar perfil do usuário:", error);
+                    console.error("Erro ao buscar perfil do usuário. Verifique se o UID e o papel estão corretos na tabela 'usuarios'.", error);
                     signOutUser();
                     return;
                 }
@@ -231,10 +233,11 @@
                     showView('professor-view');
                     await loadProfessorData(currentUser.id);
                 } else {
+                    console.error(`Papel de usuário desconhecido: '${papel}'. Deslogando.`);
                     signOutUser();
                 }
 
-            } else if (event === 'SIGNED_OUT') {
+            } else {
                 currentUser = null;
                 showView('login-view');
             }
