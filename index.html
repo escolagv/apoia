@@ -188,6 +188,7 @@
 
         // --- Elementos da UI ---
         const loginView = document.getElementById('login-view');
+        const loginError = document.getElementById('login-error');
         const professorView = document.getElementById('professor-view');
         const adminView = document.getElementById('admin-view');
         const turmaSelect = document.getElementById('professor-turma-select');
@@ -212,15 +213,18 @@
 
         // --- Lógica de Autenticação ---
         db.auth.onAuthStateChange(async (event, session) => {
-            // CORREÇÃO: A lógica agora verifica se existe uma 'session', 
-            // que funciona tanto para o login inicial quanto para recarregar a página.
             if (session) {
                 currentUser = session.user;
                 const { data, error } = await db.from('usuarios').select('papel, nome').eq('user_uid', currentUser.id).single();
 
+                // CORREÇÃO: Adiciona uma mensagem de erro visível para o usuário se o perfil não for encontrado.
                 if (error || !data) {
                     console.error("Erro ao buscar perfil do usuário. Verifique se o UID e o papel estão corretos na tabela 'usuarios'.", error);
-                    signOutUser();
+                    // Mostra o erro na tela de login antes de deslogar
+                    showView('login-view');
+                    loginError.textContent = 'Login válido, mas perfil não encontrado. Contate o suporte.';
+                    // Desloga o usuário por segurança
+                    setTimeout(signOutUser, 3000); 
                     return;
                 }
 
@@ -376,7 +380,6 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const loginError = document.getElementById('login-error');
             loginError.textContent = '';
             const { error } = await db.auth.signInWithPassword({ email, password });
             if (error) loginError.textContent = "Email ou senha inválidos.";
