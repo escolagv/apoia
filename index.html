@@ -383,23 +383,20 @@
         const { createClient } = supabase;
         const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
-        const APP_VERSION = '2.3'; // CONTROLE DE VERSÃO PARA CACHE
+        const APP_VERSION = '2.4'; // CONTROLE DE VERSÃO PARA CACHE
 
         // --- VERIFICAÇÃO DE VERSÃO PARA LIMPEZA DE CACHE ---
         const checkVersion = () => {
             const storedVersion = localStorage.getItem('app_version');
             if (storedVersion !== APP_VERSION) {
                 console.log(`Nova versão detectada! Atualizando de ${storedVersion} para ${APP_VERSION}. Limpando cache...`);
-                // Limpa o cache de sessão e local
                 localStorage.clear();
                 sessionStorage.clear();
-                // Tenta limpar caches mais agressivos
                 if ('caches' in window) {
                     caches.keys().then(keys => {
                         keys.forEach(key => caches.delete(key));
                     });
                 }
-                // Atualiza a versão local e recarrega a página
                 localStorage.setItem('app_version', APP_VERSION);
                 window.location.reload(true);
             }
@@ -514,8 +511,9 @@
         // ================= LÓGICA DE AUTENTICAÇÃO ======================
         // ===============================================================
         db.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'INITIAL_SESSION') {
-                resetLoginFormState(); // GARANTE QUE O FORM ESTEJA LIMPO AO CARREGAR A PÁGINA
+            // SOLUÇÃO DEFINITIVA PARA O BUG DO LOGIN: SEMPRE RESETAR O FORM QUANDO O ESTADO MUDA E NÃO HÁ SESSÃO
+            if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+                resetLoginFormState();
             }
 
             if (event === 'PASSWORD_RECOVERY') {
@@ -525,32 +523,35 @@
             }
 
             if (session) {
-                currentUser = session.user;
-                const { data, error } = await db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single();
+                try {
+                    currentUser = session.user;
+                    const { data, error } = await db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single();
 
-                if (error || !data || data.status !== 'ativo') {
-                    loginError.textContent = 'Login válido, mas perfil não encontrado ou inativo.';
+                    if (error || !data || data.status !== 'ativo') {
+                        throw new Error('Perfil não encontrado ou inativo.');
+                    }
+
+                    const { papel, nome } = data;
+                    if (papel === 'admin') {
+                        document.getElementById('admin-info').textContent = nome || currentUser.email;
+                        showView('admin-view');
+                        await loadAdminData();
+                        renderDashboardPanel();
+                    } else if (papel === 'professor') {
+                        document.getElementById('professor-info').textContent = nome || currentUser.email;
+                        showView('professor-view');
+                        await loadProfessorData(currentUser.id);
+                    } else {
+                        throw new Error('Papel de usuário desconhecido.');
+                    }
+                } catch (err) {
+                    // SE QUALQUER COISA FALHAR APÓS O LOGIN, DESLOGA E RESETA O FORM
+                    loginError.textContent = err.message || 'Erro ao carregar seu perfil. Tente novamente.';
                     resetLoginFormState();
-                    setTimeout(signOutUser, 4000); 
-                    return;
-                }
-
-                const { papel, nome } = data;
-                if (papel === 'admin') {
-                    document.getElementById('admin-info').textContent = nome || currentUser.email;
-                    showView('admin-view');
-                    await loadAdminData();
-                    renderDashboardPanel();
-                } else if (papel === 'professor') {
-                    document.getElementById('professor-info').textContent = nome || currentUser.email;
-                    showView('professor-view');
-                    await loadProfessorData(currentUser.id);
-                } else {
-                    signOutUser();
+                    await signOutUser(); 
                 }
             } else {
                 currentUser = null;
-                resetLoginFormState();
                 showView('login-view');
             }
         });
@@ -573,7 +574,10 @@
         async function loadChamada() {
             const turmaId = turmaSelect.value;
             const data = dataSelect.value;
-            const isPastDate = new Date(data + 'T00:00:00') < new Date(new Date().toDateString());
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const selectedDate = new Date(data + 'T00:00:00');
+            const isPastDate = selectedDate < today;
 
             listaAlunosContainer.innerHTML = '';
             chamadaHeader.textContent = 'Selecione uma turma e data';
@@ -1073,7 +1077,6 @@
                     if(error.code !== 'PGRST116'){ // PGRST116 = 0 rows in .single()
                         throw error;
                     }
-                    // Se a tabela estiver vazia, não há problema, apenas não preenche o form.
                 } else {
                     document.getElementById('config-faltas-consecutivas').value = data.faltas_consecutivas_limite || '';
                     document.getElementById('config-faltas-intercaladas').value = data.faltas_intercaladas_limite || '';
