@@ -10,12 +10,12 @@
     <meta http-equiv="Expires" content="0" />
 
     <title>Sistema de Faltas - APOIA</title>
-    <script src="https://cdn.tailwindcss.com?v=1.8"></script>
+    <script src="https://cdn.tailwindcss.com?v=1.9"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- IMPORTANTE: Adicionando o cliente JavaScript da Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2?v=1.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2?v=1.9"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .hidden { display: none; }
@@ -490,6 +490,10 @@
         // ================= LÓGICA DE AUTENTICAÇÃO ======================
         // ===============================================================
         db.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'INITIAL_SESSION') {
+                resetLoginFormState(); // GARANTE QUE O FORM ESTEJA LIMPO AO CARREGAR A PÁGINA
+            }
+
             if (event === 'PASSWORD_RECOVERY') {
                 showView('login-view');
                 resetPasswordModal.classList.remove('hidden');
@@ -1030,31 +1034,40 @@
         
         // --- Gerenciamento de Configurações ---
         async function renderConfigPanel() {
-            const { data, error } = await db.from('configuracoes').select('*').limit(1).single();
-            if (error || !data) {
-                console.error("Erro ao carregar configurações ou tabela vazia:", error);
-                return;
+            try {
+                const { data, error } = await db.from('configuracoes').select('*').limit(1).single();
+                if (error || !data) {
+                    if(error.code !== 'PGRST116'){ // PGRST116 = 0 rows in .single()
+                        throw error;
+                    }
+                    // Se a tabela estiver vazia, não há problema, apenas não preenche o form.
+                } else {
+                    document.getElementById('config-faltas-consecutivas').value = data.faltas_consecutivas_limite || '';
+                    document.getElementById('config-faltas-intercaladas').value = data.faltas_intercaladas_limite || '';
+                    document.getElementById('config-faltas-dias').value = data.faltas_intercaladas_dias || '';
+                    if (data.alerta_horario) {
+                        document.getElementById('config-alerta-horario').value = data.alerta_horario.substring(0, 5);
+                    }
+                    document.getElementById('config-alerta-faltas-ativo').checked = data.alerta_faltas_ativo;
+                    document.getElementById('config-alerta-chamada-ativo').checked = data.alerta_chamada_nao_feita_ativo;
+                    
+                    configEmailList.innerHTML = '';
+                    const emails = Array.isArray(data.emails_notificacao) ? data.emails_notificacao : [];
+                    emails.forEach(email => {
+                        configEmailList.innerHTML += `<li class="flex justify-between items-center bg-gray-100 p-1 rounded"><span>${email}</span><button class="text-red-500 remove-email-btn">&times;</button></li>`;
+                    });
+                }
+            } catch (err) {
+                console.error("Erro crítico ao renderizar painel de configurações:", err);
+                showToast("Não foi possível carregar as configurações.", true);
             }
-            document.getElementById('config-faltas-consecutivas').value = data.faltas_consecutivas_limite;
-            document.getElementById('config-faltas-intercaladas').value = data.faltas_intercaladas_limite;
-            document.getElementById('config-faltas-dias').value = data.faltas_intercaladas_dias;
-            if (data.alerta_horario) { // Formata HH:MM:SS para HH:MM
-                document.getElementById('config-alerta-horario').value = data.alerta_horario.substring(0, 5);
-            }
-            document.getElementById('config-alerta-faltas-ativo').checked = data.alerta_faltas_ativo;
-            document.getElementById('config-alerta-chamada-ativo').checked = data.alerta_chamada_nao_feita_ativo;
-            
-            configEmailList.innerHTML = '';
-            const emails = Array.isArray(data.emails_notificacao) ? data.emails_notificacao : [];
-            emails.forEach(email => {
-                configEmailList.innerHTML += `<li class="flex justify-between items-center bg-gray-100 p-1 rounded"><span>${email}</span><button class="text-red-500 remove-email-btn">&times;</button></li>`;
-            });
         }
 
         async function handleConfigFormSubmit(e) {
             e.preventDefault();
             const emails = Array.from(configEmailList.querySelectorAll('li span')).map(span => span.textContent);
             const configData = {
+                id: 1, // Garante que estamos sempre atualizando ou criando a linha 1
                 faltas_consecutivas_limite: document.getElementById('config-faltas-consecutivas').value,
                 faltas_intercaladas_limite: document.getElementById('config-faltas-intercaladas').value,
                 faltas_intercaladas_dias: document.getElementById('config-faltas-dias').value,
@@ -1064,7 +1077,7 @@
                 alerta_chamada_nao_feita_ativo: document.getElementById('config-alerta-chamada-ativo').checked
             };
 
-            const { error } = await db.from('configuracoes').update(configData).eq('id', 1);
+            const { error } = await db.from('configuracoes').upsert(configData).select();
             if (error) {
                 showToast('Erro ao salvar configurações: ' + error.message, true);
             } else {
@@ -1363,16 +1376,4 @@
     </script>
 </body>
 </html>
-``` and am asking a query about/based on this code below.
-Instructions to follow:
-  * Don't output/edit the document if the query is Direct/Simple. For example, if the query asks for a simple explanation, output a direct answer.
-  * Make sure to **edit** the document if the query is intending to edit the document, in which case output the entire edited document, **not just that section or the edits**.
-    * Don't output the same document/empty document and say that you have edited it.
-    * Don't change unrelated code in the document.
-  * Don't output  and  in your final response.
-  * Any references like "this" or "selected code" refers to the code between  and  tags.
-  * Just acknowledge my request in the introduction.
-  * Make sure to refer to the document as "Canvas" in your response.
-
-nao consigo acessar as configuraçoes para alterar o horario, e nem adicionar o email.
 
