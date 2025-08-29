@@ -10,13 +10,13 @@
     <meta http-equiv="Expires" content="0" />
 
     <title>Sistema de Faltas - APOIA</title>
-    <!-- O "?v=2.2" força o navegador a baixar o arquivo se a versão mudar -->
-    <script src="https://cdn.tailwindcss.com?v=2.2"></script>
+    <!-- O "?v=2.3" força o navegador a baixar o arquivo se a versão mudar -->
+    <script src="https://cdn.tailwindcss.com?v=2.3"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- IMPORTANTE: Adicionando o cliente JavaScript da Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2?v=2.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2?v=2.3"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .hidden { display: none; }
@@ -290,12 +290,13 @@
                         <div id="admin-relatorios-panel" class="admin-panel hidden">
                             <h2 class="text-2xl font-bold mb-4">Busca e Relatórios</h2>
                             <div class="bg-white p-6 rounded-lg shadow-md">
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
                                     <div><label for="relatorio-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label><input type="date" id="relatorio-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div>
                                     <div><label for="relatorio-data-fim" class="block text-sm font-medium text-gray-700">Data de Fim</label><input type="date" id="relatorio-data-fim" class="w-full mt-1 p-2 border rounded-md"></div>
                                     <div><label for="relatorio-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="relatorio-turma-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todas</option></select></div>
                                      <div><label for="relatorio-aluno-select" class="block text-sm font-medium text-gray-700">Aluno</label><select id="relatorio-aluno-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option></select></div>
                                      <div><label for="relatorio-professor-select" class="block text-sm font-medium text-gray-700">Professor</label><select id="relatorio-professor-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option></select></div>
+                                     <div><label for="relatorio-status-select" class="block text-sm font-medium text-gray-700">Status</label><select id="relatorio-status-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option><option value="presente">Apenas Presenças</option><option value="falta">Apenas Faltas</option></select></div>
                                 </div>
                                 <button id="gerar-relatorio-btn" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Gerar Relatório</button>
                             </div>
@@ -382,6 +383,28 @@
         const { createClient } = supabase;
         const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
+        const APP_VERSION = '2.3'; // CONTROLE DE VERSÃO PARA CACHE
+
+        // --- VERIFICAÇÃO DE VERSÃO PARA LIMPEZA DE CACHE ---
+        const checkVersion = () => {
+            const storedVersion = localStorage.getItem('app_version');
+            if (storedVersion !== APP_VERSION) {
+                console.log(`Nova versão detectada! Atualizando de ${storedVersion} para ${APP_VERSION}. Limpando cache...`);
+                // Limpa o cache de sessão e local
+                localStorage.clear();
+                sessionStorage.clear();
+                // Tenta limpar caches mais agressivos
+                if ('caches' in window) {
+                    caches.keys().then(keys => {
+                        keys.forEach(key => caches.delete(key));
+                    });
+                }
+                // Atualiza a versão local e recarrega a página
+                localStorage.setItem('app_version', APP_VERSION);
+                window.location.reload(true);
+            }
+        };
+        checkVersion();
 
         if (SUPABASE_URL === 'SUA_URL_DO_PROJETO') throw new Error("Credenciais da Supabase não configuradas.");
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -550,6 +573,8 @@
         async function loadChamada() {
             const turmaId = turmaSelect.value;
             const data = dataSelect.value;
+            const isPastDate = new Date(data + 'T00:00:00') < new Date(new Date().toDateString());
+
             listaAlunosContainer.innerHTML = '';
             chamadaHeader.textContent = 'Selecione uma turma e data';
             salvarChamadaBtn.classList.add('hidden');
@@ -571,12 +596,16 @@
                 const alunoDiv = document.createElement('div');
                 alunoDiv.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
                 alunoDiv.dataset.alunoId = aluno.id;
-                alunoDiv.innerHTML = `<span class="font-medium">${aluno.nome_completo}</span><div class="flex items-center gap-4"><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600" ${statusAtual === 'presente' ? 'checked' : ''}><span class="ml-2 text-sm">Presente</span></label><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600" ${statusAtual === 'falta' ? 'checked' : ''}><span class="ml-2 text-sm">Falta</span></label></div>`;
+                alunoDiv.innerHTML = `<span class="font-medium">${aluno.nome_completo}</span><div class="flex items-center gap-4"><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600" ${statusAtual === 'presente' ? 'checked' : ''} ${isPastDate ? 'disabled' : ''}><span class="ml-2 text-sm">Presente</span></label><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600" ${statusAtual === 'falta' ? 'checked' : ''} ${isPastDate ? 'disabled' : ''}><span class="ml-2 text-sm">Falta</span></label></div>`;
                 listaAlunosContainer.appendChild(alunoDiv);
             });
 
             chamadaHeader.textContent = `Chamada para ${turmaSelect.options[turmaSelect.selectedIndex].text}`;
-            salvarChamadaBtn.classList.remove('hidden');
+            if (!isPastDate) {
+                salvarChamadaBtn.classList.remove('hidden');
+            } else {
+                 showToast('Visualizando chamada. Não é possível editar datas passadas.', false);
+            }
         }
         
         async function saveChamada() {
@@ -633,7 +662,7 @@
             faltasEl.textContent = '...';
             ausentesListEl.innerHTML = '<li>Carregando...</li>';
 
-            const { data, error } = await db.from('presencas').select('status, alunos ( nome_completo )').eq('data', selectedDate);
+            const { data, error } = await db.from('presencas').select('status, alunos ( nome_completo ), turmas ( nome_turma )').eq('data', selectedDate);
             if (error) {
                 console.error("Erro ao buscar resumo diário:", error);
                 ausentesListEl.innerHTML = '<li>Erro ao carregar dados.</li>';
@@ -650,7 +679,7 @@
             if (ausentes.length === 0) {
                 ausentesListEl.innerHTML = '<li>Nenhum aluno ausente.</li>';
             } else {
-                ausentesListEl.innerHTML = ausentes.map(a => `<li>${a.alunos.nome_completo}</li>`).join('');
+                ausentesListEl.innerHTML = ausentes.map(a => `<li>${a.alunos.nome_completo} <span class="text-gray-500">(${a.turmas.nome_turma})</span></li>`).join('');
             }
         }
 
@@ -990,6 +1019,7 @@
             const turmaId = document.getElementById('relatorio-turma-select').value;
             const alunoId = document.getElementById('relatorio-aluno-select').value;
             const profId = document.getElementById('relatorio-professor-select').value;
+            const statusFiltro = document.getElementById('relatorio-status-select').value;
 
             if (dataInicio && !dataFim) dataFim = dataInicio;
 
@@ -998,6 +1028,8 @@
             if (turmaId) query = query.eq('turma_id', turmaId);
             if (alunoId) query = query.eq('aluno_id', alunoId);
             if (profId) query = query.eq('registrado_por_uid', profId);
+            if (statusFiltro) query = query.eq('status', statusFiltro);
+
 
             const { data, error } = await query;
 
@@ -1377,5 +1409,4 @@
     </script>
 </body>
 </html>
-
 
