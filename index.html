@@ -325,7 +325,7 @@
                                         <input type="date" id="evento-data-fim-filter" class="w-full mt-1 p-2 border rounded-md">
                                     </div>
                                 </div>
-                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
+                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left font-semibold text-gray-600">Descrição</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
                             </div>
                         </div>
 
@@ -416,7 +416,7 @@
         const { createClient } = supabase;
         const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
-        const APP_VERSION = '2.9'; // CONTROLE DE VERSÃO PARA CACHE
+        const APP_VERSION = '3.0'; // CONTROLE DE VERSÃO PARA CACHE
 
         // --- VERIFICAÇÃO DE VERSÃO PARA LIMPEZA DE CACHE ---
         const checkVersion = () => {
@@ -503,7 +503,6 @@
         const imprimirApoiaRelatorioBtn = document.getElementById('imprimir-apoia-relatorio-btn');
         // Configurações
         const configForm = document.getElementById('config-form');
-        const configEmailList = document.getElementById('config-email-list');
         // Calendário Dashboard
         const calendarMonthYear = document.getElementById('calendar-month-year');
         const calendarGrid = document.getElementById('calendar-grid');
@@ -518,6 +517,14 @@
 
         async function signOutUser() {
             await db.auth.signOut();
+        }
+
+        function resetApplicationState() {
+            currentUser = null;
+            turmasCache = [];
+            professoresCache = [];
+            alunosCache = [];
+            dashboardCalendar = { month: new Date().getMonth(), year: new Date().getFullYear() };
         }
 
         function resetLoginFormState() {
@@ -560,6 +567,7 @@
         // ===============================================================
         db.auth.onAuthStateChange(async (event, session) => {
             if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+                resetApplicationState();
                 resetLoginFormState();
             }
 
@@ -620,10 +628,15 @@
         async function loadChamada() {
             const turmaId = turmaSelect.value;
             const data = dataSelect.value;
+
+            // Pega a data de hoje sem o horário
             const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const selectedDate = new Date(data + 'T00:00:00');
-            const isPastDate = selectedDate < today;
+            const todayString = today.toISOString().split('T')[0];
+            
+            // Pega a data selecionada
+            const selectedDate = data;
+
+            const isEditable = selectedDate === todayString;
 
             listaAlunosContainer.innerHTML = '';
             chamadaHeader.textContent = 'Selecione uma turma e data';
@@ -646,15 +659,15 @@
                 const alunoDiv = document.createElement('div');
                 alunoDiv.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
                 alunoDiv.dataset.alunoId = aluno.id;
-                alunoDiv.innerHTML = `<span class="font-medium">${aluno.nome_completo}</span><div class="flex items-center gap-4"><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600" ${statusAtual === 'presente' ? 'checked' : ''} ${isPastDate ? 'disabled' : ''}><span class="ml-2 text-sm">Presente</span></label><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600" ${statusAtual === 'falta' ? 'checked' : ''} ${isPastDate ? 'disabled' : ''}><span class="ml-2 text-sm">Falta</span></label></div>`;
+                alunoDiv.innerHTML = `<span class="font-medium">${aluno.nome_completo}</span><div class="flex items-center gap-4"><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600" ${statusAtual === 'presente' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Presente</span></label><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600" ${statusAtual === 'falta' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Falta</span></label></div>`;
                 listaAlunosContainer.appendChild(alunoDiv);
             });
 
             chamadaHeader.textContent = `Chamada para ${turmaSelect.options[turmaSelect.selectedIndex].text}`;
-            if (!isPastDate) {
+            if (isEditable) {
                 salvarChamadaBtn.classList.remove('hidden');
             } else {
-                 showToast('Visualizando chamada. Não é possível editar datas passadas.', false);
+                 showToast('Visualizando chamada. Apenas a chamada do dia atual pode ser editada.', false);
             }
         }
         
@@ -701,13 +714,8 @@
             await loadDailySummary();
             await renderDashboardCalendar();
             
-            // Carregar o total de alunos em acompanhamento
             const { count, error } = await db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento');
-            if (error) {
-                document.getElementById('dashboard-acompanhamento').textContent = 'N/A';
-            } else {
-                document.getElementById('dashboard-acompanhamento').textContent = count;
-            }
+            document.getElementById('dashboard-acompanhamento').textContent = error ? 'N/A' : count;
         }
 
         async function loadDailySummary() {
@@ -720,25 +728,23 @@
             faltasEl.textContent = '...';
             ausentesListEl.innerHTML = '<li>Carregando...</li>';
 
-            const { data, error } = await db.from('presencas').select('status, alunos ( nome_completo ), turmas ( nome_turma )').eq('data', selectedDate);
+            const { data, error } = await db.from('presencas').select('status, alunos ( nome_completo ), turmas ( nome_turma )').eq('data', selectedDate).eq('status', 'falta');
             
             if (error) {
                 console.error("Erro ao buscar resumo diário:", error);
-                ausentesListEl.innerHTML = `<li>Erro ao carregar dados: ${error.message}</li>`;
+                ausentesListEl.innerHTML = `<li>Erro ao carregar dados.</li>`;
                 return;
             }
 
-            const presencas = data.filter(r => r.status === 'presente').length;
-            const faltas = data.filter(r => r.status === 'falta').length;
-            const ausentes = data.filter(r => r.status === 'falta' && r.alunos && r.turmas);
+            const { count: totalPresencas } = await db.from('presencas').select('*', { count: 'exact', head: true }).eq('data', selectedDate).eq('status', 'presente');
+            
+            presencasEl.textContent = totalPresencas || 0;
+            faltasEl.textContent = data.length;
 
-            presencasEl.textContent = presencas;
-            faltasEl.textContent = faltas;
-
-            if (ausentes.length === 0) {
+            if (data.length === 0) {
                 ausentesListEl.innerHTML = '<li>Nenhum aluno ausente.</li>';
             } else {
-                ausentesListEl.innerHTML = ausentes.map(a => `<li>${a.alunos.nome_completo} <span class="text-gray-500">(${a.turmas.nome_turma})</span></li>`).join('');
+                ausentesListEl.innerHTML = data.map(a => `<li>${a.alunos.nome_completo} <span class="text-gray-500">(${a.turmas.nome_turma})</span></li>`).join('');
             }
         }
 
@@ -1254,12 +1260,6 @@
                     }
                     document.getElementById('config-alerta-faltas-ativo').checked = data.alerta_faltas_ativo;
                     document.getElementById('config-alerta-chamada-ativo').checked = data.alerta_chamada_nao_feita_ativo;
-                    
-                    configEmailList.innerHTML = '';
-                    const emails = Array.isArray(data.emails_notificacao) ? data.emails_notificacao : [];
-                    emails.forEach(email => {
-                       if(email) configEmailList.innerHTML += `<li class="flex justify-between items-center bg-gray-100 p-1 rounded"><span>${email}</span><button class="text-red-500 remove-email-btn">&times;</button></li>`;
-                    });
                 }
             } catch (err) {
                 console.error("Erro crítico ao renderizar painel de configurações:", err);
@@ -1269,23 +1269,22 @@
 
         async function handleConfigFormSubmit(e) {
             e.preventDefault();
-            const emails = Array.from(configEmailList.querySelectorAll('li span')).map(span => span.textContent);
-            const configData = {
-                id: 1, // Garante que estamos sempre atualizando ou criando a linha 1
-                faltas_consecutivas_limite: document.getElementById('config-faltas-consecutivas').value,
-                faltas_intercaladas_limite: document.getElementById('config-faltas-intercaladas').value,
-                faltas_intercaladas_dias: document.getElementById('config-faltas-dias').value,
-                emails_notificacao: emails,
-                alerta_horario: document.getElementById('config-alerta-horario').value || null,
-                alerta_faltas_ativo: document.getElementById('config-alerta-faltas-ativo').checked,
-                alerta_chamada_nao_feita_ativo: document.getElementById('config-alerta-chamada-ativo').checked
-            };
+            try {
+                const configData = {
+                    id: 1, // Garante que estamos sempre atualizando ou criando a linha 1
+                    faltas_consecutivas_limite: document.getElementById('config-faltas-consecutivas').value,
+                    faltas_intercaladas_limite: document.getElementById('config-faltas-intercaladas').value,
+                    faltas_intercaladas_dias: document.getElementById('config-faltas-dias').value,
+                    alerta_horario: document.getElementById('config-alerta-horario').value || null,
+                    alerta_faltas_ativo: document.getElementById('config-alerta-faltas-ativo').checked,
+                    alerta_chamada_nao_feita_ativo: document.getElementById('config-alerta-chamada-ativo').checked
+                };
 
-            const { error } = await db.from('configuracoes').upsert(configData).select();
-            if (error) {
-                showToast('Erro ao salvar configurações: ' + error.message, true);
-            } else {
+                const { error } = await db.from('configuracoes').upsert(configData).select();
+                if (error) throw error;
                 showToast('Configurações salvas com sucesso!');
+            } catch(err) {
+                showToast('Erro ao salvar configurações: ' + err.message, true);
             }
         }
         
@@ -1419,8 +1418,9 @@
             const tituloEl = document.getElementById(tituloId);
             const area = document.querySelector(areaSelector);
             
-            if (!area) {
-                console.error("Área de impressão não encontrada:", areaSelector);
+            if (!area || !tituloEl) {
+                console.error("Elementos de impressão não encontrados:", areaSelector, tituloId);
+                showToast("Erro ao preparar impressão.", true);
                 return;
             }
 
@@ -1564,20 +1564,9 @@
                     if(dashboardCalendar.month > 11) { dashboardCalendar.month = 0; dashboardCalendar.year++; }
                     renderDashboardCalendar();
                 }
-
-                if (target.closest('#config-add-email-btn')) {
-                    const emailInput = document.getElementById('config-add-email-input');
-                    if (emailInput.value) {
-                        configEmailList.innerHTML += `<li class="flex justify-between items-center bg-gray-100 p-1 rounded"><span>${emailInput.value}</span><button class="text-red-500 remove-email-btn">&times;</button></li>`;
-                        emailInput.value = '';
-                    }
-                }
-                if (target.closest('.remove-email-btn')) {
-                    target.closest('li').remove();
-                }
             });
 
-            // Listeners de change
+            // Listeners de change e input
             turmaSelect.addEventListener('change', loadChamada);
             dataSelect.addEventListener('change', loadChamada);
             salvarChamadaBtn.addEventListener('click', saveChamada);
@@ -1587,6 +1576,7 @@
             });
             document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
             document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
+            document.getElementById('aluno-search-input').addEventListener('input', (e) => renderAlunosPanel(e.target.value));
 
             dataSelect.value = new Date().toISOString().split('T')[0];
             console.log("Sistema de Gestão de Faltas (Supabase) inicializado.");
