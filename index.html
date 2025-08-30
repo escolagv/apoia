@@ -61,7 +61,7 @@
             font-weight: bold;
         }
         .calendar-day-weekend {
-            background-color: #f3f4f6; /* bg-gray-100 */
+            background-color: #fef08a; /* bg-yellow-200 */
         }
         .tooltip {
             visibility: hidden;
@@ -240,9 +240,10 @@
                             </div>
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div>
-                                    <div id="dashboard-summary" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div id="dashboard-summary" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                                         <div class="bg-white p-6 rounded-lg shadow-md flex items-center"><div class="bg-green-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Presenças</p><p id="dashboard-presencas" class="text-2xl font-bold">...</p></div></div>
                                         <div class="bg-white p-6 rounded-lg shadow-md flex items-center"><div class="bg-red-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Faltas</p><p id="dashboard-faltas" class="text-2xl font-bold">...</p></div></div>
+                                        <div class="bg-white p-6 rounded-lg shadow-md flex items-center"><div class="bg-yellow-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Em Acompanhamento</p><p id="dashboard-acompanhamento" class="text-2xl font-bold">...</p></div></div>
                                     </div>
                                     <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-2">Alunos Ausentes</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div>
                                 </div>
@@ -263,7 +264,13 @@
                         </div>
                         
                         <div id="admin-alunos-panel" class="admin-panel hidden">
-                           <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Cadastro Geral de Alunos</h2><button id="add-aluno-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Aluno</button></div>
+                           <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold">Cadastro Geral de Alunos</h2>
+                                <div class="flex gap-4">
+                                    <input type="text" id="aluno-search-input" class="p-2 border rounded-md" placeholder="Buscar por nome, matrícula...">
+                                    <button id="add-aluno-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Aluno</button>
+                                </div>
+                            </div>
                             <div class="bg-white p-6 rounded-lg shadow-md overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Nome</th><th class="p-3 text-left font-semibold text-gray-600">Matrícula</th><th class="p-3 text-left font-semibold text-gray-600">Turma</th><th class="p-3 text-left font-semibold text-gray-600">Responsável</th><th class="p-3 text-left font-semibold text-gray-600">Telefone</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="alunos-table-body"></tbody></table></div>
                         </div>
 
@@ -366,15 +373,6 @@
                                             <input type="number" id="config-faltas-dias" class="w-full mt-1 p-2 border rounded-md">
                                         </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold">Notificações por E-mail</h3>
-                                    <p class="text-sm text-gray-600">Adicione os e-mails que devem receber os alertas de faltas.</p>
-                                    <div class="flex mt-2">
-                                        <input type="email" id="config-add-email-input" class="flex-1 p-2 border rounded-l-md" placeholder="novo@email.com">
-                                        <button type="button" id="config-add-email-btn" class="px-4 py-2 font-semibold text-white bg-gray-600 rounded-r-md hover:bg-gray-700">Adicionar</button>
-                                    </div>
-                                    <ul id="config-email-list" class="mt-2 space-y-1 text-sm"></ul>
                                 </div>
                                 <div>
                                     <h3 class="text-lg font-semibold">Configurações de Alerta Automático</h3>
@@ -702,6 +700,14 @@
             dashboardDatePicker.value = new Date().toISOString().split('T')[0];
             await loadDailySummary();
             await renderDashboardCalendar();
+            
+            // Carregar o total de alunos em acompanhamento
+            const { count, error } = await db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento');
+            if (error) {
+                document.getElementById('dashboard-acompanhamento').textContent = 'N/A';
+            } else {
+                document.getElementById('dashboard-acompanhamento').textContent = count;
+            }
         }
 
         async function loadDailySummary() {
@@ -715,15 +721,16 @@
             ausentesListEl.innerHTML = '<li>Carregando...</li>';
 
             const { data, error } = await db.from('presencas').select('status, alunos ( nome_completo ), turmas ( nome_turma )').eq('data', selectedDate);
+            
             if (error) {
                 console.error("Erro ao buscar resumo diário:", error);
-                ausentesListEl.innerHTML = '<li>Erro ao carregar dados.</li>';
+                ausentesListEl.innerHTML = `<li>Erro ao carregar dados: ${error.message}</li>`;
                 return;
             }
 
             const presencas = data.filter(r => r.status === 'presente').length;
             const faltas = data.filter(r => r.status === 'falta').length;
-            const ausentes = data.filter(r => r.status === 'falta' && r.alunos);
+            const ausentes = data.filter(r => r.status === 'falta' && r.alunos && r.turmas);
 
             presencasEl.textContent = presencas;
             faltasEl.textContent = faltas;
@@ -767,7 +774,7 @@
                     });
                 }
                 
-                let dayContainerClass = 'p-1';
+                let dayContainerClass = 'p-1 flex justify-center items-center';
                 let daySpanClass = 'flex items-center justify-center w-8 h-8 rounded-full';
                 let tooltipHtml = '';
 
@@ -785,15 +792,23 @@
         }
 
         // --- Gerenciamento de Alunos ---
-        async function renderAlunosPanel() {
+        async function renderAlunosPanel(searchTerm = '') {
             alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Carregando...</td></tr>';
-            const { data, error } = await db.from('alunos').select(`*, turmas ( nome_turma )`).order('nome_completo');
+            
+            let query = db.from('alunos').select(`*, turmas ( nome_turma )`).order('nome_completo');
+            
+            if (searchTerm) {
+                query = query.or(`nome_completo.ilike.%${searchTerm}%,matricula.ilike.%${searchTerm}%,nome_responsavel.ilike.%${searchTerm}%`);
+            }
+
+            const { data, error } = await query;
+
             if (error) {
                 alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
                 return;
             }
             if (data.length === 0) {
-                alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Nenhum aluno cadastrado.</td></tr>';
+                alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Nenhum aluno encontrado.</td></tr>';
                 return;
             }
             alunosTableBody.innerHTML = data.map(aluno => `
