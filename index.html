@@ -10,13 +10,13 @@
     <meta http-equiv="Expires" content="0" />
 
     <title>Sistema de Faltas - APOIA</title>
-    <!-- O "?v=2.7" força o navegador a baixar o arquivo se a versão mudar -->
-    <script src="https://cdn.tailwindcss.com?v=2.7"></script>
+    <!-- O "?v=2.8" força o navegador a baixar o arquivo se a versão mudar -->
+    <script src="https://cdn.tailwindcss.com?v=2.8"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- IMPORTANTE: Adicionando o cliente JavaScript da Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2?v=2.7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2?v=2.8"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .hidden { display: none; }
@@ -60,6 +60,9 @@
             border-radius: 9999px;
             font-weight: bold;
         }
+        .calendar-day-weekend {
+            background-color: #f3f4f6; /* bg-gray-100 */
+        }
         .tooltip {
             visibility: hidden;
             background-color: #1f2937; /* bg-gray-800 */
@@ -71,7 +74,7 @@
             z-index: 10;
             bottom: 125%;
             left: 50%;
-            margin-left: -60px;
+            transform: translateX(-50%);
             opacity: 0;
             transition: opacity 0.3s;
             width: max-content;
@@ -1498,4 +1501,5 @@
     </script>
 </body>
 </html>
+"
 
