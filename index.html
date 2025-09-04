@@ -10,13 +10,13 @@
     <meta http-equiv="Expires" content="0" />
 
     <title>Sistema de Faltas - APOIA</title>
-    <!-- O "?v=3.3" força o navegador a baixar o arquivo se a versão mudar -->
-    <script src="https://cdn.tailwindcss.com?v=3.3"></script>
+    <!-- O "?v=3.5" força o navegador a baixar o arquivo se a versão mudar -->
+    <script src="https://cdn.tailwindcss.com?v=3.5"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- IMPORTANTE: Adicionando o cliente JavaScript da Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2?v=3.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2?v=3.5"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .hidden { display: none; }
@@ -330,7 +330,10 @@
                         </div>
 
                         <div id="admin-relatorios-panel" class="admin-panel hidden">
-                            <h2 class="text-2xl font-bold mb-4">Relatórios de Faltas</h2>
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold">Relatórios de Faltas</h2>
+                                <button id="correcao-chamada-btn" class="px-4 py-2 font-semibold text-white bg-orange-500 rounded-md hover:bg-orange-600">Corrigir/Lançar Chamada</button>
+                            </div>
                             <div class="bg-white p-6 rounded-lg shadow-md">
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
                                     <div><label for="relatorio-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label><input type="date" id="relatorio-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div>
@@ -409,6 +412,7 @@
         <div id="evento-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="evento-modal-title" class="text-xl font-bold mb-4"></h3><form id="evento-form"><input type="hidden" id="evento-id"><div class="space-y-4"><div><label for="evento-descricao" class="block text-sm font-medium text-gray-700">Descrição</label><input type="text" id="evento-descricao" required class="w-full mt-1 p-2 border rounded-md" placeholder="Ex: Feriado Nacional"></div><div class="grid grid-cols-2 gap-4"><div><label for="evento-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label><input type="date" id="evento-data-inicio" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="evento-data-fim" class="block text-sm font-medium text-gray-700">Data de Fim (Opcional)</label><input type="date" id="evento-data-fim" class="w-full mt-1 p-2 border rounded-md"></div></div></div><div class="mt-6 flex justify-between items-center"><div id="evento-delete-container" class="hidden"><button type="button" class="text-red-600 hover:underline text-sm delete-btn" data-type="evento">Excluir Evento</button></div><div><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
         <div id="reset-password-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">Redefinir Senha</h3><form id="reset-password-form"><div class="space-y-4"><div><label for="new-password" class="block text-sm font-medium text-gray-700">Nova Senha</label><input type="password" id="new-password" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirme a Nova Senha</label><input type="password" id="confirm-password" required class="w-full mt-1 p-2 border rounded-md"></div></div><p id="reset-password-error" class="text-sm text-center text-red-600 mt-4"></p><div class="mt-6 flex justify-end gap-4"><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar Nova Senha</button></div></form></div></div>
         <div id="delete-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4 text-red-600">Confirmar Exclusão</h3><p id="delete-confirm-message" class="mb-4"></p><div class="mb-4"><label class="flex items-center"><input type="checkbox" id="delete-confirm-checkbox" class="form-checkbox h-5 w-5 text-red-600"><span class="ml-2 text-sm">Sim, eu entendo e quero continuar.</span></label></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md disabled:bg-red-300" disabled>Excluir Permanentemente</button></div></div></div>
+        <div id="correcao-chamada-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6"><h3 class="text-xl font-bold mb-4">Corrigir/Lançar Chamada (Admin)</h3><form id="correcao-chamada-form"><div class="flex flex-col md:flex-row gap-4 mb-6"><div class="flex-1"><label for="correcao-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="correcao-turma-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"></select></div><div class="flex-1"><label for="correcao-data-select" class="block text-sm font-medium text-gray-700">Data</label><input type="date" id="correcao-data-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"></div></div><div id="correcao-chamada-lista-container" class="max-h-96 overflow-y-auto pr-2"><div id="correcao-chamada-lista-alunos" class="space-y-3"></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar Correção</button></div></div></form></div></div>
 
     </div>
 
@@ -416,7 +420,7 @@
         const { createClient } = supabase;
         const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
-        const APP_VERSION = '3.2'; // CONTROLE DE VERSÃO PARA CACHE
+        const APP_VERSION = '3.3'; // CONTROLE DE VERSÃO PARA CACHE
 
         // --- VERIFICAÇÃO DE VERSÃO PARA LIMPEZA DE CACHE ---
         const checkVersion = () => {
@@ -483,6 +487,7 @@
         const turmaModal = document.getElementById('turma-modal');
         const eventoModal = document.getElementById('evento-modal');
         const acompanhamentoModal = document.getElementById('acompanhamento-modal');
+        const correcaoChamadaModal = document.getElementById('correcao-chamada-modal');
         const resetPasswordModal = document.getElementById('reset-password-modal');
         const deleteConfirmModal = document.getElementById('delete-confirm-modal');
         // Forms
@@ -491,6 +496,7 @@
         const turmaForm = document.getElementById('turma-form');
         const eventoForm = document.getElementById('evento-form');
         const acompanhamentoForm = document.getElementById('acompanhamento-form');
+        const correcaoChamadaForm = document.getElementById('correcao-chamada-form');
         const resetPasswordForm = document.getElementById('reset-password-form');
         // Selects and Lists
         const alunoTurmaSelect = document.getElementById('aluno-turma');
@@ -1470,6 +1476,27 @@
                 if (e.target.id === 'evento-form') await handleEventoFormSubmit(e);
                 if (e.target.id === 'acompanhamento-form') await handleAcompanhamentoFormSubmit(e);
                 if (e.target.id === 'config-form') await handleConfigFormSubmit(e);
+                if (e.target.id === 'correcao-chamada-form') {
+                    e.preventDefault();
+                    const form = e.target;
+                    const turmaId = form.querySelector('#correcao-turma-select').value;
+                    const data = form.querySelector('#correcao-data-select').value;
+                    const alunoRows = form.querySelectorAll('[data-aluno-id]');
+                    const registros = Array.from(alunoRows).map(row => ({
+                        aluno_id: parseInt(row.dataset.alunoId),
+                        turma_id: parseInt(turmaId),
+                        data: data,
+                        status: row.querySelector('input[type="radio"]:checked').value,
+                        registrado_por_uid: currentUser.id
+                    }));
+                    
+                    const { error } = await db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' });
+                    if(error) showToast('Erro ao salvar correção: ' + error.message, true);
+                    else {
+                        showToast('Chamada corrigida com sucesso!');
+                        closeModal(correcaoChamadaModal);
+                    }
+                }
                 if (e.target.id === 'reset-password-form') {
                     e.preventDefault();
                     const newPassword = document.getElementById('new-password').value;
@@ -1550,9 +1577,15 @@
                 if (target.closest('#confirm-delete-btn')) handleConfirmDelete();
                 if (target.closest('#admin-logout-btn') || target.closest('#professor-logout-btn')) signOutUser();
                 if (target.closest('#gerar-relatorio-btn')) handleGerarRelatorio();
-                if (target.closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('#relatorio-resultados', 'relatorio-titulo-impressao', `Relatório de Frequência`);
+                if (target.closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('#relatorio-resultados', '#relatorio-titulo-impressao', `Relatório de Frequência`);
                  if (target.closest('#gerar-apoia-relatorio-btn')) handleGerarApoiaRelatorio();
-                if (target.closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('#apoia-relatorio-resultados', 'apoia-relatorio-titulo-impressao', 'Relatório de Acompanhamento APOIA');
+                if (target.closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('#apoia-relatorio-resultados', '#apoia-relatorio-titulo-impressao', 'Relatório de Acompanhamento APOIA');
+                if (target.closest('#correcao-chamada-btn')) {
+                    correcaoChamadaModal.classList.remove('hidden');
+                    const turmaSel = document.getElementById('correcao-turma-select');
+                    turmaSel.innerHTML = '<option value="">Selecione uma turma...</option>';
+                    turmasCache.forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+                }
 
                 if(target.closest('#prev-month-btn')) {
                     dashboardCalendar.month--;
@@ -1577,6 +1610,33 @@
             document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
             document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
             document.getElementById('aluno-search-input').addEventListener('input', (e) => renderAlunosPanel(e.target.value));
+
+            const correcaoTurmaSel = document.getElementById('correcao-turma-select');
+            const correcaoDataSel = document.getElementById('correcao-data-select');
+            const correcaoListaAlunos = document.getElementById('correcao-chamada-lista-alunos');
+            
+            const loadCorrecaoChamada = async () => {
+                const turmaId = correcaoTurmaSel.value;
+                const data = correcaoDataSel.value;
+                correcaoListaAlunos.innerHTML = '';
+
+                if (!turmaId || !data) return;
+                
+                const { data: alunos } = await db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo');
+                const { data: presencas } = await db.from('presencas').select('aluno_id, status').eq('turma_id', turmaId).eq('data', data);
+                const presencasMap = new Map(presencas.map(p => [p.aluno_id, p.status]));
+
+                alunos.forEach(aluno => {
+                    const statusAtual = presencasMap.get(aluno.id) || 'presente';
+                    const alunoDiv = document.createElement('div');
+                    alunoDiv.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                    alunoDiv.dataset.alunoId = aluno.id;
+                    alunoDiv.innerHTML = `<span class="font-medium">${aluno.nome_completo}</span><div class="flex items-center gap-4"><label class="flex items-center cursor-pointer"><input type="radio" name="corr-status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600" ${statusAtual === 'presente' ? 'checked' : ''}><span class="ml-2 text-sm">Presente</span></label><label class="flex items-center cursor-pointer"><input type="radio" name="corr-status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600" ${statusAtual === 'falta' ? 'checked' : ''}><span class="ml-2 text-sm">Falta</span></label></div>`;
+                    correcaoListaAlunos.appendChild(alunoDiv);
+                });
+            };
+            correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
+            correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
 
             dataSelect.value = new Date().toISOString().split('T')[0];
             console.log("Sistema de Gestão de Faltas (Supabase) inicializado.");
