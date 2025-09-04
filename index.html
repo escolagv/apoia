@@ -325,7 +325,7 @@
                                         <input type="date" id="evento-data-fim-filter" class="w-full mt-1 p-2 border rounded-md">
                                     </div>
                                 </div>
-                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
+                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
                             </div>
                         </div>
 
@@ -420,7 +420,7 @@
         const { createClient } = supabase;
         const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
-        const APP_VERSION = '3.3'; // CONTROLE DE VERSÃO PARA CACHE
+        const APP_VERSION = '3.2'; // CONTROLE DE VERSÃO PARA CACHE
 
         // --- VERIFICAÇÃO DE VERSÃO PARA LIMPEZA DE CACHE ---
         const checkVersion = () => {
