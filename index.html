@@ -10,13 +10,13 @@
     <meta http-equiv="Expires" content="0" />
 
     <title>Sistema de Faltas - APOIA</title>
-    <!-- O "?v=3.3" força o navegador a baixar o arquivo se a versão mudar -->
-    <script src="https://cdn.tailwindcss.com?v=3.3"></script>
+    <!-- O "?v=3.6" força o navegador a baixar o arquivo se a versão mudar -->
+    <script src="https://cdn.tailwindcss.com?v=3.6"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- IMPORTANTE: Adicionando o cliente JavaScript da Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2?v=3.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2?v=3.6"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .hidden { display: none; }
@@ -228,8 +228,14 @@
                 </aside>
                 <main class="flex-1 p-6 overflow-y-auto">
                     <div class="flex justify-end mb-4">
-                        <div id="notification-bell" class="relative cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                        <div class="relative">
+                            <div id="notification-bell" class="relative cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                            </div>
+                            <div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-20">
+                                <div class="p-4 font-bold border-b">Notificações</div>
+                                <div id="notification-list" class="p-2 max-h-64 overflow-y-auto"></div>
+                            </div>
                         </div>
                     </div>
                     <div id="admin-content">
@@ -325,7 +331,7 @@
                                         <input type="date" id="evento-data-fim-filter" class="w-full mt-1 p-2 border rounded-md">
                                     </div>
                                 </div>
-                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
+                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
                             </div>
                         </div>
 
@@ -521,7 +527,8 @@
             document.getElementById(viewId).classList.remove('hidden');
         }
 
-        async function signOutUser() {
+        async function signOutUser(message) {
+            if (message) showToast(message, true);
             await db.auth.signOut();
         }
 
@@ -567,6 +574,34 @@
         function closeAllModals() {
             allModals.forEach(modal => modal.classList.add('hidden'));
         }
+        
+        // --- VERIFICADOR DE SEGURANÇA CENTRAL ---
+        async function safeQuery(queryBuilder) {
+            const { data, error, count } = await queryBuilder;
+            if (error) {
+                // Se o erro for de token inválido/expirado, força o logout
+                if (error.message.includes('JWT') || error.code === '401') {
+                    await signOutUser("Sua sessão expirou por segurança. Por favor, faça o login novamente.");
+                    return { data: null, error, count: null };
+                }
+                // Para outros erros, apenas retorna o erro
+                throw error;
+            }
+            return { data, error, count };
+        }
+
+        // --- TIMER DE INATIVIDADE ---
+        let inactivityTimer;
+        const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutos
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                if (currentUser) {
+                    signOutUser("Sessão encerrada por inatividade.");
+                }
+            }, INACTIVITY_TIMEOUT);
+        }
 
         // ===============================================================
         // ================= LÓGICA DE AUTENTICAÇÃO ======================
@@ -575,6 +610,7 @@
             if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
                 resetApplicationState();
                 resetLoginFormState();
+                clearTimeout(inactivityTimer);
             }
 
             if (event === 'PASSWORD_RECOVERY') {
@@ -586,7 +622,7 @@
             if (session) {
                 try {
                     currentUser = session.user;
-                    const { data, error } = await db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single();
+                    const { data, error } = await safeQuery(db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single());
 
                     if (error || !data || data.status !== 'ativo') {
                         throw new Error('Perfil não encontrado ou inativo.');
@@ -605,6 +641,7 @@
                     } else {
                         throw new Error('Papel de usuário desconhecido.');
                     }
+                    resetInactivityTimer(); // Inicia o timer de inatividade
                 } catch (err) {
                     loginError.textContent = err.message || 'Erro ao carregar seu perfil. Tente novamente.';
                     resetLoginFormState();
@@ -620,13 +657,13 @@
         // ============= LÓGICA DO PAINEL DO PROFESSOR ===================
         // ===============================================================
         async function loadProfessorData(professorUid) {
-            const { data: rels, error: relsError } = await db.from('professores_turmas').select('turma_id').eq('professor_id', professorUid);
-            if (relsError || !rels || rels.length === 0) return;
+            const { data: rels } = await safeQuery(db.from('professores_turmas').select('turma_id').eq('professor_id', professorUid));
+            if (!rels || rels.length === 0) return;
             
             const turmaIds = rels.map(r => r.turma_id);
-            const { data, error } = await db.from('turmas').select('id, nome_turma').in('id', turmaIds);
+            const { data } = await safeQuery(db.from('turmas').select('id, nome_turma').in('id', turmaIds));
 
-            if (error) return;
+            if (!data) return;
             turmaSelect.innerHTML = '<option value="">Selecione uma turma</option>';
             data.forEach(t => turmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
         }
@@ -650,15 +687,15 @@
             if (!turmaId || !data) return;
 
             chamadaHeader.innerHTML = '<div class="loader mx-auto"></div>';
-            const { data: alunos, error } = await db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo');
-            if (error || !alunos) return;
+            const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo'));
+            if (!alunos) return;
             if (alunos.length === 0) {
                 chamadaHeader.textContent = 'Nenhum aluno ativo encontrado.';
                 return;
             }
 
-            const { data: presencas } = await db.from('presencas').select('aluno_id, status').eq('turma_id', turmaId).eq('data', data);
-            const presencasMap = new Map(presencas.map(p => [p.aluno_id, p.status]));
+            const { data: presencas } = await safeQuery(db.from('presencas').select('aluno_id, status').eq('turma_id', turmaId).eq('data', data));
+            const presencasMap = new Map((presencas || []).map(p => [p.aluno_id, p.status]));
 
             alunos.forEach(aluno => {
                 const statusAtual = presencasMap.get(aluno.id) || 'presente';
@@ -688,7 +725,7 @@
                 registrado_por_uid: currentUser.id
             }));
             
-            const { error } = await db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' });
+            const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
             
             if(error) {
                 showToast('Erro ao salvar: ' + error.message, true);
@@ -704,13 +741,13 @@
         // ============= LÓGICA DO PAINEL DO ADMINISTRADOR ===============
         // ===============================================================
         async function loadAdminData() {
-            const { data: turmas } = await db.from('turmas').select('id, nome_turma');
+            const { data: turmas } = await safeQuery(db.from('turmas').select('id, nome_turma'));
             turmasCache = turmas || [];
 
-            const { data: profs } = await db.from('usuarios').select('id, user_uid, nome').eq('papel', 'professor').eq('status', 'ativo');
+            const { data: profs } = await safeQuery(db.from('usuarios').select('id, user_uid, nome').eq('papel', 'professor').eq('status', 'ativo'));
             professoresCache = profs || [];
             
-            const { data: allAlunos } = await db.from('alunos').select('id, nome_completo');
+            const { data: allAlunos } = await safeQuery(db.from('alunos').select('id, nome_completo'));
             alunosCache = allAlunos || [];
         }
 
@@ -720,8 +757,8 @@
             await loadDailySummary();
             await renderDashboardCalendar();
             
-            const { count, error } = await db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento');
-            document.getElementById('dashboard-acompanhamento').textContent = error ? 'N/A' : count;
+            const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento'));
+            document.getElementById('dashboard-acompanhamento').textContent = count === null ? 'N/A' : count;
         }
 
         async function loadDailySummary() {
@@ -734,15 +771,14 @@
             faltasEl.textContent = '...';
             ausentesListEl.innerHTML = '<li>Carregando...</li>';
 
-            const { data, error } = await db.from('presencas').select('status, alunos ( nome_completo ), turmas ( nome_turma )').eq('data', selectedDate).eq('status', 'falta');
+            const { data } = await safeQuery(db.from('presencas').select('status, alunos ( nome_completo ), turmas ( nome_turma )').eq('data', selectedDate).eq('status', 'falta'));
             
-            if (error) {
-                console.error("Erro ao buscar resumo diário:", error);
+            if (!data) {
                 ausentesListEl.innerHTML = `<li>Erro ao carregar dados.</li>`;
                 return;
             }
 
-            const { count: totalPresencas } = await db.from('presencas').select('*', { count: 'exact', head: true }).eq('data', selectedDate).eq('status', 'presente');
+            const { count: totalPresencas } = await safeQuery(db.from('presencas').select('*', { count: 'exact', head: true }).eq('data', selectedDate).eq('status', 'presente'));
             
             presencasEl.textContent = totalPresencas || 0;
             faltasEl.textContent = data.length;
@@ -765,9 +801,9 @@
             const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
             const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
             
-            const { data: eventos } = await db.from('eventos').select('*')
+            const { data: eventos } = await safeQuery(db.from('eventos').select('*')
                 .or(`data.gte.${monthStart},data_fim.gte.${monthStart}`)
-                .or(`data.lte.${monthEnd},data_fim.lte.${monthEnd}`);
+                .or(`data.lte.${monthEnd},data_fim.lte.${monthEnd}`));
             
             let html = '';
             for (let i = 0; i < firstDayOfMonth; i++) {
@@ -807,13 +843,11 @@
         async function renderAlunosPanel(searchTerm = '') {
             alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Carregando...</td></tr>';
             
-            let query = db.from('alunos').select(`*, turmas ( nome_turma )`).order('nome_completo');
-            
+            let queryBuilder = db.from('alunos').select(`*, turmas ( nome_turma )`).order('nome_completo');
             if (searchTerm) {
-                query = query.or(`nome_completo.ilike.%${searchTerm}%,matricula.ilike.%${searchTerm}%,nome_responsavel.ilike.%${searchTerm}%`);
+                queryBuilder = queryBuilder.or(`nome_completo.ilike.%${searchTerm}%,matricula.ilike.%${searchTerm}%,nome_responsavel.ilike.%${searchTerm}%`);
             }
-
-            const { data, error } = await query;
+            const { data, error } = await safeQuery(queryBuilder);
 
             if (error) {
                 alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
@@ -843,7 +877,7 @@
             document.getElementById('aluno-delete-container').classList.add('hidden');
 
             if (editId) {
-                const { data } = await db.from('alunos').select('*').eq('id', editId).single();
+                const { data } = await safeQuery(db.from('alunos').select('*').eq('id', editId).single());
                 document.getElementById('aluno-modal-title').textContent = 'Editar Aluno';
                 document.getElementById('aluno-id').value = data.id;
                 document.getElementById('aluno-nome').value = data.nome_completo;
@@ -874,7 +908,8 @@
                 status: document.getElementById('aluno-status').value
             };
 
-            const { error } = id ? await db.from('alunos').update(alunoData).eq('id', id) : await db.from('alunos').insert(alunoData);
+            const queryBuilder = id ? db.from('alunos').update(alunoData).eq('id', id) : db.from('alunos').insert(alunoData);
+            const { error } = await safeQuery(queryBuilder);
             if (error) {
                 showToast('Erro ao salvar o aluno: ' + error.message, true);
             } else {
@@ -887,7 +922,7 @@
         // --- Acompanhamento APOIA ---
         async function renderApoiaPanel() {
             apoiaTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
-            const { data, error } = await db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('data_encaminhamento', { ascending: false });
+            const { data, error } = await safeQuery(db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('data_encaminhamento', { ascending: false }));
             if (error) {
                 apoiaTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
                 return;
@@ -914,7 +949,7 @@
             deleteContainer.classList.add('hidden');
             
             if (editId) {
-                const { data } = await db.from('apoia_encaminhamentos').select('*, alunos(nome_completo)').eq('id', editId).single();
+                const { data } = await safeQuery(db.from('apoia_encaminhamentos').select('*, alunos(nome_completo)').eq('id', editId).single());
                 document.getElementById('acompanhamento-modal-title').textContent = 'Editar Acompanhamento';
                 alunoSelect.innerHTML = `<option value="${data.aluno_id}">${data.alunos.nome_completo}</option>`;
                 alunoSelect.disabled = true;
@@ -944,7 +979,8 @@
                 observacoes: document.getElementById('acompanhamento-observacoes').value
             };
             
-            const { error } = id ? await db.from('apoia_encaminhamentos').update(acompanhamentoData).eq('id', id) : await db.from('apoia_encaminhamentos').insert(acompanhamentoData);
+            const queryBuilder = id ? db.from('apoia_encaminhamentos').update(acompanhamentoData).eq('id', id) : db.from('apoia_encaminhamentos').insert(acompanhamentoData);
+            const { error } = await safeQuery(queryBuilder);
 
             if(error) {
                 showToast('Erro ao salvar acompanhamento: ' + error.message, true);
@@ -960,17 +996,17 @@
             tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Gerando relatório...</td></tr>';
             imprimirApoiaRelatorioBtn.classList.add('hidden');
 
-            let query = db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('data_encaminhamento');
+            let queryBuilder = db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('data_encaminhamento');
 
             const dataInicio = document.getElementById('apoia-relatorio-data-inicio').value;
             const dataFim = document.getElementById('apoia-relatorio-data-fim').value;
             const statusFiltro = document.getElementById('apoia-relatorio-status').value;
 
-            if (dataInicio) query = query.gte('data_encaminhamento', dataInicio);
-            if (dataFim) query = query.lte('data_encaminhamento', dataFim);
-            if (statusFiltro) query = query.eq('status', statusFiltro);
+            if (dataInicio) queryBuilder = queryBuilder.gte('data_encaminhamento', dataInicio);
+            if (dataFim) queryBuilder = queryBuilder.lte('data_encaminhamento', dataFim);
+            if (statusFiltro) queryBuilder = queryBuilder.eq('status', statusFiltro);
 
-            const { data, error } = await query;
+            const { data, error } = await safeQuery(queryBuilder);
              if (error) {
                 tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
                 return;
@@ -995,7 +1031,7 @@
         // --- Gerenciamento de Professores ---
         async function renderProfessoresPanel() {
             professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
-            const { data, error } = await db.from('usuarios').select('id, user_uid, nome, email, status').eq('papel', 'professor').order('nome');
+            const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status').eq('papel', 'professor').order('nome'));
             if (error) {
                 professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
                 return;
@@ -1024,7 +1060,7 @@
             document.getElementById('professor-delete-container').classList.add('hidden');
             
             if (editId) {
-                const { data } = await db.from('usuarios').select('*').eq('id', editId).single();
+                const { data } = await safeQuery(db.from('usuarios').select('*').eq('id', editId).single());
                 document.getElementById('professor-modal-title').textContent = 'Editar Professor';
                 document.getElementById('professor-id').value = data.id;
                 document.getElementById('professor-nome').value = data.nome;
@@ -1050,7 +1086,7 @@
 
             if (id) { // Modo de Edição
                 const status = document.getElementById('professor-status').value;
-                const { error } = await db.from('usuarios').update({ nome, email, status }).eq('id', id);
+                const { error } = await safeQuery(db.from('usuarios').update({ nome, email, status }).eq('id', id));
                 if (error) {
                     showToast('Erro ao atualizar professor: ' + error.message, true);
                 } else {
@@ -1069,13 +1105,13 @@
                     return;
                 }
                 
-                const { error: profileError } = await db.from('usuarios').insert({
+                const { error: profileError } = await safeQuery(db.from('usuarios').insert({
                     user_uid: authData.user.id,
                     nome: nome,
                     email: email,
                     papel: 'professor',
                     status: 'ativo'
-                });
+                }));
 
                 if (profileError) {
                     showToast('Login criado, mas falha ao criar perfil.', true);
@@ -1108,7 +1144,7 @@
         // --- Gerenciamento de Turmas ---
         async function renderTurmasPanel() {
             turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
-            const { data, error } = await db.from('turmas').select(`id, nome_turma, professores_turmas(usuarios(nome))`).order('nome_turma');
+            const { data, error } = await safeQuery(db.from('turmas').select(`id, nome_turma, professores_turmas(usuarios(nome))`).order('nome_turma'));
             if (error) {
                 turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
                 return;
@@ -1139,13 +1175,13 @@
             document.getElementById('turma-delete-container').classList.add('hidden');
 
             if (editId) {
-                const { data } = await db.from('turmas').select('*').eq('id', editId).single();
+                const { data } = await safeQuery(db.from('turmas').select('*').eq('id', editId).single());
                 document.getElementById('turma-modal-title').textContent = 'Editar Turma';
                 document.getElementById('turma-id').value = data.id;
                 document.getElementById('turma-nome').value = data.nome_turma;
                 document.getElementById('turma-delete-container').classList.remove('hidden');
 
-                const { data: profsAtuais } = await db.from('professores_turmas').select('professor_id').eq('turma_id', editId);
+                const { data: profsAtuais } = await safeQuery(db.from('professores_turmas').select('professor_id').eq('turma_id', editId));
                 if (profsAtuais) {
                     const profIds = profsAtuais.map(p => p.professor_id);
                     turmaProfessoresList.querySelectorAll('input').forEach(input => {
@@ -1168,19 +1204,19 @@
             const selectedProfIds = Array.from(turmaProfessoresList.querySelectorAll('input:checked')).map(input => input.value);
             
             if (id) { // Edição
-                const { error: updateError } = await db.from('turmas').update({ nome_turma: nome }).eq('id', id);
+                const { error: updateError } = await safeQuery(db.from('turmas').update({ nome_turma: nome }).eq('id', id));
                 if (updateError) { showToast('Erro ao atualizar turma.', true); return; }
                 
-                await db.from('professores_turmas').delete().eq('turma_id', id);
+                await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
                 const rels = selectedProfIds.map(profId => ({ turma_id: id, professor_id: profId }));
-                await db.from('professores_turmas').insert(rels);
+                await safeQuery(db.from('professores_turmas').insert(rels));
             } else { // Criação
-                const { data, error: insertError } = await db.from('turmas').insert({ nome_turma: nome }).select().single();
+                const { data, error: insertError } = await safeQuery(db.from('turmas').insert({ nome_turma: nome }).select().single());
                 if (insertError) { showToast('Erro ao criar turma.', true); return; }
 
                 const newTurmaId = data.id;
                 const rels = selectedProfIds.map(profId => ({ turma_id: newTurmaId, professor_id: profId }));
-                await db.from('professores_turmas').insert(rels);
+                await safeQuery(db.from('professores_turmas').insert(rels));
             }
             showToast('Turma salva com sucesso!');
             closeModal(turmaModal);
@@ -1208,7 +1244,7 @@
             relatorioTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Gerando relatório...</td></tr>';
             imprimirRelatorioBtn.classList.add('hidden');
 
-            let query = db.from('presencas').select(`data, status, alunos ( nome_completo ), turmas ( nome_turma ), usuarios ( nome )`).order('data', { ascending: false });
+            let queryBuilder = db.from('presencas').select(`data, status, alunos ( nome_completo ), turmas ( nome_turma ), usuarios ( nome )`).order('data', { ascending: false });
 
             let dataInicio = document.getElementById('relatorio-data-inicio').value;
             let dataFim = document.getElementById('relatorio-data-fim').value;
@@ -1219,15 +1255,15 @@
 
             if (dataInicio && !dataFim) dataFim = dataInicio;
 
-            if (dataInicio) query = query.gte('data', dataInicio);
-            if (dataFim) query = query.lte('data', dataFim);
-            if (turmaId) query = query.eq('turma_id', turmaId);
-            if (alunoId) query = query.eq('aluno_id', alunoId);
-            if (profId) query = query.eq('registrado_por_uid', profId);
-            if (statusFiltro) query = query.eq('status', statusFiltro);
+            if (dataInicio) queryBuilder = queryBuilder.gte('data', dataInicio);
+            if (dataFim) queryBuilder = queryBuilder.lte('data', dataFim);
+            if (turmaId) queryBuilder = queryBuilder.eq('turma_id', turmaId);
+            if (alunoId) queryBuilder = queryBuilder.eq('aluno_id', alunoId);
+            if (profId) queryBuilder = queryBuilder.eq('registrado_por_uid', profId);
+            if (statusFiltro) queryBuilder = queryBuilder.eq('status', statusFiltro);
 
 
-            const { data, error } = await query;
+            const { data, error } = await safeQuery(queryBuilder);
 
             if (error) {
                 relatorioTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
@@ -1254,7 +1290,7 @@
         // --- Gerenciamento de Configurações ---
         async function renderConfigPanel() {
             try {
-                const { data, error } = await db.from('configuracoes').select('*').limit(1).single();
+                const { data, error } = await safeQuery(db.from('configuracoes').select('*').limit(1).single());
                 if (error && error.code !== 'PGRST116') throw error;
                 
                 if (data) {
@@ -1286,7 +1322,7 @@
                     alerta_chamada_nao_feita_ativo: document.getElementById('config-alerta-chamada-ativo').checked
                 };
 
-                const { error } = await db.from('configuracoes').upsert(configData).select();
+                const { error } = await safeQuery(db.from('configuracoes').upsert(configData).select());
                 if (error) throw error;
                 showToast('Configurações salvas com sucesso!');
             } catch(err) {
@@ -1300,16 +1336,16 @@
             const dataFimFilter = document.getElementById('evento-data-fim-filter').value;
             
             eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
-            let query = db.from('eventos').select('*').order('data', { ascending: false });
+            let queryBuilder = db.from('eventos').select('*').order('data', { ascending: false });
 
             if (dataInicioFilter && !dataFimFilter) {
-                 query = query.gte('data', dataInicioFilter).lte('data', dataInicioFilter);
+                 queryBuilder = queryBuilder.gte('data', dataInicioFilter).lte('data', dataInicioFilter);
             } else {
-                if (dataInicioFilter) query = query.gte('data', dataInicioFilter);
-                if (dataFimFilter) query = query.lte('data', dataFimFilter);
+                if (dataInicioFilter) queryBuilder = queryBuilder.gte('data', dataInicioFilter);
+                if (dataFimFilter) queryBuilder = queryBuilder.lte('data', dataFimFilter);
             }
 
-            const { data, error } = await query;
+            const { data, error } = await safeQuery(queryBuilder);
 
             if (error) {
                 eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
@@ -1336,7 +1372,7 @@
             eventoForm.reset();
             document.getElementById('evento-delete-container').classList.add('hidden');
             if (editId) {
-                const { data } = await db.from('eventos').select('*').eq('id', editId).single();
+                const { data } = await safeQuery(db.from('eventos').select('*').eq('id', editId).single());
                 document.getElementById('evento-modal-title').textContent = 'Editar Evento';
                 document.getElementById('evento-id').value = data.id;
                 document.getElementById('evento-descricao').value = data.descricao;
@@ -1364,7 +1400,8 @@
                 return;
             }
 
-            const { error } = id ? await db.from('eventos').update(eventoData).eq('id', id) : await db.from('eventos').insert(eventoData);
+            const queryBuilder = id ? db.from('eventos').update(eventoData).eq('id', id) : db.from('eventos').insert(eventoData);
+            const { error } = await safeQuery(queryBuilder);
             if (error) {
                 showToast('Erro ao salvar o evento: ' + error.message, true);
             } else {
@@ -1394,15 +1431,17 @@
             const confirmBtn = document.getElementById('confirm-delete-btn');
             const type = confirmBtn.dataset.type;
             const id = confirmBtn.dataset.id;
-            let error = null;
+            let queryBuilder;
 
-            if (type === 'aluno') ({ error } = await db.from('alunos').delete().eq('id', id));
+            if (type === 'aluno') queryBuilder = db.from('alunos').delete().eq('id', id);
             else if (type === 'turma') {
-                await db.from('professores_turmas').delete().eq('turma_id', id);
-                ({ error } = await db.from('turmas').delete().eq('id', id));
-            } else if (type === 'professor') ({ error } = await db.from('usuarios').delete().eq('id', id));
-            else if (type === 'evento') ({ error } = await db.from('eventos').delete().eq('id', id));
-            else if (type === 'acompanhamento') ({ error } = await db.from('apoia_encaminhamentos').delete().eq('id', id));
+                await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
+                queryBuilder = db.from('turmas').delete().eq('id', id);
+            } else if (type === 'professor') queryBuilder = db.from('usuarios').delete().eq('id', id);
+            else if (type === 'evento') queryBuilder = db.from('eventos').delete().eq('id', id);
+            else if (type === 'acompanhamento') queryBuilder = db.from('apoia_encaminhamentos').delete().eq('id', id);
+            
+            const { error } = await safeQuery(queryBuilder);
             
             if(error) {
                  showToast(`Não foi possível excluir o ${type}: ` + error.message, true);
@@ -1430,15 +1469,10 @@
                 return;
             }
 
-            // Adiciona a classe no container certo
             area.classList.add('printable-area');
-            
             tituloEl.textContent = tituloTexto;
             tituloEl.classList.remove('hidden');
-            
             window.print();
-
-            // Limpeza após impressão
             tituloEl.classList.add('hidden');
             area.classList.remove('printable-area');
         }
@@ -1448,7 +1482,7 @@
         // =================== EVENT LISTENERS ===========================
         // ===============================================================
         document.addEventListener('DOMContentLoaded', () => {
-             if (!checkVersion()) return; // PARA A EXECUÇÃO SE UMA ATUALIZAÇÃO FOR NECESSÁRIA
+             if (!checkVersion()) return;
 
             // Delegação de eventos centralizada para todo o body
             document.body.addEventListener('submit', async (e) => {
@@ -1490,7 +1524,7 @@
                         registrado_por_uid: currentUser.id
                     }));
                     
-                    const { error } = await db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' });
+                    const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
                     if(error) showToast('Erro ao salvar correção: ' + error.message, true);
                     else {
                         showToast('Chamada corrigida com sucesso!');
@@ -1622,11 +1656,11 @@
 
                 if (!turmaId || !data) return;
                 
-                const { data: alunos } = await db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo');
-                const { data: presencas } = await db.from('presencas').select('aluno_id, status').eq('turma_id', turmaId).eq('data', data);
-                const presencasMap = new Map(presencas.map(p => [p.aluno_id, p.status]));
+                const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo'));
+                const { data: presencas } = await safeQuery(db.from('presencas').select('aluno_id, status').eq('turma_id', turmaId).eq('data', data));
+                const presencasMap = new Map((presencas || []).map(p => [p.aluno_id, p.status]));
 
-                alunos.forEach(aluno => {
+                (alunos || []).forEach(aluno => {
                     const statusAtual = presencasMap.get(aluno.id) || 'presente';
                     const alunoDiv = document.createElement('div');
                     alunoDiv.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
@@ -1639,6 +1673,12 @@
             correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
 
             dataSelect.value = new Date().toISOString().split('T')[0];
+            
+            // Listeners de atividade para o timer de inatividade
+            ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
+                document.addEventListener(event, resetInactivityTimer);
+            });
+
             console.log("Sistema de Gestão de Faltas (Supabase) inicializado.");
         });
     </script>
