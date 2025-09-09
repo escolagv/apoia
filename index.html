@@ -211,11 +211,11 @@
         <div id="admin-view" class="hidden">
             <div class="flex h-screen bg-gray-200">
                 <aside class="w-64 bg-gray-800 text-white flex flex-col">
-                    <div class="p-4 border-b border-gray-700 flex items-center gap-3">
-                        <img src="./logo.png" alt="Logo da Escola" class="h-10">
+                    <div class="p-4 border-b border-gray-700 flex flex-col items-center gap-3">
+                        <img src="./logo_admin.png" alt="Logo da Escola" class="h-16">
                         <div>
                            <h1 class="text-xl font-bold">Painel Admin</h1>
-                           <p id="admin-info" class="text-sm text-gray-400"></p>
+                           <p id="admin-info" class="text-sm text-gray-400 text-center"></p>
                         </div>
                     </div>
                     <nav id="admin-sidebar-nav" class="flex-1 p-4 space-y-2">
@@ -231,7 +231,8 @@
                     <div class="p-4 border-t border-gray-700 space-y-4">
                          <div class="text-xs text-center text-gray-400">
                             <img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16 mx-auto mb-2">
-                            <p>Desenvolvido por: Cristian Berão - Altnix</p>
+                            <p>Desenvolvido por:</p>
+                            <p>Cristian Berão - Altnix Tecnologia</p>
                             <p>WhatsApp: (48) 99100-4780</p>
                             <a href="#" id="support-link-admin" class="text-blue-400 hover:underline">Suporte Técnico</a>
                         </div>
@@ -299,7 +300,7 @@
 
                         <div id="admin-turmas-panel" class="admin-panel hidden">
                             <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Turmas</h2><button id="add-turma-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Turma</button></div>
-                            <div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome da Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Professores</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="turmas-table-body"></tbody></table></div>
+                            <div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome da Turma</th><th class="p-3 text-left font-semibold text-gray-600">Professores</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="turmas-table-body"></tbody></table></div>
                         </div>
 
                          <div id="admin-apoia-panel" class="admin-panel hidden">
