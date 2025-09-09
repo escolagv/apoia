@@ -104,6 +104,14 @@
                 top: 0;
                 width: 100%;
             }
+            .print-logo {
+                display: block !important;
+                margin-bottom: 1rem;
+                max-height: 80px;
+                width: auto;
+                margin-left: auto;
+                margin-right: auto;
+            }
         }
     </style>
 </head>
@@ -325,6 +333,7 @@
                                     </div>
                                     <div>
                                         <h2 id="apoia-relatorio-titulo-impressao" class="text-xl font-bold text-center mb-4 hidden"></h2>
+                                        <img src="./logo.png" alt="Logo da Escola" class="hidden print-logo">
                                         <table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Aluno</th><th class="p-3 text-left font-semibold text-gray-600">Data</th><th class="p-3 text-left font-semibold text-gray-600">Motivo</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Observações</th></tr></thead><tbody id="apoia-relatorio-table-body"></tbody></table>
                                     </div>
                                 </div>
@@ -344,7 +353,7 @@
                                         <input type="date" id="evento-data-fim-filter" class="w-full mt-1 p-2 border rounded-md">
                                     </div>
                                 </div>
-                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
+                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left font-semibold text-gray-600">Descrição</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
                             </div>
                         </div>
 
@@ -371,7 +380,8 @@
                                 </div>
                                 <div>
                                     <h2 id="relatorio-titulo-impressao" class="text-xl font-bold text-center mb-4 hidden"></h2>
-                                    <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Aluno</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table>
+                                     <img src="./logo.png" alt="Logo da Escola" class="hidden print-logo">
+                                    <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Aluno</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table>
                                 </div>
                             </div>
                         </div>
@@ -472,6 +482,9 @@
         const turmasTableBody = document.getElementById('turmas-table-body');
         const eventosTableBody = document.getElementById('eventos-table-body');
         const dashboardDatePicker = document.getElementById('dashboard-date-picker');
+        const notificationBell = document.getElementById('notification-bell');
+        const notificationPanel = document.getElementById('notification-panel');
+        const notificationList = document.getElementById('notification-list');
         // Modals
         const allModals = document.querySelectorAll('.fixed.inset-0.z-50');
         const alunoModal = document.getElementById('aluno-modal');
@@ -620,6 +633,7 @@
                         showView('admin-view');
                         await loadAdminData();
                         renderDashboardPanel();
+                        loadNotifications();
                     } else if (papel === 'professor') {
                         document.getElementById('professor-info').textContent = nome || currentUser.email;
                         showView('professor-view');
@@ -1595,9 +1609,9 @@
                 if (target.closest('#confirm-delete-btn')) handleConfirmDelete();
                 if (target.closest('#admin-logout-btn') || target.closest('#professor-logout-btn')) signOutUser();
                 if (target.closest('#gerar-relatorio-btn')) handleGerarRelatorio();
-                if (target.closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('#relatorio-resultados', 'relatorio-titulo-impressao', `Relatório de Frequência`);
+                if (target.closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('#relatorio-resultados', '#relatorio-titulo-impressao', `Relatório de Frequência`);
                  if (target.closest('#gerar-apoia-relatorio-btn')) handleGerarApoiaRelatorio();
-                if (target.closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('#apoia-relatorio-resultados', 'apoia-relatorio-titulo-impressao', 'Relatório de Acompanhamento APOIA');
+                if (target.closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('#apoia-relatorio-resultados', '#apoia-relatorio-titulo-impressao', 'Relatório de Acompanhamento APOIA');
                 if (target.closest('#correcao-chamada-btn')) {
                     correcaoChamadaModal.classList.remove('hidden');
                     const turmaSel = document.getElementById('correcao-turma-select');
