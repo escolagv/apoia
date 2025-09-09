@@ -381,7 +381,7 @@
                                 <div>
                                     <h2 id="relatorio-titulo-impressao" class="text-xl font-bold text-center mb-4 hidden"></h2>
                                     <img src="./logo.png" alt="Logo da Escola" class="hidden print-logo">
-                                    <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Aluno</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table>
+                                    <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Aluno</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table>
                                 </div>
                             </div>
                         </div>
@@ -624,7 +624,14 @@
                     const { data, error } = await safeQuery(db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single());
 
                     if (error || !data || data.status !== 'ativo') {
-                        throw new Error('Perfil não encontrado ou inativo.');
+                        // Não força o logout aqui para evitar o loop. Apenas mostra o erro.
+                        loginError.textContent = 'Login válido, mas não foi possível carregar seu perfil. Contate o suporte.';
+                        // Limpa o estado da aplicação para evitar que dados antigos causem problemas
+                        resetApplicationState(); 
+                        showView('login-view');
+                        // Desloga após um tempo para não ficar em um estado inválido
+                        setTimeout(() => db.auth.signOut(), 5000);
+                        return;
                     }
 
                     const { papel, nome } = data;
