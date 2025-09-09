@@ -353,7 +353,7 @@
                                         <input type="date" id="evento-data-fim-filter" class="w-full mt-1 p-2 border rounded-md">
                                     </div>
                                 </div>
-                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left font-semibold text-gray-600">Descrição</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
+                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
                             </div>
                         </div>
 
@@ -380,7 +380,7 @@
                                 </div>
                                 <div>
                                     <h2 id="relatorio-titulo-impressao" class="text-xl font-bold text-center mb-4 hidden"></h2>
-                                     <img src="./logo.png" alt="Logo da Escola" class="hidden print-logo">
+                                    <img src="./logo.png" alt="Logo da Escola" class="hidden print-logo">
                                     <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Aluno</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table>
                                 </div>
                             </div>
@@ -1460,11 +1460,16 @@
         }
 
         function handleImprimirRelatorio(areaSelector, tituloId, tituloTexto) {
-            const tituloEl = document.getElementById(tituloId);
             const area = document.querySelector(areaSelector);
-            
-            if (!area || !tituloEl) {
-                console.error("Elementos de impressão não encontrados:", areaSelector, tituloId);
+            if (!area) {
+                console.error("Área de impressão não encontrada:", areaSelector);
+                showToast("Erro ao preparar impressão.", true);
+                return;
+            }
+
+            const tituloEl = area.querySelector('h2');
+            if (!tituloEl) {
+                console.error("Elemento de título não encontrado dentro da área:", areaSelector);
                 showToast("Erro ao preparar impressão.", true);
                 return;
             }
@@ -1472,7 +1477,9 @@
             area.classList.add('printable-area');
             tituloEl.textContent = tituloTexto;
             tituloEl.classList.remove('hidden');
+            
             window.print();
+
             tituloEl.classList.add('hidden');
             area.classList.remove('printable-area');
         }
