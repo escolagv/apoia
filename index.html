@@ -90,6 +90,9 @@
         }
 
         /* --- ESTILOS DE IMPRESSÃO ATUALIZADOS --- */
+        .print-header {
+            display: none; /* Garante que o cabeçalho esteja oculto por padrão */
+        }
         @media print {
             body * {
                 visibility: hidden;
@@ -339,7 +342,7 @@
                                     </div>
                                     <div class="printable-area">
                                         <!-- NOVO CABEÇALHO DE IMPRESSÃO -->
-                                        <div class="print-header">
+                                        <div class="print-header hidden">
                                             <img src="./logo.png" alt="Logo da Escola">
                                             <div class="print-header-info">
                                                 <h2 id="apoia-relatorio-titulo-impressao">Relatório de Acompanhamento APOIA</h2>
@@ -393,7 +396,7 @@
                                 </div>
                                 <div class="printable-area">
                                     <!-- NOVO CABEÇALHO DE IMPRESSÃO -->
-                                    <div class="print-header">
+                                    <div class="print-header hidden">
                                         <img src="./logo.png" alt="Logo da Escola">
                                         <div class="print-header-info">
                                             <h2 id="relatorio-titulo-impressao">Relatório de Frequência</h2>
@@ -906,7 +909,11 @@
         async function renderAlunosPanel(searchTerm = '') {
             alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Carregando...</td></tr>';
             
-            let queryBuilder = db.from('alunos').select(`*, turmas ( nome_turma )`).order('nome_completo');
+            let queryBuilder = db.from('alunos').select(`*, turmas ( nome_turma )`)
+                .order('turma_id', { nullsFirst: false })
+                .order('status', { ascending: true }) // 'ativo' vem antes de 'inativo'
+                .order('nome_completo', { ascending: true });
+
             if (searchTerm) {
                 queryBuilder = queryBuilder.or(`nome_completo.ilike.%${searchTerm}%,matricula.ilike.%${searchTerm}%,nome_responsavel.ilike.%${searchTerm}%`);
             }
@@ -1094,7 +1101,10 @@
         // --- Gerenciamento de Professores ---
         async function renderProfessoresPanel() {
             professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
-            const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status').eq('papel', 'professor').order('nome'));
+            const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status').eq('papel', 'professor')
+                .order('status', { ascending: true }) // 'ativo' primeiro
+                .order('nome', { ascending: true })
+            );
             if (error) {
                 professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
                 return;
@@ -1207,15 +1217,28 @@
         // --- Gerenciamento de Turmas ---
         async function renderTurmasPanel() {
             turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
-            const { data, error } = await safeQuery(db.from('turmas').select(`id, nome_turma, professores_turmas(usuarios(nome))`).order('nome_turma'));
+            const { data, error } = await safeQuery(db.from('turmas').select(`id, nome_turma, professores_turmas(usuarios(nome))`));
+            
             if (error) {
                 turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
                 return;
             }
+
+            // Ordenação natural em JavaScript
+            data.sort((a, b) => {
+                const numA = parseInt(a.nome_turma.match(/\d+/g));
+                const numB = parseInt(b.nome_turma.match(/\d+/g));
+                if (numA && numB && numA !== numB) {
+                    return numA - numB;
+                }
+                return a.nome_turma.localeCompare(b.nome_turma, undefined, {numeric: true});
+            });
+
             if (data.length === 0) {
                 turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhuma turma cadastrada.</td></tr>';
                 return;
             }
+
             turmasTableBody.innerHTML = data.map(t => {
                 const profs = t.professores_turmas.map(pt => pt.usuarios.nome).join(', ');
                 return `
@@ -1796,3 +1819,4 @@
     </script>
 </body>
 </html>
+
