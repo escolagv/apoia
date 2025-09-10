@@ -88,7 +88,42 @@
             opacity: 0;
             transform: translateX(100%);
         }
-
+.no-print {
+        display: none !important;
+    }
+    .print-header {
+        display: none; /* Fica escondido por padrão */
+    }
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        .print-header {
+            display: flex !important;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 1rem;
+        }
+        .print-header img {
+            max-height: 60px;
+            width: auto;
+        }
+        .print-header-info {
+            text-align: right;
+            color: #111827;
+        }
+        .print-header-info h2 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .print-header-info p {
+            font-size: 0.875rem;
+            margin: 0;
+        }
+    }
         @media print {
             body * {
                 visibility: hidden;
@@ -197,7 +232,7 @@
                     <div>
                         <p>Desenvolvido por: Cristian Berão - Altnix Tecnologia</p>
                         <p>WhatsApp: (48) 99100-4780</p>
-                        <a href="#" id="support-link-prof" class="text-blue-600 hover:underline">Suporte Técnico via WhatsApp</a>
+                        <a href="#" id="support-link-prof" target="_blank" class="text-blue-600 hover:underline">Suporte Técnico via WhatsApp</a>
                     </div>
                 </div>
             </footer>
@@ -229,7 +264,7 @@
                             <p>Desenvolvido por:</p>
                             <p>Cristian Berão - Altnix Tecnologia</p>
                             <p>WhatsApp: (48) 99100-4780</p>
-                            <a href="#" id="support-link-admin" class="text-blue-400 hover:underline">Suporte Técnico</a>
+                            <a href="#" id="support-link-admin" target="_blank" class="text-blue-400 hover:underline">Suporte Técnico</a>
                         </div>
                         <button id="admin-logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
                     </div>
@@ -313,12 +348,22 @@
                                     </div>
                                     <button id="gerar-apoia-relatorio-btn" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Gerar Relatório</button>
                                 </div>
-                                <div id="apoia-relatorio-resultados" class="mt-6 printable-area">
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h3 class="text-lg font-bold">Resultados do Relatório</h3>
-                                        <button id="imprimir-apoia-relatorio-btn" class="hidden px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700">Imprimir</button>
-                                    </div>
-                                    <div>
+                                <div id="apoia-relatorio-resultados" class="mt-6 bg-white p-6 rounded-lg shadow-md">
+    <div class="flex justify-between items-center mb-4 no-print">
+        <h3 class="text-lg font-bold">Resultados do Relatório</h3>
+        <button id="imprimir-apoia-relatorio-btn" class="hidden px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700">Imprimir</button>
+    </div>
+    <div class="printable-area">
+        <div class="print-header hidden">
+            <img src="./logo.png" alt="Logo da Escola">
+            <div class="print-header-info">
+                <h2>Relatório de Acompanhamento APOIA</h2>
+                <p id="apoia-periodo-impressao"></p>
+            </div>
+        </div>
+        <table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Aluno</th><th class="p-3 text-left font-semibold text-gray-600">Data</th><th class="p-3 text-left font-semibold text-gray-600">Motivo</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Observações</th></tr></thead><tbody id="apoia-relatorio-table-body"></tbody></table>
+    </div>
+</div>
                                         <h2 id="apoia-relatorio-titulo-impressao" class="text-xl font-bold text-center mb-4 hidden"></h2>
                                         <img src="./logo.png" alt="Logo da Escola" class="hidden print-logo">
                                         <table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Aluno</th><th class="p-3 text-left font-semibold text-gray-600">Data</th><th class="p-3 text-left font-semibold text-gray-600">Motivo</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Observações</th></tr></thead><tbody id="apoia-relatorio-table-body"></tbody></table>
@@ -360,12 +405,22 @@
                                 </div>
                                 <button id="gerar-relatorio-btn" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Gerar Relatório</button>
                             </div>
-                            <div id="relatorio-resultados" class="mt-6 bg-white p-6 rounded-lg shadow-md printable-area">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-bold">Resultados</h3>
-                                    <button id="imprimir-relatorio-btn" class="hidden px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700">Imprimir</button>
-                                </div>
-                                <div>
+                            <div id="relatorio-resultados" class="mt-6 bg-white p-6 rounded-lg shadow-md">
+    <div class="flex justify-between items-center mb-4 no-print">
+        <h3 class="text-lg font-bold">Resultados</h3>
+        <button id="imprimir-relatorio-btn" class="hidden px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700">Imprimir</button>
+    </div>
+    <div class="printable-area">
+        <div class="print-header hidden">
+            <img src="./logo.png" alt="Logo da Escola">
+            <div class="print-header-info">
+                <h2>Relatório de Frequência</h2>
+                <p id="faltas-periodo-impressao"></p>
+            </div>
+        </div>
+        <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Aluno</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table>
+    </div>
+</div>
                                     <h2 id="relatorio-titulo-impressao" class="text-xl font-bold text-center mb-4 hidden"></h2>
                                     <img src="./logo.png" alt="Logo da Escola" class="hidden print-logo">
                                     <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Aluno</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table>
@@ -591,11 +646,13 @@
         // ================= LÓGICA DE AUTENTICAÇÃO ======================
         // ===============================================================
         db.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
-                resetApplicationState();
-                resetLoginFormState();
-                clearTimeout(inactivityTimer);
-            }
+            if (papel === 'admin') {
+    document.getElementById('admin-info').textContent = nome || currentUser.email;
+    showView('admin-view');
+    await loadAdminData();
+    await renderDashboardPanel();
+    await loadNotifications(); // Carrega as notificações para o admin
+}
 
             if (event === 'PASSWORD_RECOVERY') {
                 showView('login-view');
@@ -728,6 +785,47 @@
         // ===============================================================
         // ============= LÓGICA DO PAINEL DO ADMINISTRADOR ===============
         // ===============================================================
+        async function loadNotifications() {
+    const notificationBell = document.getElementById('notification-bell');
+    const notificationList = document.getElementById('notification-list');
+
+    if (!notificationBell || !notificationList) return;
+
+    const { data, error, count } = await safeQuery(db.from('alertas').select('*', { count: 'exact' }).eq('lido', false).order('created_at', { ascending: false }));
+
+    if (error) {
+        console.error("Erro ao buscar notificações:", error);
+        return;
+    }
+
+    if (count > 0) {
+        notificationBell.classList.add('notification-badge');
+        notificationBell.setAttribute('data-count', count);
+    } else {
+        notificationBell.classList.remove('notification-badge');
+        notificationBell.setAttribute('data-count', 0);
+    }
+
+    if (data.length === 0) {
+        notificationList.innerHTML = '<p class="text-sm text-gray-500 p-4 text-center">Nenhuma nova notificação.</p>';
+        return;
+    }
+
+    notificationList.innerHTML = data.map(alert => `
+        <div class="p-2 border-b hover:bg-gray-100 cursor-pointer text-sm text-gray-700 notification-item" data-id="${alert.id}">
+            ${alert.mensagem}
+        </div>
+    `).join('');
+}
+
+async function markNotificationAsRead(alertId) {
+    const { error } = await safeQuery(db.from('alertas').update({ lido: true }).eq('id', alertId));
+    if (error) {
+        showToast("Erro ao marcar notificação como lida.", true);
+    } else {
+        await loadNotifications();
+    }
+}
         async function loadAdminData() {
             const { data: turmas } = await safeQuery(db.from('turmas').select('id, nome_turma'));
             turmasCache = turmas || [];
@@ -1447,13 +1545,39 @@
             closeModal(deleteConfirmModal);
         }
 
-        function handleImprimirRelatorio(areaSelector, tituloId, tituloTexto) {
-            const area = document.querySelector(areaSelector);
-            if (!area) {
-                console.error("Área de impressão não encontrada:", areaSelector);
-                showToast("Erro ao preparar impressão.", true);
-                return;
-            }
+        function handleImprimirRelatorio(reportType) {
+    let areaSelector, dataInicioId, dataFimId, periodoElId;
+
+    if (reportType === 'faltas') {
+        areaSelector = '#relatorio-resultados';
+        dataInicioId = 'relatorio-data-inicio';
+        dataFimId = 'relatorio-data-fim';
+        periodoElId = 'faltas-periodo-impressao';
+    } else if (reportType === 'apoia') {
+        areaSelector = '#apoia-relatorio-resultados';
+        dataInicioId = 'apoia-relatorio-data-inicio';
+        dataFimId = 'apoia-relatorio-data-fim';
+        periodoElId = 'apoia-periodo-impressao';
+    } else {
+        return;
+    }
+
+    const periodoEl = document.getElementById(periodoElId);
+    const dataInicio = document.getElementById(dataInicioId).value;
+    const dataFim = document.getElementById(dataFimId).value;
+
+    if (periodoEl) {
+        if (dataInicio && dataFim) {
+            const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
+            const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
+            periodoEl.textContent = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
+        } else {
+            periodoEl.textContent = 'Período: Todas as datas';
+        }
+    }
+
+    window.print();
+}
 
             const tituloEl = area.querySelector('h2');
             if (!tituloEl) {
@@ -1477,6 +1601,18 @@
         // =================== EVENT LISTENERS ===========================
         // ===============================================================
         document.addEventListener('DOMContentLoaded', () => {
+            const setupSupportLinks = () => {
+        const numero = "5548991004780"; // Número com código do país
+        const mensagem = "Olá! Mensagem enviada do Sistema de chamadas da EEB Getúlio Vargas. Preciso de suporte.";
+        const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+
+        const linkProf = document.getElementById('support-link-prof');
+        const linkAdmin = document.getElementById('support-link-admin');
+
+        if (linkProf) linkProf.href = url;
+        if (linkAdmin) linkAdmin.href = url;
+    };
+    setupSupportLinks();
             // Delegação de eventos centralizada para todo o body
             document.body.addEventListener('submit', async (e) => {
                 if (e.target.id === 'login-form') {
@@ -1547,6 +1683,20 @@
             });
 
             document.body.addEventListener('click', (e) => {
+                const notificationPanel = document.getElementById('notification-panel');
+
+    if (e.target.closest('#notification-bell')) {
+        e.stopPropagation();
+        notificationPanel.classList.toggle('hidden');
+    } else if (notificationPanel && !notificationPanel.classList.contains('hidden') && !e.target.closest('#notification-panel')) {
+        notificationPanel.classList.add('hidden');
+    }
+
+    const notificationItem = e.target.closest('.notification-item');
+    if (notificationItem) {
+        const alertId = notificationItem.dataset.id;
+        markNotificationAsRead(alertId);
+    }
                 const target = e.target;
                 
                 if (target.closest('#toggle-password-btn')) {
@@ -1604,9 +1754,9 @@
                 if (target.closest('#confirm-delete-btn')) handleConfirmDelete();
                 if (target.closest('#admin-logout-btn') || target.closest('#professor-logout-btn')) signOutUser();
                 if (target.closest('#gerar-relatorio-btn')) handleGerarRelatorio();
-                if (target.closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('#relatorio-resultados', '#relatorio-titulo-impressao', `Relatório de Frequência`);
-                 if (target.closest('#gerar-apoia-relatorio-btn')) handleGerarApoiaRelatorio();
-                if (target.closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('#apoia-relatorio-resultados', '#apoia-relatorio-titulo-impressao', 'Relatório de Acompanhamento APOIA');
+                if (target.closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('faltas');                 
+                if (target.closest('#gerar-apoia-relatorio-btn')) handleGerarApoiaRelatorio();
+                if (target.closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('apoia');
                 if (target.closest('#correcao-chamada-btn')) {
                     correcaoChamadaModal.classList.remove('hidden');
                     const turmaSel = document.getElementById('correcao-turma-select');
