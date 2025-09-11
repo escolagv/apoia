@@ -33,7 +33,6 @@
             justify-content: center;
             font-weight: bold;
         }
-        /* Estilo para loading spinner */
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
@@ -46,23 +45,21 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* Estilo para o Modal */
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5);
         }
-        /* Estilos para o Calendário Visual */
         .calendar-day-event {
-            background-color: #3b82f6; /* bg-blue-500 */
+            background-color: #3b82f6;
             color: white;
             border-radius: 9999px;
             font-weight: bold;
         }
         .calendar-day-weekend {
-            background-color: #fef08a; /* bg-yellow-200 */
+            background-color: #fef08a;
         }
         .tooltip {
             visibility: hidden;
-            background-color: #1f2937; /* bg-gray-800 */
+            background-color: #1f2937;
             color: #fff;
             text-align: center;
             border-radius: 6px;
@@ -80,7 +77,6 @@
             visibility: visible;
             opacity: 1;
         }
-        /* Estilos para o Toast */
         .toast {
             transition: opacity 0.5s, transform 0.5s;
         }
@@ -88,7 +84,6 @@
             opacity: 0;
             transform: translateX(100%);
         }
-        /* Estilo para cartão clicável */
         .clickable-card {
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -97,10 +92,8 @@
             transform: translateY(-4px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-
-        /* --- ESTILOS DE IMPRESSÃO ATUALIZADOS --- */
         .print-header {
-            display: none; /* Garante que o cabeçalho esteja oculto por padrão na tela */
+            display: none;
         }
         @media print {
             body * {
@@ -116,12 +109,12 @@
                 width: 100%;
             }
             .print-header {
-                display: flex !important; /* Usa flexbox para alinhar na impressão */
-                justify-content: space-between; /* Espaço entre logo e texto */
-                align-items: center; /* Alinha verticalmente */
+                display: flex !important;
+                justify-content: space-between;
+                align-items: center;
                 padding-bottom: 1rem;
                 margin-bottom: 1.5rem;
-                border-bottom: 2px solid #e5e7eb; /* Linha separadora */
+                border-bottom: 2px solid #e5e7eb;
             }
             .print-header img {
                 max-height: 60px;
@@ -167,19 +160,12 @@
                         <div class="relative">
                             <input type="password" id="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10" placeholder="********" autocomplete="current-password">
                             <button type="button" id="toggle-password-btn" class="absolute inset-y-0 right-0 top-1 flex items-center px-3 text-gray-500 hover:text-gray-700">
-                                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                </svg>
+                                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
                             </button>
                         </div>
                     </div>
-                    <button type="submit" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400">
-                        Entrar
-                    </button>
+                    <button type="submit" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400">Entrar</button>
                     <p id="login-error" class="text-sm text-center text-red-600"></p>
                 </form>
             </div>
@@ -200,53 +186,25 @@
                 <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
                     <h2 class="text-2xl font-bold mb-4">Lançar Chamada</h2>
                     <div class="flex flex-col md:flex-row gap-4 mb-6">
-                        <div class="flex-1">
-                            <label for="professor-turma-select" class="block text-sm font-medium text-gray-700">Turma</label>
-                            <select id="professor-turma-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm">
-                                <option value="">Carregando turmas...</option>
-                            </select>
-                        </div>
-                        <div class="flex-1">
-                            <label for="professor-data-select" class="block text-sm font-medium text-gray-700">Data</label>
-                            <input type="date" id="professor-data-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm">
-                        </div>
+                        <div class="flex-1"><label for="professor-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="professor-turma-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"><option value="">Carregando turmas...</option></select></div>
+                        <div class="flex-1"><label for="professor-data-select" class="block text-sm font-medium text-gray-700">Data</label><input type="date" id="professor-data-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"></div>
                     </div>
                     <div id="chamada-lista-container">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 id="chamada-header" class="text-lg font-semibold">Selecione uma turma e data</h3>
-                            <button id="marcar-todos-presentes-btn" class="hidden px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700">Marcar Todos como Presentes</button>
-                        </div>
-                        <div id="chamada-lista-alunos" class="space-y-3"></div>
+                        <div class="flex justify-between items-center mb-4"><h3 id="chamada-header" class="text-lg font-semibold">Selecione uma turma e data</h3></div>
+                        <div id="chamada-lista-alunos" class="space-y-4"></div>
                     </div>
-                    <div class="mt-8 text-center">
-                        <button id="salvar-chamada-btn" class="hidden w-full md:w-auto px-8 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400">
-                            Salvar Chamada
-                        </button>
-                    </div>
+                    <div class="mt-8 text-center"><button id="salvar-chamada-btn" class="hidden w-full md:w-auto px-8 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400">Salvar Chamada</button></div>
                 </div>
             </main>
             <footer class="text-center p-4 text-xs text-gray-500">
-                <div class="flex items-center justify-center gap-4">
-                    <img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16">
-                    <div>
-                        <p>Desenvolvido por: Cristian Berão - Altnix Tecnologia</p>
-                        <p>WhatsApp: (48) 99100-4780</p>
-                        <a href="#" id="support-link-prof" class="text-blue-600 hover:underline">Suporte Técnico via WhatsApp</a>
-                    </div>
-                </div>
+                <div class="flex items-center justify-center gap-4"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16"><div><p>Desenvolvido por: Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-prof" class="text-blue-600 hover:underline">Suporte Técnico via WhatsApp</a></div></div>
             </footer>
         </div>
 
         <div id="admin-view" class="hidden">
             <div class="flex h-screen bg-gray-200">
                 <aside class="w-64 bg-gray-800 text-white flex flex-col">
-                    <div class="p-4 border-b border-gray-700 flex flex-col items-center gap-3">
-                        <img src="./logo_admin.png" alt="Logo da Escola" class="h-16">
-                        <div>
-                           <h1 class="text-xl font-bold">Painel Admin</h1>
-                           <p id="admin-info" class="text-sm text-gray-400 text-center"></p>
-                        </div>
-                    </div>
+                    <div class="p-4 border-b border-gray-700 flex flex-col items-center gap-3"><img src="./logo_admin.png" alt="Logo da Escola" class="h-16"><div><h1 class="text-xl font-bold">Painel Admin</h1><p id="admin-info" class="text-sm text-gray-400 text-center"></p></div></div>
                     <nav id="admin-sidebar-nav" class="flex-1 p-4 space-y-2">
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md bg-gray-700" data-target="admin-dashboard-panel">Dashboard</a>
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-professores-panel">Professores</a>
@@ -257,213 +215,19 @@
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-relatorios-panel">Relatórios Faltas</a>
                         <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-config-panel">Configurações</a>
                     </nav>
-                    <div class="p-4 border-t border-gray-700 space-y-4">
-                        <div class="text-xs text-center text-gray-400">
-                            <img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16 mx-auto mb-2">
-                            <p>Desenvolvido por:</p>
-                            <p>Cristian Berão - Altnix Tecnologia</p>
-                            <p>WhatsApp: (48) 99100-4780</p>
-                            <a href="#" id="support-link-admin" class="text-blue-400 hover:underline">Suporte Técnico</a>
-                        </div>
-                        <button id="admin-logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
-                    </div>
+                    <div class="p-4 border-t border-gray-700 space-y-4"><div class="text-xs text-center text-gray-400"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16 mx-auto mb-2"><p>Desenvolvido por:</p><p>Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-admin" class="text-blue-400 hover:underline">Suporte Técnico</a></div><button id="admin-logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button></div>
                 </aside>
                 <main class="flex-1 p-6 overflow-y-auto">
-                    <div class="flex justify-end mb-4">
-                        <div class="relative">
-                            <div id="notification-bell" class="relative cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                            </div>
-                            <div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-20">
-                                <div class="p-4 font-bold border-b flex justify-between items-center">
-                                    <span>Notificações</span>
-                                    <button id="clear-notifications-btn" class="text-xs text-blue-600 hover:underline font-medium">Limpar Todas</button>
-                                </div>
-                                <div id="notification-list" class="p-2 max-h-64 overflow-y-auto"></div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="flex justify-end mb-4"><div class="relative"><div id="notification-bell" class="relative cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg></div><div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-20"><div class="p-4 font-bold border-b flex justify-between items-center"><span>Notificações</span><button id="clear-notifications-btn" class="text-xs text-blue-600 hover:underline font-medium">Limpar Todas</button></div><div id="notification-list" class="p-2 max-h-64 overflow-y-auto"></div></div></div></div>
                     <div id="admin-content">
-                        <div id="admin-dashboard-panel" class="admin-panel">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-2xl font-bold">Resumo do Dia</h2>
-                                <input type="date" id="dashboard-date-picker" class="p-2 border rounded-md">
-                            </div>
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div>
-                                    <div id="dashboard-summary" class="flex flex-wrap gap-6 mb-6">
-                                        <div data-type="presencas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-green-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Presenças</p><p id="dashboard-presencas" class="text-2xl font-bold">...</p></div></div>
-                                        <div data-type="faltas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-red-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Faltas</p><p id="dashboard-faltas" class="text-2xl font-bold">...</p></div></div>
-                                        <div class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1"><div class="bg-yellow-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Em Acompanhamento</p><p id="dashboard-acompanhamento" class="text-2xl font-bold">...</p></div></div>
-                                    </div>
-                                    <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-2">Alunos Ausentes</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div>
-                                </div>
-                                <div class="bg-white p-6 rounded-lg shadow-md">
-                                    <div id="dashboard-calendar-container">
-                                        <div class="flex items-center justify-between mb-4">
-                                            <button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200">&lt;</button>
-                                            <h3 id="calendar-month-year" class="text-lg font-bold"></h3>
-                                            <button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200">&gt;</button>
-                                        </div>
-                                        <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-600">
-                                            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                                        </div>
-                                        <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center mt-2"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div id="admin-alunos-panel" class="admin-panel hidden">
-                           <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-2xl font-bold">Cadastro Geral de Alunos</h2>
-                                <div class="flex gap-4">
-                                    <input type="text" id="aluno-search-input" class="p-2 border rounded-md" placeholder="Buscar por nome, matrícula...">
-                                    <button id="add-aluno-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Aluno</button>
-                                </div>
-                            </div>
-                             <div class="bg-white p-6 rounded-lg shadow-md overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Nome</th><th class="p-3 text-left font-semibold text-gray-600">Matrícula</th><th class="p-3 text-left font-semibold text-gray-600">Turma</th><th class="p-3 text-left font-semibold text-gray-600">Responsável</th><th class="p-3 text-left font-semibold text-gray-600">Telefone</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="alunos-table-body"></tbody></table></div>
-                        </div>
-
-                        <div id="admin-professores-panel" class="admin-panel hidden">
-                            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Professores</h2><button id="add-professor-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Professor</button></div>
-                            <div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Email</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="professores-table-body"></tbody></table></div>
-                        </div>
-
-                        <div id="admin-turmas-panel" class="admin-panel hidden">
-                            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Turmas</h2><button id="add-turma-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Turma</button></div>
-                            <div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome da Turma</th><th class="p-3 text-left font-semibold text-gray-600">Professores</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="turmas-table-body"></tbody></table></div>
-                        </div>
-
-                         <div id="admin-apoia-panel" class="admin-panel hidden">
-                            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Acompanhamento APOIA</h2><button id="add-acompanhamento-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Aluno Manualmente</button></div>
-                            <div class="bg-white p-6 rounded-lg shadow-md">
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Aluno</th><th class="p-3 text-left font-semibold text-gray-600">Data</th><th class="p-3 text-left font-semibold text-gray-600">Motivo</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="apoia-table-body"></tbody></table>
-                                </div>
-                                <div id="apoia-pagination" class="flex justify-center items-center mt-4 space-x-1"></div>
-                                <div class="mt-8 pt-6 border-t">
-                                    <h3 class="text-xl font-bold mb-4">Relatório de Acompanhamento</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                        <div><label for="apoia-relatorio-data-inicio" class="block text-sm font-medium text-gray-700">De:</label><input type="date" id="apoia-relatorio-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div>
-                                        <div><label for="apoia-relatorio-data-fim" class="block text-sm font-medium text-gray-700">Até:</label><input type="date" id="apoia-relatorio-data-fim" class="w-full mt-1 p-2 border rounded-md"></div>
-                                        <div><label for="apoia-relatorio-status" class="block text-sm font-medium text-gray-700">Status:</label><select id="apoia-relatorio-status" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option><option value="Em andamento">Em andamento</option><option value="Finalizado">Finalizado</option></select></div>
-                                    </div>
-                                    <button id="gerar-apoia-relatorio-btn" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Gerar Relatório</button>
-                                </div>
-                                <div id="apoia-relatorio-resultados" class="mt-6 bg-white p-6 rounded-lg shadow-md">
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h3 class="text-lg font-bold">Resultados do Relatório</h3>
-                                        <button id="imprimir-apoia-relatorio-btn" class="hidden px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700">Imprimir</button>
-                                    </div>
-                                    <div class="printable-area">
-                                        <div class="print-header">
-                                            <img src="./logo.png" alt="Logo da Escola">
-                                            <div class="print-header-info">
-                                                <h2 id="apoia-relatorio-titulo-impressao">Relatório de Acompanhamento APOIA</h2>
-                                                <p id="apoia-relatorio-periodo-impressao"></p>
-                                            </div>
-                                        </div>
-                                        <table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Aluno</th><th class="p-3 text-left font-semibold text-gray-600">Data</th><th class="p-3 text-left font-semibold text-gray-600">Motivo</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Observações</th></tr></thead><tbody id="apoia-relatorio-table-body"></tbody></table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div id="admin-calendario-panel" class="admin-panel hidden">
-                            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Calendário de Eventos</h2><button id="add-evento-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Evento</button></div>
-                            <div class="bg-white p-6 rounded-lg shadow-md">
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                                    <div class="md:col-span-2">
-                                        <label for="evento-data-inicio-filter" class="block text-sm font-medium text-gray-700">Filtrar de:</label>
-                                        <input type="date" id="evento-data-inicio-filter" class="w-full mt-1 p-2 border rounded-md">
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <label for="evento-data-fim-filter" class="block text-sm font-medium text-gray-700">Até:</label>
-                                        <input type="date" id="evento-data-fim-filter" class="w-full mt-1 p-2 border rounded-md">
-                                    </div>
-                                </div>
-                                <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table>
-                            </div>
-                        </div>
-
-                        <div id="admin-relatorios-panel" class="admin-panel hidden">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-2xl font-bold">Relatórios de Faltas</h2>
-                                <button id="correcao-chamada-btn" class="px-4 py-2 font-semibold text-white bg-orange-500 rounded-md hover:bg-orange-600">Corrigir/Lançar Chamada</button>
-                            </div>
-                            <div class="bg-white p-6 rounded-lg shadow-md">
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
-                                    <div><label for="relatorio-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label><input type="date" id="relatorio-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div>
-                                    <div><label for="relatorio-data-fim" class="block text-sm font-medium text-gray-700">Data de Fim</label><input type="date" id="relatorio-data-fim" class="w-full mt-1 p-2 border rounded-md"></div>
-                                    <div><label for="relatorio-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="relatorio-turma-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todas</option></select></div>
-                                    <div><label for="relatorio-aluno-select" class="block text-sm font-medium text-gray-700">Aluno</label><select id="relatorio-aluno-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option></select></div>
-                                     <div><label for="relatorio-professor-select" class="block text-sm font-medium text-gray-700">Registrado por</label><select id="relatorio-professor-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option></select></div>
-                                     <div><label for="relatorio-status-select" class="block text-sm font-medium text-gray-700">Status</label><select id="relatorio-status-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option><option value="presente">Apenas Presenças</option><option value="falta">Apenas Faltas</option></select></div>
-                                </div>
-                                <button id="gerar-relatorio-btn" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Gerar Relatório</button>
-                            </div>
-                            <div id="relatorio-resultados" class="mt-6 bg-white p-6 rounded-lg shadow-md">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-bold">Resultados</h3>
-                                    <button id="imprimir-relatorio-btn" class="hidden px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700">Imprimir</button>
-                                </div>
-                                <div class="printable-area">
-                                    <div class="print-header">
-                                        <img src="./logo.png" alt="Logo da Escola">
-                                        <div class="print-header-info">
-                                            <h2 id="relatorio-titulo-impressao">Relatório de Frequência</h2>
-                                            <p id="relatorio-periodo-impressao"></p>
-                                        </div>
-                                    </div>
-                                    <table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Aluno</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Justificativa</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="admin-config-panel" class="admin-panel hidden">
-                            <h2 class="text-2xl font-bold mb-4">Configurações de Alerta</h2>
-                            <form id="config-form" class="bg-white p-6 rounded-lg shadow-md space-y-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold">Regras de Faltas</h3>
-                                    <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label for="config-faltas-consecutivas" class="block text-sm font-medium">Alertar após X faltas consecutivas:</label>
-                                            <input type="number" id="config-faltas-consecutivas" class="w-full mt-1 p-2 border rounded-md">
-                                        </div>
-                                        <div>
-                                            <label for="config-faltas-intercaladas" class="block text-sm font-medium">Alertar após X faltas intercaladas:</label>
-                                            <input type="number" id="config-faltas-intercaladas" class="w-full mt-1 p-2 border rounded-md">
-                                        </div>
-                                        <div class="md:col-span-2">
-                                            <label for="config-faltas-dias" class="block text-sm font-medium">...dentro de um período de X dias:</label>
-                                            <input type="number" id="config-faltas-dias" class="w-full mt-1 p-2 border rounded-md">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold">Configurações de Alerta Automático</h3>
-                                    <div class="mt-2 space-y-2">
-                                        <div>
-                                            <label for="config-alerta-horario" class="block text-sm font-medium">Horário para verificação diária:</label>
-                                            <input type="time" id="config-alerta-horario" class="w-full mt-1 p-2 border rounded-md">
-                                            <p class="text-xs text-gray-500 mt-1">A verificação de alertas será executada uma vez por dia, na primeira oportunidade após o horário definido.</p>
-                                        </div>
-                                        <label class="flex items-center">
-                                            <input type="checkbox" id="config-alerta-faltas-ativo" class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded">
-                                            <span class="ml-2">Ativar alerta para excesso de faltas de alunos.</span>
-                                        </label>
-                                        <label class="flex items-center">
-                                            <input type="checkbox" id="config-alerta-chamada-ativo" class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded">
-                                            <span class="ml-2">Ativar alerta para chamadas não realizadas.</span>
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <button type="submit" class="px-6 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Salvar Configurações</button>
-                                </div>
-                            </form>
-                        </div>
+                        <div id="admin-dashboard-panel" class="admin-panel"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Resumo do Dia</h2><input type="date" id="dashboard-date-picker" class="p-2 border rounded-md"></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><div id="dashboard-summary" class="flex flex-wrap gap-6 mb-6"><div data-type="presencas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-green-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Presenças</p><p id="dashboard-presencas" class="text-2xl font-bold">...</p></div></div><div data-type="faltas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-red-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Faltas</p><p id="dashboard-faltas" class="text-2xl font-bold">...</p></div></div><div class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1"><div class="bg-yellow-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Em Acompanhamento</p><p id="dashboard-acompanhamento" class="text-2xl font-bold">...</p></div></div></div><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-2">Alunos Ausentes</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div></div><div class="bg-white p-6 rounded-lg shadow-md"><div id="dashboard-calendar-container"><div class="flex items-center justify-between mb-4"><button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200">&lt;</button><h3 id="calendar-month-year" class="text-lg font-bold"></h3><button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-600"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center mt-2"></div></div></div></div></div>
+                        <div id="admin-alunos-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Cadastro Geral de Alunos</h2><div class="flex gap-4"><input type="text" id="aluno-search-input" class="p-2 border rounded-md" placeholder="Buscar por nome, matrícula..."><button id="add-aluno-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Aluno</button></div></div><div class="bg-white p-6 rounded-lg shadow-md overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Nome</th><th class="p-3 text-left font-semibold text-gray-600">Matrícula</th><th class="p-3 text-left font-semibold text-gray-600">Turma</th><th class="p-3 text-left font-semibold text-gray-600">Responsável</th><th class="p-3 text-left font-semibold text-gray-600">Telefone</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="alunos-table-body"></tbody></table></div></div>
+                        <div id="admin-professores-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Professores</h2><button id="add-professor-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Professor</button></div><div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Email</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="professores-table-body"></tbody></table></div></div>
+                        <div id="admin-turmas-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Turmas</h2><button id="add-turma-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Turma</button></div><div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome da Turma</th><th class="p-3 text-left font-semibold text-gray-600">Professores</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="turmas-table-body"></tbody></table></div></div>
+                        <div id="admin-apoia-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Acompanhamento APOIA</h2><button id="add-acompanhamento-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Aluno Manualmente</button></div><div class="bg-white p-6 rounded-lg shadow-md"><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Aluno</th><th class="p-3 text-left font-semibold text-gray-600">Data</th><th class="p-3 text-left font-semibold text-gray-600">Motivo</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="apoia-table-body"></tbody></table></div><div id="apoia-pagination" class="flex justify-center items-center mt-4 space-x-1"></div><div class="mt-8 pt-6 border-t"><h3 class="text-xl font-bold mb-4">Relatório de Acompanhamento</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"><div><label for="apoia-relatorio-data-inicio" class="block text-sm font-medium text-gray-700">De:</label><input type="date" id="apoia-relatorio-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="apoia-relatorio-data-fim" class="block text-sm font-medium text-gray-700">Até:</label><input type="date" id="apoia-relatorio-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="apoia-relatorio-status" class="block text-sm font-medium text-gray-700">Status:</label><select id="apoia-relatorio-status" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option><option value="Em andamento">Em andamento</option><option value="Finalizado">Finalizado</option></select></div></div><button id="gerar-apoia-relatorio-btn" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Gerar Relatório</button></div><div id="apoia-relatorio-resultados" class="mt-6 bg-white p-6 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Resultados do Relatório</h3><button id="imprimir-apoia-relatorio-btn" class="hidden px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700">Imprimir</button></div><div class="printable-area"><div class="print-header"><img src="./logo.png" alt="Logo da Escola"><div class="print-header-info"><h2 id="apoia-relatorio-titulo-impressao">Relatório de Acompanhamento APOIA</h2><p id="apoia-relatorio-periodo-impressao"></p></div></div><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Aluno</th><th class="p-3 text-left font-semibold text-gray-600">Data</th><th class="p-3 text-left font-semibold text-gray-600">Motivo</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Observações</th></tr></thead><tbody id="apoia-relatorio-table-body"></tbody></table></div></div></div></div>
+                        <div id="admin-calendario-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Calendário de Eventos</h2><button id="add-evento-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Evento</button></div><div class="bg-white p-6 rounded-lg shadow-md"><div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4"><div class="md:col-span-2"><label for="evento-data-inicio-filter" class="block text-sm font-medium text-gray-700">Filtrar de:</label><input type="date" id="evento-data-inicio-filter" class="w-full mt-1 p-2 border rounded-md"></div><div class="md:col-span-2"><label for="evento-data-fim-filter" class="block text-sm font-medium text-gray-700">Até:</label><input type="date" id="evento-data-fim-filter" class="w-full mt-1 p-2 border rounded-md"></div></div><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table></div></div>
+                        <div id="admin-relatorios-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Relatórios de Faltas</h2><button id="correcao-chamada-btn" class="px-4 py-2 font-semibold text-white bg-orange-500 rounded-md hover:bg-orange-600">Corrigir/Lançar Chamada</button></div><div class="bg-white p-6 rounded-lg shadow-md"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4"><div><label for="relatorio-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label><input type="date" id="relatorio-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="relatorio-data-fim" class="block text-sm font-medium text-gray-700">Data de Fim</label><input type="date" id="relatorio-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="relatorio-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="relatorio-turma-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todas</option></select></div><div><label for="relatorio-aluno-select" class="block text-sm font-medium text-gray-700">Aluno</label><select id="relatorio-aluno-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option></select></div><div><label for="relatorio-professor-select" class="block text-sm font-medium text-gray-700">Registrado por</label><select id="relatorio-professor-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option></select></div><div><label for="relatorio-status-select" class="block text-sm font-medium text-gray-700">Status</label><select id="relatorio-status-select" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option><option value="presente">Apenas Presenças</option><option value="falta">Apenas Faltas</option></select></div></div><button id="gerar-relatorio-btn" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Gerar Relatório</button></div><div id="relatorio-resultados" class="mt-6 bg-white p-6 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Resultados</h3><button id="imprimir-relatorio-btn" class="hidden px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700">Imprimir</button></div><div class="printable-area"><div class="print-header"><img src="./logo.png" alt="Logo da Escola"><div class="print-header-info"><h2 id="relatorio-titulo-impressao">Relatório de Frequência</h2><p id="relatorio-periodo-impressao"></p></div></div><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Data</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Aluno</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Turma</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Justificativa</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table></div></div></div>
+                        <div id="admin-config-panel" class="admin-panel hidden"><h2 class="text-2xl font-bold mb-4">Configurações de Alerta</h2><form id="config-form" class="bg-white p-6 rounded-lg shadow-md space-y-6"><div><h3 class="text-lg font-semibold">Regras de Faltas</h3><div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="config-faltas-consecutivas" class="block text-sm font-medium">Alertar após X faltas consecutivas:</label><input type="number" id="config-faltas-consecutivas" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="config-faltas-intercaladas" class="block text-sm font-medium">Alertar após X faltas intercaladas:</label><input type="number" id="config-faltas-intercaladas" class="w-full mt-1 p-2 border rounded-md"></div><div class="md:col-span-2"><label for="config-faltas-dias" class="block text-sm font-medium">...dentro de um período de X dias:</label><input type="number" id="config-faltas-dias" class="w-full mt-1 p-2 border rounded-md"></div></div></div><div><h3 class="text-lg font-semibold">Configurações de Alerta Automático</h3><div class="mt-2 space-y-2"><div><label for="config-alerta-horario" class="block text-sm font-medium">Horário para verificação diária:</label><input type="time" id="config-alerta-horario" class="w-full mt-1 p-2 border rounded-md"><p class="text-xs text-gray-500 mt-1">A verificação de alertas será executada uma vez por dia, na primeira oportunidade após o horário definido.</p></div><label class="flex items-center"><input type="checkbox" id="config-alerta-faltas-ativo" class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded"><span class="ml-2">Ativar alerta para excesso de faltas de alunos.</span></label><label class="flex items-center"><input type="checkbox" id="config-alerta-chamada-ativo" class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded"><span class="ml-2">Ativar alerta para chamadas não realizadas.</span></label></div></div><div class="text-right"><button type="submit" class="px-6 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Salvar Configurações</button></div></form></div>
                     </div>
                 </main>
             </div>
@@ -476,34 +240,8 @@
         <div id="evento-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="evento-modal-title" class="text-xl font-bold mb-4"></h3><form id="evento-form"><input type="hidden" id="evento-id"><div class="space-y-4"><div><label for="evento-descricao" class="block text-sm font-medium text-gray-700">Descrição</label><input type="text" id="evento-descricao" required class="w-full mt-1 p-2 border rounded-md" placeholder="Ex: Feriado Nacional"></div><div class="grid grid-cols-2 gap-4"><div><label for="evento-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label><input type="date" id="evento-data-inicio" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="evento-data-fim" class="block text-sm font-medium text-gray-700">Data de Fim (Opcional)</label><input type="date" id="evento-data-fim" class="w-full mt-1 p-2 border rounded-md"></div></div></div><div class="mt-6 flex justify-between items-center"><div id="evento-delete-container" class="hidden"><button type="button" class="text-red-600 hover:underline text-sm delete-btn" data-type="evento">Excluir Evento</button></div><div><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
         <div id="reset-password-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">Redefinir Senha</h3><form id="reset-password-form"><div class="space-y-4"><div><label for="new-password" class="block text-sm font-medium text-gray-700">Nova Senha</label><input type="password" id="new-password" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirme a Nova Senha</label><input type="password" id="confirm-password" required class="w-full mt-1 p-2 border rounded-md"></div></div><p id="reset-password-error" class="text-sm text-center text-red-600 mt-4"></p><div class="mt-6 flex justify-end gap-4"><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar Nova Senha</button></div></form></div></div>
         <div id="delete-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4 text-red-600">Confirmar Exclusão</h3><p id="delete-confirm-message" class="mb-4"></p><div class="mb-4"><label class="flex items-center"><input type="checkbox" id="delete-confirm-checkbox" class="form-checkbox h-5 w-5 text-red-600"><span class="ml-2 text-sm">Sim, eu entendo e quero continuar.</span></label></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md disabled:bg-red-300" disabled>Excluir Permanentemente</button></div></div></div>
-        
-        <div id="correcao-chamada-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6"><h3 class="text-xl font-bold mb-4">Corrigir/Lançar Chamada (Admin)</h3><form id="correcao-chamada-form"><div class="flex flex-col md:flex-row gap-4 mb-6"><div class="flex-1"><label for="correcao-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="correcao-turma-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"></select></div><div class="flex-1"><label for="correcao-data-select" class="block text-sm font-medium text-gray-700">Data</label><input type="date" id="correcao-data-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"></div></div><div id="correcao-chamada-lista-container" class="max-h-96 overflow-y-auto pr-2"><div id="correcao-chamada-lista-alunos" class="space-y-3"></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar Correção</button></div></form></div></div>
-
-        <div id="aluno-historico-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6">
-                <div class="printable-area">
-                    <div class="print-header">
-                        <img src="./logo.png" alt="Logo da Escola">
-                        <div class="print-header-info">
-                            <h2 id="historico-titulo-impressao">Histórico de Frequência do Aluno</h2>
-                            <p id="historico-aluno-nome-impressao"></p>
-                        </div>
-                    </div>
-                    <div id="historico-summary" class="grid grid-cols-3 gap-4 mb-4 text-center">
-                        <div><p class="text-sm text-gray-500">Total de Presenças</p><p id="historico-presencas" class="text-xl font-bold text-green-600">0</p></div>
-                        <div><p class="text-sm text-gray-500">Total de Faltas</p><p id="historico-faltas" class="text-xl font-bold text-red-600">0</p></div>
-                        <div><p class="text-sm text-gray-500">Taxa de Assiduidade</p><p id="historico-assiduidade" class="text-xl font-bold text-blue-600">0%</p></div>
-                    </div>
-                    <div class="max-h-80 overflow-y-auto border-t pt-4">
-                        <table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-2 text-left font-semibold text-gray-600">Data</th><th class="p-2 text-left font-semibold text-gray-600">Status</th><th class="p-2 text-left font-semibold text-gray-600">Justificativa</th></tr></thead><tbody id="aluno-historico-table-body"></tbody></table>
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end gap-4">
-                    <button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Fechar</button>
-                    <button type="button" id="imprimir-historico-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md ml-2">Imprimir</button>
-                </div>
-            </div>
-        </div>
+        <div id="correcao-chamada-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6"><h3 class="text-xl font-bold mb-4">Corrigir/Lançar Chamada (Admin)</h3><form id="correcao-chamada-form"><div class="flex flex-col md:flex-row gap-4 mb-6"><div class="flex-1"><label for="correcao-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="correcao-turma-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"></select></div><div class="flex-1"><label for="correcao-data-select" class="block text-sm font-medium text-gray-700">Data</label><input type="date" id="correcao-data-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"></div></div><div id="correcao-chamada-lista-container" class="max-h-96 overflow-y-auto pr-2"><div id="correcao-chamada-lista-alunos" class="space-y-4"></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar Correção</button></div></form></div></div>
+        <div id="aluno-historico-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6"><div class="printable-area"><div class="print-header"><img src="./logo.png" alt="Logo da Escola"><div class="print-header-info"><h2 id="historico-titulo-impressao">Histórico de Frequência do Aluno</h2><p id="historico-aluno-nome-impressao"></p></div></div><div id="historico-summary" class="grid grid-cols-3 gap-4 mb-4 text-center"><div><p class="text-sm text-gray-500">Total de Presenças</p><p id="historico-presencas" class="text-xl font-bold text-green-600">0</p></div><div><p class="text-sm text-gray-500">Total de Faltas</p><p id="historico-faltas" class="text-xl font-bold text-red-600">0</p></div><div><p class="text-sm text-gray-500">Taxa de Assiduidade</p><p id="historico-assiduidade" class="text-xl font-bold text-blue-600">0%</p></div></div><div class="max-h-80 overflow-y-auto border-t pt-4"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-2 text-left font-semibold text-gray-600">Data</th><th class="p-2 text-left font-semibold text-gray-600">Status</th><th class="p-2 text-left font-semibold text-gray-600">Justificativa</th></tr></thead><tbody id="aluno-historico-table-body"></tbody></table></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Fechar</button><button type="button" id="imprimir-historico-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md ml-2">Imprimir</button></div></div></div>
 
     </div>
 
@@ -648,7 +386,6 @@
             allModals.forEach(modal => modal.classList.add('hidden'));
         }
         
-        // --- VERIFICADOR DE SEGURANÇA CENTRAL ---
         async function safeQuery(queryBuilder) {
             const { data, error, count } = await queryBuilder;
             if (error) {
@@ -661,9 +398,8 @@
             return { data, error, count };
         }
 
-        // --- TIMER DE INATIVIDADE ---
         let inactivityTimer;
-        const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos
+        const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
@@ -752,11 +488,7 @@
         async function loadChamada() {
             const turmaId = turmaSelect.value;
             const data = dataSelect.value;
-
-            const today = new Date();
-            const todayString = today.toISOString().split('T')[0];
-            const selectedDate = data;
-            const isEditable = selectedDate === todayString;
+            const isEditable = data === new Date().toISOString().split('T')[0];
 
             listaAlunosContainer.innerHTML = '';
             chamadaHeader.textContent = 'Selecione uma turma e data';
@@ -771,15 +503,37 @@
                 return;
             }
 
-            const { data: presencas } = await safeQuery(db.from('presencas').select('aluno_id, status').eq('turma_id', turmaId).eq('data', data));
-            const presencasMap = new Map((presencas || []).map(p => [p.aluno_id, p.status]));
+            const { data: presencas } = await safeQuery(db.from('presencas').select('aluno_id, status, justificativa').eq('turma_id', turmaId).eq('data', data));
+            const presencasMap = new Map((presencas || []).map(p => [p.aluno_id, { status: p.status, justificativa: p.justificativa }]));
 
             alunos.forEach(aluno => {
-                const statusAtual = presencasMap.get(aluno.id) || 'presente';
+                const presenca = presencasMap.get(aluno.id) || { status: 'presente', justificativa: null };
+                const isJustificada = presenca.justificativa === 'Falta justificada';
+                const isInjustificada = presenca.justificativa === 'Falta injustificada' || (!presenca.justificativa && presenca.status === 'falta');
+                const isOutros = !isJustificada && !isInjustificada && presenca.justificativa;
+                
                 const alunoDiv = document.createElement('div');
-                alunoDiv.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                alunoDiv.className = 'p-3 bg-gray-50 rounded-lg';
                 alunoDiv.dataset.alunoId = aluno.id;
-                alunoDiv.innerHTML = `<span class="font-medium">${aluno.nome_completo}</span><div class="flex items-center gap-4"><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600" ${statusAtual === 'presente' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Presente</span></label><label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600" ${statusAtual === 'falta' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Falta</span></label></div>`;
+
+                alunoDiv.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">${aluno.nome_completo}</span>
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600 status-radio" ${presenca.status === 'presente' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Presente</span></label>
+                            <label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600 status-radio" ${presenca.status === 'falta' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Falta</span></label>
+                        </div>
+                    </div>
+                    <div class="justificativa-container mt-3 pt-3 border-t border-gray-200 ${presenca.status === 'falta' ? '' : 'hidden'}">
+                        <div class="text-sm font-medium mb-2">Justificativa:</div>
+                        <div class="space-y-2 pl-2">
+                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="Falta justificada" class="form-radio h-4 w-4" ${isJustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Falta justificada</span></label>
+                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="Falta injustificada" class="form-radio h-4 w-4" ${isInjustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Falta injustificada</span></label>
+                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="outros" class="form-radio h-4 w-4" ${isOutros ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Outros</span></label>
+                            <input type="text" class="justificativa-outros-input mt-1 p-1 w-full border rounded-md text-sm" placeholder="Digite o motivo (opcional)..." value="${isOutros ? presenca.justificativa : ''}" ${!isEditable ? 'disabled' : ''}>
+                        </div>
+                    </div>
+                `;
                 listaAlunosContainer.appendChild(alunoDiv);
             });
 
@@ -794,13 +548,30 @@
         async function saveChamada() {
             salvarChamadaBtn.disabled = true;
             salvarChamadaBtn.innerHTML = '<div class="loader mx-auto"></div>';
-            const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => ({
-                aluno_id: parseInt(row.dataset.alunoId),
-                turma_id: parseInt(turmaSelect.value),
-                data: dataSelect.value,
-                status: row.querySelector('input[type="radio"]:checked').value,
-                registrado_por_uid: currentUser.id
-            }));
+            const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => {
+                const status = row.querySelector('.status-radio:checked').value;
+                let justificativa = null;
+                if (status === 'falta') {
+                    const justRadio = row.querySelector(`input[name="just-${row.dataset.alunoId}"]:checked`);
+                    if (justRadio) {
+                        if (justRadio.value === 'outros') {
+                            justificativa = row.querySelector('.justificativa-outros-input').value.trim() || 'Outros';
+                        } else {
+                            justificativa = justRadio.value;
+                        }
+                    } else {
+                         justificativa = 'Falta injustificada'; // Default se nada for marcado
+                    }
+                }
+                return {
+                    aluno_id: parseInt(row.dataset.alunoId),
+                    turma_id: parseInt(turmaSelect.value),
+                    data: dataSelect.value,
+                    status: status,
+                    justificativa: justificativa,
+                    registrado_por_uid: currentUser.id
+                };
+            });
             
             const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
             
@@ -819,12 +590,6 @@
         // ===============================================================
         
         async function loadNotifications() {
-            const notificationBell = document.getElementById('notification-bell');
-            const notificationList = document.getElementById('notification-list');
-            const clearNotificationsBtn = document.getElementById('clear-notifications-btn');
-
-            if (!notificationBell || !notificationList) return;
-
             const { data, error, count } = await safeQuery(db.from('alertas').select('*', { count: 'exact' }).eq('lido', false).order('created_at', { ascending: false }));
 
             if (error) {
@@ -832,7 +597,7 @@
                 return;
             }
             
-            clearNotificationsBtn.classList.toggle('hidden', count === 0);
+            document.getElementById('clear-notifications-btn').classList.toggle('hidden', count === 0);
 
             if (count > 0) {
                 notificationBell.classList.add('notification-badge');
@@ -844,34 +609,21 @@
 
             if (data.length === 0) {
                 notificationList.innerHTML = '<p class="text-sm text-gray-500 p-4 text-center">Nenhuma nova notificação.</p>';
-                return;
+            } else {
+                notificationList.innerHTML = data.map(alert => `<div class="p-2 border-b hover:bg-gray-100 cursor-pointer text-sm text-gray-700 notification-item" data-id="${alert.id}">${alert.mensagem}</div>`).join('');
             }
-
-            notificationList.innerHTML = data.map(alert => `
-                <div class="p-2 border-b hover:bg-gray-100 cursor-pointer text-sm text-gray-700 notification-item" data-id="${alert.id}">
-                    ${alert.mensagem}
-                </div>
-            `).join('');
         }
 
         async function markNotificationAsRead(alertId) {
             const { error } = await safeQuery(db.from('alertas').update({ lido: true }).eq('id', alertId));
-            if (error) {
-                showToast("Erro ao marcar notificação como lida.", true);
-            } else {
-                await loadNotifications();
-            }
+            if (error) showToast("Erro ao marcar notificação como lida.", true);
+            else await loadNotifications();
         }
 
         async function markAllNotificationsAsRead() {
-            const { error } = await safeQuery(
-                db.from('alertas').update({ lido: true }).eq('lido', false)
-            );
-            if (error) {
-                showToast("Erro ao limpar notificações.", true);
-            } else {
-                await loadNotifications();
-            }
+            const { error } = await safeQuery(db.from('alertas').update({ lido: true }).eq('lido', false));
+            if (error) showToast("Erro ao limpar notificações.", true);
+            else await loadNotifications();
         }
         
         async function loadAdminData() {
@@ -979,7 +731,7 @@
             
             let queryBuilder = db.from('alunos').select(`*, turmas ( nome_turma )`)
                 .order('turma_id', { nullsFirst: false })
-                .order('status', { ascending: true }) // 'ativo' vem antes de 'inativo'
+                .order('status', { ascending: true }) 
                 .order('nome_completo', { ascending: true });
 
             if (searchTerm) {
@@ -1083,7 +835,7 @@
 
             const { data, error } = await safeQuery(db.from('apoia_encaminhamentos')
                 .select(`*, alunos(nome_completo)`)
-                .order('status', { ascending: true }) // 'Em andamento' vem antes
+                .order('status', { ascending: true })
                 .order('data_encaminhamento', { ascending: false })
                 .range(from, to)
             );
@@ -1217,7 +969,7 @@
         async function renderProfessoresPanel() {
             professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
             const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status').eq('papel', 'professor')
-                .order('status', { ascending: true }) // 'ativo' primeiro
+                .order('status', { ascending: true }) 
                 .order('nome', { ascending: true })
             );
             if (error) {
@@ -1272,7 +1024,7 @@
             const nome = document.getElementById('professor-nome').value;
             const email = document.getElementById('professor-email').value;
 
-            if (id) { // Modo de Edição
+            if (id) {
                 const status = document.getElementById('professor-status').value;
                 const { error } = await safeQuery(db.from('usuarios').update({ nome, email, status }).eq('id', id));
                 if (error) {
@@ -1280,7 +1032,7 @@
                 } else {
                     showToast('Professor atualizado com sucesso!');
                 }
-            } else { // Modo de Criação
+            } else { 
                 const password = document.getElementById('professor-password').value;
                 if (password.length < 6) {
                     showToast('A senha temporária deve ter no mínimo 6 caracteres.', true);
@@ -1339,15 +1091,7 @@
                 return;
             }
 
-            // Ordenação natural em JavaScript
-            data.sort((a, b) => {
-                const numA = parseInt(a.nome_turma.match(/\d+/g));
-                const numB = parseInt(b.nome_turma.match(/\d+/g));
-                if (numA && numB && numA !== numB) {
-                    return numA - numB;
-                }
-                return a.nome_turma.localeCompare(b.nome_turma, undefined, {numeric: true});
-            });
+            data.sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, {numeric: true}));
 
             if (data.length === 0) {
                 turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhuma turma cadastrada.</td></tr>';
@@ -1370,7 +1114,6 @@
         async function openTurmaModal(editId = null) {
             turmaForm.reset();
             turmaProfessoresList.innerHTML = '';
-            // Usa o cache de usuários filtrando apenas os professores
             usuariosCache.filter(u => u.papel === 'professor').forEach(p => {
                 turmaProfessoresList.innerHTML += `<label class="flex items-center"><input type="checkbox" class="form-checkbox" value="${p.user_uid}"><span class="ml-2">${p.nome}</span></label>`;
             });
@@ -1387,9 +1130,7 @@
                 if (profsAtuais) {
                     const profIds = profsAtuais.map(p => p.professor_id);
                     turmaProfessoresList.querySelectorAll('input').forEach(input => {
-                        if (profIds.includes(input.value)) {
-                            input.checked = true;
-                        }
+                        if (profIds.includes(input.value)) input.checked = true;
                     });
                 }
             } else {
@@ -1405,20 +1146,20 @@
             const nome = document.getElementById('turma-nome').value;
             const selectedProfIds = Array.from(turmaProfessoresList.querySelectorAll('input:checked')).map(input => input.value);
             
-            if (id) { // Edição
+            if (id) {
                 const { error: updateError } = await safeQuery(db.from('turmas').update({ nome_turma: nome }).eq('id', id));
                 if (updateError) { showToast('Erro ao atualizar turma.', true); return; }
                 
                 await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
                 const rels = selectedProfIds.map(profId => ({ turma_id: id, professor_id: profId }));
-                await safeQuery(db.from('professores_turmas').insert(rels));
-            } else { // Criação
+                if (rels.length > 0) await safeQuery(db.from('professores_turmas').insert(rels));
+            } else {
                 const { data, error: insertError } = await safeQuery(db.from('turmas').insert({ nome_turma: nome }).select().single());
                 if (insertError) { showToast('Erro ao criar turma.', true); return; }
 
                 const newTurmaId = data.id;
                 const rels = selectedProfIds.map(profId => ({ turma_id: newTurmaId, professor_id: profId }));
-                await safeQuery(db.from('professores_turmas').insert(rels));
+                if (rels.length > 0) await safeQuery(db.from('professores_turmas').insert(rels));
             }
             showToast('Turma salva com sucesso!');
             closeModal(turmaModal);
@@ -1426,7 +1167,7 @@
             await renderTurmasPanel();
         }
         
-        // --- Gerenciamento de Relatórios (COM FILTRO CORRIGIDO) ---
+        // --- Gerenciamento de Relatórios ---
         async function renderRelatoriosPanel() {
             const turmaFilter = document.getElementById('relatorio-turma-select');
             const alunoFilter = document.getElementById('relatorio-aluno-select');
@@ -1439,7 +1180,6 @@
             alunosCache.forEach(a => alunoFilter.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
 
             profFilter.innerHTML = '<option value="">Todos</option>';
-            // CORREÇÃO: Popula o filtro com professores E admins do cache
             usuariosCache.forEach(u => profFilter.innerHTML += `<option value="${u.user_uid}">${u.nome} (${u.papel})</option>`);
         }
 
@@ -1479,8 +1219,8 @@
             relatorioTableBody.innerHTML = data.map(r => `
                 <tr class="border-b">
                     <td class="p-3">${new Date(r.data + 'T00:00:00').toLocaleDateString()}</td>
-                    <td class="p-3">${r.alunos.nome_completo}</td>
-                    <td class="p-3">${r.turmas.nome_turma}</td>
+                    <td class="p-3">${r.alunos ? r.alunos.nome_completo : 'Aluno Removido'}</td>
+                    <td class="p-3">${r.turmas ? r.turmas.nome_turma : 'Turma Removida'}</td>
                     <td class="p-3"><span class="font-semibold ${r.status === 'falta' ? 'text-red-600' : 'text-green-600'}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span></td>
                     <td class="p-3 text-xs">${r.justificativa || ''}</td>
                     <td class="p-3">${r.usuarios ? r.usuarios.nome : 'Usuário Removido'}</td>
@@ -1489,7 +1229,6 @@
             imprimirRelatorioBtn.classList.remove('hidden');
         }
 
-        
         // --- Gerenciamento de Configurações ---
         async function renderConfigPanel() {
             try {
@@ -1507,7 +1246,7 @@
                     document.getElementById('config-alerta-chamada-ativo').checked = data.alerta_chamada_nao_feita_ativo;
                 }
             } catch (err) {
-                console.error("Erro crítico ao renderizar painel de configurações:", err);
+                console.error("Erro ao carregar configurações:", err);
                 showToast("Não foi possível carregar as configurações.", true);
             }
         }
@@ -1516,7 +1255,7 @@
             e.preventDefault();
             try {
                 const configData = {
-                    id: 1, // Garante que estamos sempre atualizando ou criando a linha 1
+                    id: 1, 
                     faltas_consecutivas_limite: document.getElementById('config-faltas-consecutivas').value,
                     faltas_intercaladas_limite: document.getElementById('config-faltas-intercaladas').value,
                     faltas_intercaladas_dias: document.getElementById('config-faltas-dias').value,
@@ -1524,8 +1263,7 @@
                     alerta_faltas_ativo: document.getElementById('config-alerta-faltas-ativo').checked,
                     alerta_chamada_nao_feita_ativo: document.getElementById('config-alerta-chamada-ativo').checked
                 };
-
-                const { error } = await safeQuery(db.from('configuracoes').upsert(configData).select());
+                const { error } = await safeQuery(db.from('configuracoes').upsert(configData));
                 if (error) throw error;
                 showToast('Configurações salvas com sucesso!');
             } catch(err) {
@@ -1615,18 +1353,16 @@
             }
         }
         
-        // --- Lógica de Exclusão com Confirmação ---
+        // --- Lógica de Exclusão ---
         function openDeleteConfirmModal(type, id) {
             const messageEl = document.getElementById('delete-confirm-message');
             const confirmBtn = document.getElementById('confirm-delete-btn');
             const checkbox = document.getElementById('delete-confirm-checkbox');
-
             messageEl.textContent = `Você tem certeza que deseja excluir este ${type}? Esta ação é irreversível.`;
             checkbox.checked = false;
             confirmBtn.disabled = true;
             confirmBtn.dataset.type = type;
             confirmBtn.dataset.id = id;
-            
             deleteConfirmModal.classList.remove('hidden');
         }
 
@@ -1635,7 +1371,6 @@
             const type = confirmBtn.dataset.type;
             const id = confirmBtn.dataset.id;
             let queryBuilder;
-
             if (type === 'aluno') queryBuilder = db.from('alunos').delete().eq('id', id);
             else if (type === 'turma') {
                 await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
@@ -1643,9 +1378,7 @@
             } else if (type === 'professor') queryBuilder = db.from('usuarios').delete().eq('id', id);
             else if (type === 'evento') queryBuilder = db.from('eventos').delete().eq('id', id);
             else if (type === 'acompanhamento') queryBuilder = db.from('apoia_encaminhamentos').delete().eq('id', id);
-            
             const { error } = await safeQuery(queryBuilder);
-            
             if(error) {
                  showToast(`Não foi possível excluir o ${type}: ` + error.message, true);
             } else {
@@ -1662,10 +1395,9 @@
             closeModal(deleteConfirmModal);
         }
 
-        // --- FUNÇÃO DE IMPRESSÃO ATUALIZADA ---
+        // --- Impressão ---
         function handleImprimirRelatorio(reportType) {
-            let dataInicioId, dataFimId, periodoElId, printableArea;
-
+            let dataInicioId, dataFimId, periodoElId;
             if (reportType === 'faltas') {
                 dataInicioId = 'relatorio-data-inicio';
                 dataFimId = 'relatorio-data-fim';
@@ -1675,17 +1407,12 @@
                 dataFimId = 'apoia-relatorio-data-fim';
                 periodoElId = 'apoia-relatorio-periodo-impressao';
             } else if (reportType === 'historico') {
-                 // Para o histórico, o período já está implícito, então não precisamos buscar dos filtros
                  window.print();
                  return;
-            } else {
-                return;
-            }
-
+            } else return;
             const periodoEl = document.getElementById(periodoElId);
             const dataInicio = document.getElementById(dataInicioId).value;
             const dataFim = document.getElementById(dataFimId).value;
-
             if (periodoEl) {
                 if (dataInicio && dataFim && dataInicio === dataFim) {
                      periodoEl.textContent = `Data: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')}`;
@@ -1697,36 +1424,29 @@
                     periodoEl.textContent = 'Período: Todas as datas';
                 }
             }
-            
             window.print();
         }
 
-        // --- NOVO: HISTÓRICO INDIVIDUAL DO ALUNO ---
+        // --- Histórico Individual do Aluno ---
         async function openAlunoHistoricoModal(alunoId) {
             const tableBody = document.getElementById('aluno-historico-table-body');
             tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando histórico...</td></tr>';
             alunoHistoricoModal.classList.remove('hidden');
-            
             const { data: aluno } = await safeQuery(db.from('alunos').select('nome_completo').eq('id', alunoId).single());
             const { data: presencas } = await safeQuery(db.from('presencas').select('data, status, justificativa').eq('aluno_id', alunoId).order('data', { ascending: false }));
-
             if (!aluno || !presencas) {
                 showToast("Erro ao carregar dados do aluno.", true);
                 closeModal(alunoHistoricoModal);
                 return;
             }
-
             document.getElementById('historico-aluno-nome-impressao').textContent = aluno.nome_completo;
-            
             const total = presencas.length;
             const totalPresencas = presencas.filter(p => p.status === 'presente').length;
             const totalFaltas = total - totalPresencas;
             const assiduidade = total > 0 ? ((totalPresencas / total) * 100).toFixed(1) + '%' : 'N/A';
-
             document.getElementById('historico-presencas').textContent = totalPresencas;
             document.getElementById('historico-faltas').textContent = totalFaltas;
             document.getElementById('historico-assiduidade').textContent = assiduidade;
-
             if (total === 0) {
                 tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhum registro de frequência encontrado.</td></tr>';
             } else {
@@ -1740,54 +1460,33 @@
             }
         }
 
-
         // ===============================================================
         // =================== EVENT LISTENERS ===========================
         // ===============================================================
         document.addEventListener('DOMContentLoaded', () => {
-            
             const setupSupportLinks = () => {
                 const numero = "5548991004780";
                 const mensagem = "Olá! Mensagem enviada do Sistema de chamadas da EEB Getúlio Vargas. Preciso de suporte.";
                 const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
-
                 const linkProf = document.getElementById('support-link-prof');
                 const linkAdmin = document.getElementById('support-link-admin');
-
-                if (linkProf) {
-                    linkProf.href = url;
-                    linkProf.target = "_blank";
-                }
-                if (linkAdmin) {
-                    linkAdmin.href = url;
-                    linkAdmin.target = "_blank";
-                }
+                if (linkProf) { linkProf.href = url; linkProf.target = "_blank"; }
+                if (linkAdmin) { linkAdmin.href = url; linkAdmin.target = "_blank"; }
             };
             setupSupportLinks();
 
-            // --- SUPERVISOR DE SESSÃO ---
-            setInterval(async () => {
-                if (currentUser) {
-                    const { error } = await db.auth.refreshSession();
-                    if (error) console.error("Erro na renovação periódica da sessão:", error.message);
-                }
-            }, 10 * 60 * 1000);
-
-            document.addEventListener('visibilitychange', async () => {
-                if (!document.hidden && currentUser) {
-                    await db.auth.refreshSession();
-                }
-            });
-
-            // Delegação de eventos centralizada para todo o body
+            // Supervisão de Sessão
+            setInterval(async () => { if (currentUser) { const { error } = await db.auth.refreshSession(); if(error) console.error(error); }}, 10 * 60 * 1000);
+            document.addEventListener('visibilitychange', async () => { if (!document.hidden && currentUser) await db.auth.refreshSession(); });
+            
+            // Submissão de Formulários
             document.body.addEventListener('submit', async (e) => {
+                e.preventDefault();
                 if (e.target.id === 'login-form') {
-                    e.preventDefault();
                     const loginButton = e.target.querySelector('button[type="submit"]');
                     loginButton.disabled = true;
                     loginButton.innerHTML = `<div class="loader mx-auto"></div>`;
                     loginError.textContent = '';
-                    
                     try {
                         const { error } = await db.auth.signInWithPassword({ email: email.value, password: password.value });
                         if (error) {
@@ -1806,20 +1505,34 @@
                 if (e.target.id === 'acompanhamento-form') await handleAcompanhamentoFormSubmit(e);
                 if (e.target.id === 'config-form') await handleConfigFormSubmit(e);
                 if (e.target.id === 'correcao-chamada-form') {
-                    e.preventDefault();
                     const form = e.target;
                     const turmaId = form.querySelector('#correcao-turma-select').value;
                     const data = form.querySelector('#correcao-data-select').value;
                     const alunoRows = form.querySelectorAll('[data-aluno-id]');
-                    const registros = Array.from(alunoRows).map(row => ({
-                        aluno_id: parseInt(row.dataset.alunoId),
-                        turma_id: parseInt(turmaId),
-                        data: data,
-                        status: row.querySelector('input[type="radio"]:checked').value,
-                        justificativa: row.querySelector('.justificativa-input')?.value || null, // Captura a justificativa
-                        registrado_por_uid: currentUser.id
-                    }));
-                    
+                    const registros = Array.from(alunoRows).map(row => {
+                        const status = row.querySelector('.status-radio:checked').value;
+                        let justificativa = null;
+                        if (status === 'falta') {
+                            const justRadio = row.querySelector(`input[name="corr-just-${row.dataset.alunoId}"]:checked`);
+                            if (justRadio) {
+                                if (justRadio.value === 'outros') {
+                                    justificativa = row.querySelector('.justificativa-outros-input').value.trim() || 'Outros';
+                                } else {
+                                    justificativa = justRadio.value;
+                                }
+                            } else {
+                                justificativa = 'Falta injustificada';
+                            }
+                        }
+                        return {
+                            aluno_id: parseInt(row.dataset.alunoId),
+                            turma_id: parseInt(turmaId),
+                            data: data,
+                            status: status,
+                            justificativa: justificativa,
+                            registrado_por_uid: currentUser.id
+                        };
+                    });
                     const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
                     if(error) showToast('Erro ao salvar correção: ' + error.message, true);
                     else {
@@ -1828,17 +1541,13 @@
                     }
                 }
                 if (e.target.id === 'reset-password-form') {
-                    e.preventDefault();
                     const newPassword = document.getElementById('new-password').value;
                     const confirmPassword = document.getElementById('confirm-password').value;
                     const errorEl = document.getElementById('reset-password-error');
                     errorEl.textContent = '';
-
                     if (newPassword.length < 6) { errorEl.textContent = 'A senha deve ter no mínimo 6 caracteres.'; return; }
                     if (newPassword !== confirmPassword) { errorEl.textContent = 'As senhas não coincidem.'; return; }
-
                     const { error } = await db.auth.updateUser({ password: newPassword });
-
                     if (error) {
                         errorEl.textContent = 'Erro ao atualizar a senha: ' + error.message;
                     } else {
@@ -1849,80 +1558,67 @@
                 }
             });
 
+            // Listeners de Click
             document.body.addEventListener('click', (e) => {
                 const target = e.target;
-                
-                // --- Lógica de Notificações ---
-                const notificationPanel = document.getElementById('notification-panel');
-                if (e.target.closest('#notification-bell')) {
+                const closest = (selector) => target.closest(selector);
+                if (closest('#notification-bell')) {
                     e.stopPropagation();
                     notificationPanel.classList.toggle('hidden');
-                } else if (notificationPanel && !notificationPanel.classList.contains('hidden') && !e.target.closest('#notification-panel')) {
+                } else if (!notificationPanel.classList.contains('hidden') && !closest('#notification-panel')) {
                     notificationPanel.classList.add('hidden');
                 }
-                const notificationItem = e.target.closest('.notification-item');
-                if (notificationItem) {
-                    const alertId = notificationItem.dataset.id;
-                    markNotificationAsRead(alertId);
-                }
-                if (target.closest('#clear-notifications-btn')) {
-                    markAllNotificationsAsRead();
-                }
-
-                // --- Lógica de Paginação APOIA ---
-                if (target.closest('#apoia-pagination')) {
-                    const pageBtn = target.closest('button[data-page]');
-                    if (pageBtn) {
-                        renderApoiaPanel(parseInt(pageBtn.dataset.page));
-                    }
-                }
-                
-                // --- Lógica de Toggle de Senha ---
-                if (target.closest('#toggle-password-btn')) {
+                const notificationItem = closest('.notification-item');
+                if (notificationItem) markNotificationAsRead(notificationItem.dataset.id);
+                if (closest('#clear-notifications-btn')) markAllNotificationsAsRead();
+                const pageBtn = closest('#apoia-pagination button[data-page]');
+                if (pageBtn) renderApoiaPanel(parseInt(pageBtn.dataset.page));
+                if (closest('#toggle-password-btn')) {
                     const isPassword = passwordInput.type === 'password';
                     passwordInput.type = isPassword ? 'text' : 'password';
                     eyeIcon.classList.toggle('hidden', isPassword);
                     eyeOffIcon.classList.toggle('hidden', !isPassword);
-                    return;
                 }
-
-                // --- Lógica de Navegação do Admin ---
-                const navLink = target.closest('.admin-nav-link');
+                const navLink = closest('.admin-nav-link');
                 if (navLink) {
                     e.preventDefault();
                     document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
                     navLink.classList.add('bg-gray-700');
                     const targetPanelId = navLink.dataset.target;
                     document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
-                    document.getElementById(targetPanelId)?.classList.remove('hidden');
-
-                    if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
-                    if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel();
-                    if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
-                    if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
-                    if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
-                    if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
-                    if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
-                    if (targetPanelId === 'admin-config-panel') renderConfigPanel();
-                    return;
+                    const panel = document.getElementById(targetPanelId);
+                    if (panel) {
+                        panel.classList.remove('hidden');
+                        const panelAction = panel.dataset.action;
+                        if (panelAction === 'renderDashboardPanel') renderDashboardPanel();
+                        if (panelAction === 'renderAlunosPanel') renderAlunosPanel();
+                        if (panelAction === 'renderApoiaPanel') renderApoiaPanel();
+                        if (panelAction === 'renderProfessoresPanel') renderProfessoresPanel();
+                        if (panelAction === 'renderTurmasPanel') renderTurmasPanel();
+                        if (panelAction === 'renderCalendarioPanel') renderCalendarioPanel();
+                        if (panelAction === 'renderRelatoriosPanel') renderRelatoriosPanel();
+                        if (panelAction === 'renderConfigPanel') renderConfigPanel();
+                    }
                 }
-
-                // --- Botões de Abrir Modals ---
-                if (target.closest('#add-aluno-btn')) openAlunoModal();
-                if (target.closest('#add-acompanhamento-btn')) openAcompanhamentoModal();
-                if (target.closest('#add-professor-btn')) openProfessorModal();
-                if (target.closest('#add-turma-btn')) openTurmaModal();
-                if (target.closest('#add-evento-btn')) openEventoModal();
-                if (target.closest('.cancel-modal-btn')) closeAllModals();
-                if (target.closest('.edit-professor-btn')) openProfessorModal(target.closest('.edit-professor-btn').dataset.id);
-                if (target.closest('.edit-aluno-btn')) openAlunoModal(target.closest('.edit-aluno-btn').dataset.id);
-                if (target.closest('.edit-acompanhamento-btn')) openAcompanhamentoModal(target.closest('.edit-acompanhamento-btn').dataset.id);
-                if (target.closest('.edit-turma-btn')) openTurmaModal(target.closest('.edit-turma-btn').dataset.id);
-                if (target.closest('.edit-evento-btn')) openEventoModal(target.closest('.edit-evento-btn').dataset.id);
-                if (target.closest('.historico-aluno-btn')) openAlunoHistoricoModal(target.closest('.historico-aluno-btn').dataset.id); // NOVO
-                
-                // --- Botões de Exclusão ---
-                const deleteBtn = target.closest('.delete-btn');
+                if (closest('#add-aluno-btn')) openAlunoModal();
+                const editAlunoBtn = closest('.edit-aluno-btn');
+                if (editAlunoBtn) openAlunoModal(editAlunoBtn.dataset.id);
+                const historicoAlunoBtn = closest('.historico-aluno-btn');
+                if (historicoAlunoBtn) openAlunoHistoricoModal(historicoAlunoBtn.dataset.id);
+                if (closest('#add-acompanhamento-btn')) openAcompanhamentoModal();
+                const editAcompanhamentoBtn = closest('.edit-acompanhamento-btn');
+                if (editAcompanhamentoBtn) openAcompanhamentoModal(editAcompanhamentoBtn.dataset.id);
+                if (closest('#add-professor-btn')) openProfessorModal();
+                const editProfessorBtn = closest('.edit-professor-btn');
+                if (editProfessorBtn) openProfessorModal(editProfessorBtn.dataset.id);
+                if (closest('#add-turma-btn')) openTurmaModal();
+                const editTurmaBtn = closest('.edit-turma-btn');
+                if (editTurmaBtn) openTurmaModal(editTurmaBtn.dataset.id);
+                if (closest('#add-evento-btn')) openEventoModal();
+                const editEventoBtn = closest('.edit-evento-btn');
+                if (editEventoBtn) openEventoModal(editEventoBtn.dataset.id);
+                if (closest('.cancel-modal-btn')) closeAllModals();
+                const deleteBtn = closest('.delete-btn');
                 if (deleteBtn) {
                     let id;
                     if (deleteBtn.dataset.type === 'aluno') id = alunoModal.querySelector('#aluno-id').value;
@@ -1932,47 +1628,25 @@
                     else if (deleteBtn.dataset.type === 'acompanhamento') id = acompanhamentoModal.querySelector('#acompanhamento-id').value;
                     if(id) openDeleteConfirmModal(deleteBtn.dataset.type, id);
                 }
-
-                // --- Outros Botões de Ação ---
-                if (target.closest('.reset-password-btn')) handleResetPassword(target.closest('.reset-password-btn').dataset.email);
-                if (target.closest('#confirm-delete-btn')) handleConfirmDelete();
-                if (target.closest('#admin-logout-btn') || target.closest('#professor-logout-btn')) signOutUser();
-                if (target.closest('#gerar-relatorio-btn')) handleGerarRelatorio();
-                if (target.closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('faltas');
-                if (target.closest('#gerar-apoia-relatorio-btn')) handleGerarApoiaRelatorio();
-                if (target.closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('apoia');
-                if (target.closest('#imprimir-historico-btn')) handleImprimirRelatorio('historico'); // NOVO
-                if (target.closest('#correcao-chamada-btn')) {
+                const resetPassBtn = closest('.reset-password-btn');
+                if (resetPassBtn) handleResetPassword(resetPassBtn.dataset.email);
+                if (closest('#confirm-delete-btn')) handleConfirmDelete();
+                if (closest('#admin-logout-btn') || closest('#professor-logout-btn')) signOutUser();
+                if (closest('#gerar-relatorio-btn')) handleGerarRelatorio();
+                if (closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('faltas');
+                if (closest('#gerar-apoia-relatorio-btn')) handleGerarApoiaRelatorio();
+                if (closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('apoia');
+                if (closest('#imprimir-historico-btn')) handleImprimirRelatorio('historico');
+                if (closest('#correcao-chamada-btn')) {
                     correcaoChamadaModal.classList.remove('hidden');
                     const turmaSel = document.getElementById('correcao-turma-select');
                     turmaSel.innerHTML = '<option value="">Selecione uma turma...</option>';
-                    
-                    const sortedTurmas = [...turmasCache].sort((a, b) => {
-                        const numA = parseInt(a.nome_turma.match(/\d+/g));
-                        const numB = parseInt(b.nome_turma.match(/\d+/g));
-                        if (numA && numB && numA !== numB) {
-                            return numA - numB;
-                        }
-                        return a.nome_turma.localeCompare(b.nome_turma, undefined, {numeric: true});
-                    });
-
+                    const sortedTurmas = [...turmasCache].sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, {numeric: true}));
                     sortedTurmas.forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
                 }
-
-                 // --- Calendário Dashboard ---
-                if(target.closest('#prev-month-btn')) {
-                    dashboardCalendar.month--;
-                    if(dashboardCalendar.month < 0) { dashboardCalendar.month = 11; dashboardCalendar.year--; }
-                    renderDashboardCalendar();
-                }
-                 if(target.closest('#next-month-btn')) {
-                    dashboardCalendar.month++;
-                    if(dashboardCalendar.month > 11) { dashboardCalendar.month = 0; dashboardCalendar.year++; }
-                    renderDashboardCalendar();
-                }
-
-                // --- DASHBOARD INTERATIVO ---
-                const card = target.closest('.clickable-card');
+                if(closest('#prev-month-btn')) { dashboardCalendar.month--; if(dashboardCalendar.month < 0) { dashboardCalendar.month = 11; dashboardCalendar.year--; } renderDashboardCalendar(); }
+                if(closest('#next-month-btn')) { dashboardCalendar.month++; if(dashboardCalendar.month > 11) { dashboardCalendar.month = 0; dashboardCalendar.year++; } renderDashboardCalendar(); }
+                const card = closest('.clickable-card');
                 if(card) {
                     const type = card.dataset.type;
                     const date = dashboardDatePicker.value;
@@ -1983,81 +1657,39 @@
                         if(type === 'faltas') document.getElementById('relatorio-status-select').value = 'falta';
                         if(type === 'presencas') document.getElementById('relatorio-status-select').value = 'presente';
                         handleGerarRelatorio();
-                    }, 100); // Pequeno delay para garantir que o painel renderize
+                    }, 100);
                 }
-                const alunoLink = target.closest('.dashboard-aluno-link');
+                const alunoLink = closest('.dashboard-aluno-link');
                 if(alunoLink) {
                     e.preventDefault();
                     openAlunoHistoricoModal(alunoLink.dataset.alunoId);
                 }
             });
 
-            // Listeners de change e input
+            // Listeners de Change e Input
+            ['#chamada-lista-alunos', '#correcao-chamada-lista-alunos'].forEach(selector => {
+                document.querySelector(selector).addEventListener('change', e => {
+                    if (e.target.classList.contains('status-radio')) {
+                        const container = e.target.closest('[data-aluno-id]');
+                        const justDiv = container.querySelector('.justificativa-container');
+                        justDiv.classList.toggle('hidden', e.target.value !== 'falta');
+                    }
+                });
+            });
             turmaSelect.addEventListener('change', loadChamada);
             dataSelect.addEventListener('change', loadChamada);
-            salvarChamadaBtn.addEventListener('click', saveChamada);
             dashboardDatePicker.addEventListener('change', loadDailySummary);
-            document.getElementById('delete-confirm-checkbox').addEventListener('change', (e) => {
-                document.getElementById('confirm-delete-btn').disabled = !e.target.checked;
-            });
+            document.getElementById('delete-confirm-checkbox').addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
             document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
             document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
             document.getElementById('aluno-search-input').addEventListener('input', (e) => renderAlunosPanel(e.target.value));
+            document.getElementById('correcao-turma-select').addEventListener('change', loadCorrecaoChamada);
+            document.getElementById('correcao-data-select').addEventListener('change', loadCorrecaoChamada);
 
-            // Lógica para Correção/Lançamento de Chamada (Admin)
-            const correcaoTurmaSel = document.getElementById('correcao-turma-select');
-            const correcaoDataSel = document.getElementById('correcao-data-select');
-            const correcaoListaAlunos = document.getElementById('correcao-chamada-lista-alunos');
-            
-            const loadCorrecaoChamada = async () => {
-                const turmaId = correcaoTurmaSel.value;
-                const data = correcaoDataSel.value;
-                correcaoListaAlunos.innerHTML = '';
-
-                if (!turmaId || !data) return;
-                
-                const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo'));
-                const { data: presencas } = await safeQuery(db.from('presencas').select('aluno_id, status, justificativa').eq('turma_id', turmaId).eq('data', data));
-                const presencasMap = new Map((presencas || []).map(p => [p.aluno_id, { status: p.status, justificativa: p.justificativa }]));
-
-                (alunos || []).forEach(aluno => {
-                    const presenca = presencasMap.get(aluno.id) || { status: 'presente', justificativa: '' };
-                    const alunoDiv = document.createElement('div');
-                    alunoDiv.className = 'flex flex-col md:flex-row items-start md:items-center justify-between p-3 bg-gray-50 rounded-lg';
-                    alunoDiv.dataset.alunoId = aluno.id;
-                    alunoDiv.innerHTML = `
-                        <span class="font-medium mb-2 md:mb-0">${aluno.nome_completo}</span>
-                        <div class="flex items-center w-full md:w-auto">
-                            <div class="flex items-center gap-4">
-                                <label class="flex items-center cursor-pointer"><input type="radio" name="corr-status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600" ${presenca.status === 'presente' ? 'checked' : ''}><span class="ml-2 text-sm">Presente</span></label>
-                                <label class="flex items-center cursor-pointer"><input type="radio" name="corr-status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600" ${presenca.status === 'falta' ? 'checked' : ''}><span class="ml-2 text-sm">Falta</span></label>
-                            </div>
-                            <input type="text" class="justificativa-input ml-4 p-1 border rounded-md text-sm w-full md:w-48 ${presenca.status === 'falta' ? '' : 'hidden'}" placeholder="Justificativa (opcional)" value="${presenca.justificativa || ''}">
-                        </div>`;
-                    correcaoListaAlunos.appendChild(alunoDiv);
-                });
-            };
-
-            // Adiciona listener para mostrar/ocultar campo de justificativa
-            correcaoListaAlunos.addEventListener('change', e => {
-                if (e.target.type === 'radio') {
-                    const row = e.target.closest('[data-aluno-id]');
-                    const justificativaInput = row.querySelector('.justificativa-input');
-                    justificativaInput.classList.toggle('hidden', e.target.value !== 'falta');
-                }
-            });
-
-            correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
-            correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
-
+            // Inicialização
             dataSelect.value = new Date().toISOString().split('T')[0];
-            
-            // Listeners de atividade para o timer de inatividade
-            ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => {
-                document.addEventListener(event, resetInactivityTimer);
-            });
-
-            console.log("Sistema de Gestão de Faltas (Supabase) inicializado com novas funcionalidades.");
+            ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
+            console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
         });
     </script>
 </body>
