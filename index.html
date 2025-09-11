@@ -138,9 +138,15 @@
 
     <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-2"></div>
 
-    <div id="app-container">
+    <!-- Tela de Carregamento Inicial -->
+    <div id="loading-view" class="flex items-center justify-center min-h-screen">
+        <div class="loader" style="width: 48px; height: 48px;"></div>
+    </div>
 
-        <div id="login-view" class="flex items-center justify-center min-h-screen">
+    <!-- Container Principal da Aplicação (começa oculto) -->
+    <div id="app-container" class="hidden">
+
+        <div id="login-view" class="flex items-center justify-center min-h-screen hidden">
             <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
                 <img src="./logo.png" alt="Logo da Escola" class="w-32 h-32 mx-auto">
                 <h1 class="text-2xl font-bold text-center text-gray-900">Sistema de Faltas - APOIA</h1>
@@ -483,6 +489,8 @@
         const apoiaItemsPerPage = 10;
 
         // --- Mapeamento dos Elementos da UI ---
+        const loadingView = document.getElementById('loading-view');
+        const appContainer = document.getElementById('app-container');
         const loginView = document.getElementById('login-view');
         const loginError = document.getElementById('login-error');
         const professorView = document.getElementById('professor-view');
@@ -543,10 +551,16 @@
 
         // --- Funções Auxiliares ---
         function showView(viewId) {
+            loadingView.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+
             loginView.classList.add('hidden');
             professorView.classList.add('hidden');
             adminView.classList.add('hidden');
-            document.getElementById(viewId).classList.remove('hidden');
+
+            if (document.getElementById(viewId)) {
+                document.getElementById(viewId).classList.remove('hidden');
+            }
         }
 
         async function signOutUser(message) {
@@ -627,58 +641,62 @@
         // ===============================================================
         // ================= LÓGICA DE AUTENTICAÇÃO ======================
         // ===============================================================
-        db.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+        
+        async function handleAuthChange(session) {
+            if (!session) {
                 resetApplicationState();
-                resetLoginFormState();
                 clearTimeout(inactivityTimer);
+                showView('login-view');
+                return;
+            }
+
+            try {
+                currentUser = session.user;
+                const { data, error } = await safeQuery(db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single());
+
+                if (error || !data || data.status !== 'ativo') {
+                    const errorMessage = !data 
+                        ? 'Seu usuário foi autenticado, mas não possui um perfil no sistema. Contate o suporte.'
+                        : 'Seu perfil de usuário não está ativo. Contate o suporte.';
+                    
+                    showToast(errorMessage, true);
+                    await db.auth.signOut();
+                    return;
+                }
+
+                const { papel, nome } = data;
+                if (papel === 'admin') {
+                    document.getElementById('admin-info').textContent = nome || currentUser.email;
+                    await loadAdminData();
+                    await renderDashboardPanel();
+                    await loadNotifications();
+                    showView('admin-view');
+                } else if (papel === 'professor') {
+                    document.getElementById('professor-info').textContent = nome || currentUser.email;
+                    await loadProfessorData(currentUser.id);
+                    showView('professor-view');
+                } else {
+                    throw new Error('Papel de usuário desconhecido.');
+                }
+                resetInactivityTimer();
+            } catch (err) {
+                showToast(err.message || 'Erro ao carregar seu perfil. Tente novamente.', true);
+                await signOutUser();
+            }
+        }
+
+        db.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'INITIAL_SESSION') {
+                handleAuthChange(session);
+            } else if (event === 'SIGNED_IN') {
+                handleAuthChange(session);
+            } else if (event === 'SIGNED_OUT') {
+                handleAuthChange(null);
             }
 
             if (event === 'PASSWORD_RECOVERY') {
                 showView('login-view');
                 resetPasswordModal.classList.remove('hidden');
-                return;
-            }
-
-            if (session) {
-                try {
-                    currentUser = session.user;
-                    const { data, error } = await safeQuery(db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single());
-
-                    if (error || !data || data.status !== 'ativo') {
-                        const errorMessage = !data 
-                            ? 'Seu usuário foi autenticado, mas não possui um perfil no sistema. Contate o suporte.'
-                            : 'Seu perfil de usuário não está ativo. Contate o suporte.';
-                        
-                        showToast(errorMessage, true);
-                        await db.auth.signOut();
-                        resetLoginFormState();
-                        return;
-                    }
-
-                    const { papel, nome } = data;
-                    if (papel === 'admin') {
-                        document.getElementById('admin-info').textContent = nome || currentUser.email;
-                        showView('admin-view');
-                        await loadAdminData();
-                        await renderDashboardPanel();
-                        await loadNotifications(); // Carrega as notificações para o admin
-                    } else if (papel === 'professor') {
-                        document.getElementById('professor-info').textContent = nome || currentUser.email;
-                        showView('professor-view');
-                        await loadProfessorData(currentUser.id);
-                    } else {
-                        throw new Error('Papel de usuário desconhecido.');
-                    }
-                    resetInactivityTimer();
-                } catch (err) {
-                    showToast(err.message || 'Erro ao carregar seu perfil. Tente novamente.', true);
-                    resetLoginFormState();
-                    await signOutUser(); 
-                }
-            } else {
-                currentUser = null;
-                showView('login-view');
             }
         });
         
