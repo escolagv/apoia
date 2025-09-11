@@ -727,7 +727,7 @@
             alunosCache = allAlunos || [];
 
             const { data: anos } = await safeQuery(db.rpc('get_distinct_ano_letivo'));
-            anosLetivosCache = anos ? anos.map(a => a.ano_letivo).sort((a,b) => b-a) : [];
+            anosLetivosCache = anos ? anos.sort((a,b) => b-a) : [];
         }
 
         // --- Dashboard ---
@@ -1939,4 +1939,5 @@
     </script>
 </body>
 </html>
+"
 
