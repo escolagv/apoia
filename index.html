@@ -1665,13 +1665,32 @@
             };
             setupSupportLinks();
 
-            // Adicionado: Refresh proativo da sessão para evitar expiração
+            // --- NOVO SUPERVISOR DE SESSÃO ---
+            
+            // 1. Renovação periódica a cada 10 minutos
             setInterval(async () => {
                 if (currentUser) {
-                    await db.auth.refreshSession();
-                    console.log('Sessão atualizada proativamente.');
+                    const { error } = await db.auth.refreshSession();
+                    if (error) {
+                        console.error("Erro na renovação periódica da sessão:", error.message);
+                    } else {
+                        console.log('Sessão atualizada periodicamente (10 min).');
+                    }
                 }
-            }, 15 * 60 * 1000); // A cada 15 minutos
+            }, 10 * 60 * 1000); // A cada 10 minutos
+
+            // 2. Renovação imediata quando a aba fica visível
+            document.addEventListener('visibilitychange', async () => {
+                if (!document.hidden && currentUser) {
+                    const { error } = await db.auth.refreshSession();
+                    if (error) {
+                        console.error("Erro ao renovar sessão ao tornar a aba visível:", error.message);
+                    } else {
+                        console.log('Sessão atualizada ao tornar a aba visível.');
+                    }
+                }
+            });
+            // --- FIM DO NOVO SUPERVISOR DE SESSÃO ---
 
 
             // Delegação de eventos centralizada para todo o body
