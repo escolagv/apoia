@@ -1562,6 +1562,9 @@
             document.body.addEventListener('click', (e) => {
                 const target = e.target;
                 const closest = (selector) => target.closest(selector);
+
+                // Lógica de Notificações
+                const notificationPanel = document.getElementById('notification-panel');
                 if (closest('#notification-bell')) {
                     e.stopPropagation();
                     notificationPanel.classList.toggle('hidden');
@@ -1571,14 +1574,21 @@
                 const notificationItem = closest('.notification-item');
                 if (notificationItem) markNotificationAsRead(notificationItem.dataset.id);
                 if (closest('#clear-notifications-btn')) markAllNotificationsAsRead();
+                
+                // Lógica de Paginação APOIA
                 const pageBtn = closest('#apoia-pagination button[data-page]');
                 if (pageBtn) renderApoiaPanel(parseInt(pageBtn.dataset.page));
+                
+                // Lógica de Toggle de Senha
                 if (closest('#toggle-password-btn')) {
                     const isPassword = passwordInput.type === 'password';
                     passwordInput.type = isPassword ? 'text' : 'password';
                     eyeIcon.classList.toggle('hidden', isPassword);
                     eyeOffIcon.classList.toggle('hidden', !isPassword);
                 }
+
+                // --- CORREÇÃO ESTÁ AQUI ---
+                // Lógica de Navegação do Admin
                 const navLink = closest('.admin-nav-link');
                 if (navLink) {
                     e.preventDefault();
@@ -1587,19 +1597,23 @@
                     const targetPanelId = navLink.dataset.target;
                     document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
                     const panel = document.getElementById(targetPanelId);
+                    
                     if (panel) {
                         panel.classList.remove('hidden');
-                        const panelAction = panel.dataset.action;
-                        if (panelAction === 'renderDashboardPanel') renderDashboardPanel();
-                        if (panelAction === 'renderAlunosPanel') renderAlunosPanel();
-                        if (panelAction === 'renderApoiaPanel') renderApoiaPanel();
-                        if (panelAction === 'renderProfessoresPanel') renderProfessoresPanel();
-                        if (panelAction === 'renderTurmasPanel') renderTurmasPanel();
-                        if (panelAction === 'renderCalendarioPanel') renderCalendarioPanel();
-                        if (panelAction === 'renderRelatoriosPanel') renderRelatoriosPanel();
-                        if (panelAction === 'renderConfigPanel') renderConfigPanel();
+                        // A lógica foi corrigida para chamar a função correta baseada no ID do painel
+                        if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
+                        if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel();
+                        if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
+                        if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
+                        if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
+                        if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
+                        if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
+                        if (targetPanelId === 'admin-config-panel') renderConfigPanel();
                     }
                 }
+                // --- FIM DA CORREÇÃO ---
+
+                // Botões de Abrir Modals
                 if (closest('#add-aluno-btn')) openAlunoModal();
                 const editAlunoBtn = closest('.edit-aluno-btn');
                 if (editAlunoBtn) openAlunoModal(editAlunoBtn.dataset.id);
@@ -1618,6 +1632,8 @@
                 const editEventoBtn = closest('.edit-evento-btn');
                 if (editEventoBtn) openEventoModal(editEventoBtn.dataset.id);
                 if (closest('.cancel-modal-btn')) closeAllModals();
+
+                // Botões de Ação
                 const deleteBtn = closest('.delete-btn');
                 if (deleteBtn) {
                     let id;
