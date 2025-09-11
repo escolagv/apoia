@@ -440,6 +440,7 @@
                                         <div>
                                             <label for="config-alerta-horario" class="block text-sm font-medium">Horário para verificação diária:</label>
                                             <input type="time" id="config-alerta-horario" class="w-full mt-1 p-2 border rounded-md">
+                                            <p class="text-xs text-gray-500 mt-1">A verificação de alertas será executada uma vez por dia, na primeira oportunidade após o horário definido.</p>
                                         </div>
                                         <label class="flex items-center">
                                             <input type="checkbox" id="config-alerta-faltas-ativo" class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded">
@@ -1684,28 +1685,19 @@
             setupSupportLinks();
 
             // --- NOVO SUPERVISOR DE SESSÃO ---
-            
-            // 1. Renovação periódica a cada 10 minutos
             setInterval(async () => {
                 if (currentUser) {
                     const { error } = await db.auth.refreshSession();
-                    if (error) {
-                        console.error("Erro na renovação periódica da sessão:", error.message);
-                    } else {
-                        console.log('Sessão atualizada periodicamente (10 min).');
-                    }
+                    if (error) console.error("Erro na renovação periódica da sessão:", error.message);
+                    else console.log('Sessão atualizada periodicamente (10 min).');
                 }
-            }, 10 * 60 * 1000); // A cada 10 minutos
+            }, 10 * 60 * 1000);
 
-            // 2. Renovação imediata quando a aba fica visível
             document.addEventListener('visibilitychange', async () => {
                 if (!document.hidden && currentUser) {
                     const { error } = await db.auth.refreshSession();
-                    if (error) {
-                        console.error("Erro ao renovar sessão ao tornar a aba visível:", error.message);
-                    } else {
-                        console.log('Sessão atualizada ao tornar a aba visível.');
-                    }
+                    if (error) console.error("Erro ao renovar sessão ao tornar a aba visível:", error.message);
+                    else console.log('Sessão atualizada ao tornar a aba visível.');
                 }
             });
             // --- FIM DO NOVO SUPERVISOR DE SESSÃO ---
