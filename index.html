@@ -1831,7 +1831,17 @@
                     correcaoChamadaModal.classList.remove('hidden');
                     const turmaSel = document.getElementById('correcao-turma-select');
                     turmaSel.innerHTML = '<option value="">Selecione uma turma...</option>';
-                    turmasCache.forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+                    
+                    const sortedTurmas = [...turmasCache].sort((a, b) => {
+                        const numA = parseInt(a.nome_turma.match(/\d+/g));
+                        const numB = parseInt(b.nome_turma.match(/\d+/g));
+                        if (numA && numB && numA !== numB) {
+                            return numA - numB;
+                        }
+                        return a.nome_turma.localeCompare(b.nome_turma, undefined, {numeric: true});
+                    });
+
+                    sortedTurmas.forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
                 }
 
                 if(target.closest('#prev-month-btn')) {
