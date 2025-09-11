@@ -262,7 +262,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                             </div>
                             <div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-20">
-                                <div class="p-4 font-bold border-b">Notificações</div>
+                                <div class="p-4 font-bold border-b flex justify-between items-center">
+                                    <span>Notificações</span>
+                                    <button id="clear-notifications-btn" class="text-xs text-blue-600 hover:underline font-medium">Limpar Todas</button>
+                                </div>
                                 <div id="notification-list" class="p-2 max-h-64 overflow-y-auto"></div>
                             </div>
                         </div>
@@ -766,6 +769,7 @@
         async function loadNotifications() {
             const notificationBell = document.getElementById('notification-bell');
             const notificationList = document.getElementById('notification-list');
+            const clearNotificationsBtn = document.getElementById('clear-notifications-btn');
 
             if (!notificationBell || !notificationList) return;
 
@@ -775,6 +779,8 @@
                 console.error("Erro ao buscar notificações:", error);
                 return;
             }
+            
+            clearNotificationsBtn.classList.toggle('hidden', count === 0);
 
             if (count > 0) {
                 notificationBell.classList.add('notification-badge');
@@ -800,6 +806,17 @@
             const { error } = await safeQuery(db.from('alertas').update({ lido: true }).eq('id', alertId));
             if (error) {
                 showToast("Erro ao marcar notificação como lida.", true);
+            } else {
+                await loadNotifications();
+            }
+        }
+
+        async function markAllNotificationsAsRead() {
+            const { error } = await safeQuery(
+                db.from('alertas').update({ lido: true }).eq('lido', false)
+            );
+            if (error) {
+                showToast("Erro ao limpar notificações.", true);
             } else {
                 await loadNotifications();
             }
@@ -1740,6 +1757,9 @@
                 if (notificationItem) {
                     const alertId = notificationItem.dataset.id;
                     markNotificationAsRead(alertId);
+                }
+                if (target.closest('#clear-notifications-btn')) {
+                    markAllNotificationsAsRead();
                 }
 
                 if (target.closest('#apoia-pagination')) {
