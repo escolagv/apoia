@@ -1701,6 +1701,8 @@
             document.getElementById('aluno-search-input').addEventListener('input', (e) => renderAlunosPanel(e.target.value));
             document.getElementById('correcao-turma-select').addEventListener('change', loadCorrecaoChamada);
             document.getElementById('correcao-data-select').addEventListener('change', loadCorrecaoChamada);
+            document.getElementById('correcao-turma-select').addEventListener('change', loadCorrecaoChamada);
+            document.getElementById('correcao-data-select').addEventListener('change', loadCorrecaoChamada);
 
             // Inicialização
             dataSelect.value = new Date().toISOString().split('T')[0];
