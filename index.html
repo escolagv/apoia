@@ -222,7 +222,7 @@
                     <div id="admin-content">
                         <div id="admin-dashboard-panel" class="admin-panel"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Resumo do Dia</h2><input type="date" id="dashboard-date-picker" class="p-2 border rounded-md"></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><div id="dashboard-summary" class="flex flex-wrap gap-6 mb-6"><div data-type="presencas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-green-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Presenças</p><p id="dashboard-presencas" class="text-2xl font-bold">...</p></div></div><div data-type="faltas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-red-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Faltas</p><p id="dashboard-faltas" class="text-2xl font-bold">...</p></div></div><div class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1"><div class="bg-yellow-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Em Acompanhamento</p><p id="dashboard-acompanhamento" class="text-2xl font-bold">...</p></div></div></div><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-2">Alunos Ausentes</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div></div><div class="bg-white p-6 rounded-lg shadow-md"><div id="dashboard-calendar-container"><div class="flex items-center justify-between mb-4"><button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200">&lt;</button><h3 id="calendar-month-year" class="text-lg font-bold"></h3><button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-600"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center mt-2"></div></div></div></div></div>
                         <div id="admin-alunos-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Cadastro Geral de Alunos</h2><div class="flex gap-4"><input type="text" id="aluno-search-input" class="p-2 border rounded-md" placeholder="Buscar por nome, matrícula..."><button id="add-aluno-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Aluno</button></div></div><div class="bg-white p-6 rounded-lg shadow-md overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Nome</th><th class="p-3 text-left font-semibold text-gray-600">Matrícula</th><th class="p-3 text-left font-semibold text-gray-600">Turma</th><th class="p-3 text-left font-semibold text-gray-600">Responsável</th><th class="p-3 text-left font-semibold text-gray-600">Telefone</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="alunos-table-body"></tbody></table></div></div>
-                        <div id="admin-professores-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Professores</h2><button id="add-professor-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Professor</button></div><div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Email</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="professores-table-body"></tbody></table></div></div>
+                        <div id="admin-professores-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Professores</h2><button id="add-professor-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Professor</button></div><div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Email</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Confirmação</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="professores-table-body"></tbody></table></div></div>
                         <div id="admin-turmas-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Gerenciar Turmas</h2><button id="add-turma-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Turma</button></div><div class="bg-white p-6 rounded-lg shadow-md"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Nome da Turma</th><th class="p-3 text-left font-semibold text-gray-600">Professores</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="turmas-table-body"></tbody></table></div></div>
                         <div id="admin-apoia-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Acompanhamento APOIA</h2><button id="add-acompanhamento-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Aluno Manualmente</button></div><div class="bg-white p-6 rounded-lg shadow-md"><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Aluno</th><th class="p-3 text-left font-semibold text-gray-600">Data</th><th class="p-3 text-left font-semibold text-gray-600">Motivo</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Ações</th></tr></thead><tbody id="apoia-table-body"></tbody></table></div><div id="apoia-pagination" class="flex justify-center items-center mt-4 space-x-1"></div><div class="mt-8 pt-6 border-t"><h3 class="text-xl font-bold mb-4">Relatório de Acompanhamento</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"><div><label for="apoia-relatorio-data-inicio" class="block text-sm font-medium text-gray-700">De:</label><input type="date" id="apoia-relatorio-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="apoia-relatorio-data-fim" class="block text-sm font-medium text-gray-700">Até:</label><input type="date" id="apoia-relatorio-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="apoia-relatorio-status" class="block text-sm font-medium text-gray-700">Status:</label><select id="apoia-relatorio-status" class="w-full mt-1 p-2 border rounded-md"><option value="">Todos</option><option value="Em andamento">Em andamento</option><option value="Finalizado">Finalizado</option></select></div></div><button id="gerar-apoia-relatorio-btn" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Gerar Relatório</button></div><div id="apoia-relatorio-resultados" class="mt-6 bg-white p-6 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Resultados do Relatório</h3><button id="imprimir-apoia-relatorio-btn" class="hidden px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700">Imprimir</button></div><div class="printable-area"><div class="print-header"><img src="./logo.png" alt="Logo da Escola"><div class="print-header-info"><h2 id="apoia-relatorio-titulo-impressao">Relatório de Acompanhamento APOIA</h2><p id="apoia-relatorio-periodo-impressao"></p></div></div><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3 text-left font-semibold text-gray-600">Aluno</th><th class="p-3 text-left font-semibold text-gray-600">Data</th><th class="p-3 text-left font-semibold text-gray-600">Motivo</th><th class="p-3 text-left font-semibold text-gray-600">Status</th><th class="p-3 text-left font-semibold text-gray-600">Observações</th></tr></thead><tbody id="apoia-relatorio-table-body"></tbody></table></div></div></div></div>
                         <div id="admin-calendario-panel" class="admin-panel hidden"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Calendário de Eventos</h2><button id="add-evento-btn" class="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Adicionar Evento</button></div><div class="bg-white p-6 rounded-lg shadow-md"><div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4"><div class="md:col-span-2"><label for="evento-data-inicio-filter" class="block text-sm font-medium text-gray-700">Filtrar de:</label><input type="date" id="evento-data-inicio-filter" class="w-full mt-1 p-2 border rounded-md"></div><div class="md:col-span-2"><label for="evento-data-fim-filter" class="block text-sm font-medium text-gray-700">Até:</label><input type="date" id="evento-data-fim-filter" class="w-full mt-1 p-2 border rounded-md"></div></div><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-sm font-semibold text-gray-600">Período</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Descrição</th><th class="p-3 text-left text-sm font-semibold text-gray-600">Ações</th></tr></thead><tbody id="eventos-table-body"></tbody></table></div></div>
@@ -233,7 +233,7 @@
             </div>
         </div>
 
-        <div id="aluno-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6"><h3 id="aluno-modal-title" class="text-xl font-bold mb-4"></h3><form id="aluno-form"><input type="hidden" id="aluno-id"><div class="space-y-4 max-h-96 overflow-y-auto pr-2"><div><label for="aluno-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="aluno-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="aluno-matricula" class="block text-sm font-medium text-gray-700">Matrícula</label><input type="text" id="aluno-matricula" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="aluno-turma" class="block text-sm font-medium text-gray-700">Turma</label><select id="aluno-turma" required class="w-full mt-1 p-2 border rounded-md"></select></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="aluno-telefone" class="block text-sm font-medium text-gray-700">Telefone</label><input type="tel" id="aluno-telefone" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="aluno-email" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="aluno-email" class="w-full mt-1 p-2 border rounded-md"></div></div><div><label for="aluno-responsavel" class="block text-sm font-medium text-gray-700">Nome do Responsável</label><input type="text" id="aluno-responsavel" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="aluno-status" class="block text-sm font-medium text-gray-700">Status</label><select id="aluno-status" required class="w-full mt-1 p-2 border rounded-md"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div></div><div class="mt-6 flex justify-between items-center"><div id="aluno-delete-container" class="hidden"><button type="button" class="text-red-600 hover:underline text-sm delete-btn" data-type="aluno">Excluir Aluno</button></div><div><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
+        <div id="aluno-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6"><h3 id="aluno-modal-title" class="text-xl font-bold mb-4"></h3><form id="aluno-form"><input type="hidden" id="aluno-id"><div class="space-y-4 max-h-96 overflow-y-auto pr-2"><div><label for="aluno-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="aluno-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="aluno-matricula" class="block text-sm font-medium text-gray-700">Matrícula</label><input type="text" id="aluno-matricula" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="aluno-turma" class="block text-sm font-medium text-gray-700">Turma</label><select id="aluno-turma" required class="w-full mt-1 p-2 border rounded-md"></select></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="aluno-telefone" class="block text-sm font-medium text-gray-700">Telefone</label><input type="tel" id="aluno-telefone" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="aluno-email" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="aluno-email" class="w-full mt-1 p-2 border rounded-md"></div></div><div><label for="aluno-responsavel" class="block text-sm font-medium text-gray-700">Nome do Responsável</label><input type="text" id="aluno-responsavel" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="aluno-status" class="block text-sm font-medium text-gray-700">Status</label><select id="aluno-status" required class="w-full mt-1 p-2 border rounded-md"><option value="ativo">Ativo</option><option value="inativo">Inativo</option><option value="transferido">Transferido</option></select></div></div><div class="mt-6 flex justify-between items-center"><div id="aluno-delete-container" class="hidden"><button type="button" class="text-red-600 hover:underline text-sm delete-btn" data-type="aluno">Excluir Aluno</button></div><div><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
         <div id="professor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="professor-modal-title" class="text-xl font-bold mb-4"></h3><form id="professor-form"><input type="hidden" id="professor-id"><div class="space-y-4"><div><label for="professor-nome" class="block text-sm font-medium text-gray-700">Nome Completo</label><input type="text" id="professor-nome" required class="w-full mt-1 p-2 border rounded-md"></div><div><label for="professor-email" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="professor-email" required class="w-full mt-1 p-2 border rounded-md"></div><div id="password-field-container"> <label for="professor-password" class="block text-sm font-medium text-gray-700">Senha Temporária</label><input type="password" id="professor-password" class="w-full mt-1 p-2 border rounded-md"></div><div id="status-field-container" class="hidden"><label for="professor-status" class="block text-sm font-medium text-gray-700">Status</label><select id="professor-status" required class="w-full mt-1 p-2 border rounded-md"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div><p class="text-xs text-gray-500">O professor deverá confirmar seu e-mail antes do primeiro login.</p></div><div class="mt-6 flex justify-between items-center"><div id="professor-delete-container" class="hidden"><button type="button" class="text-red-600 hover:underline text-sm delete-btn" data-type="professor">Excluir Professor</button></div><div><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
         <div id="turma-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 id="turma-modal-title" class="text-xl font-bold mb-4"></h3><form id="turma-form"><input type="hidden" id="turma-id"><div class="space-y-4"><div><label for="turma-nome" class="block text-sm font-medium text-gray-700">Nome da Turma</label><input type="text" id="turma-nome" required class="w-full mt-1 p-2 border rounded-md" placeholder="Ex: 3º Ano A - Matutino"></div><div><label class="block text-sm font-medium text-gray-700">Professores</label><div id="turma-professores-list" class="mt-1 max-h-40 overflow-y-auto space-y-2 rounded-md border p-2"></div></div></div><div class="mt-6 flex justify-between items-center"><div id="turma-delete-container" class="hidden"><button type="button" class="text-red-600 hover:underline text-sm delete-btn" data-type="turma">Excluir Turma</button></div><div><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
         <div id="acompanhamento-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6"><h3 id="acompanhamento-modal-title" class="text-xl font-bold mb-4"></h3><form id="acompanhamento-form"><input type="hidden" id="acompanhamento-id"><div class="space-y-4"><div><label for="acompanhamento-aluno-select" class="block text-sm font-medium text-gray-700">Aluno</label><select id="acompanhamento-aluno-select" required class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="acompanhamento-motivo" class="block text-sm font-medium text-gray-700">Motivo</label><select id="acompanhamento-motivo" required class="w-full mt-1 p-2 border rounded-md"><option value="">Selecione...</option><option value="5 faltas consecutivas">5 faltas consecutivas</option><option value="7 faltas intercaladas">7 faltas intercaladas</option><option value="Adicionado Manualmente">Adicionado Manualmente</option></select></div><div><label for="acompanhamento-status" class="block text-sm font-medium text-gray-700">Status</label><select id="acompanhamento-status" required class="w-full mt-1 p-2 border rounded-md"><option value="Em andamento">Em andamento</option><option value="Finalizado">Finalizado</option></select></div><div><label for="acompanhamento-observacoes" class="block text-sm font-medium text-gray-700">Observações</label><textarea id="acompanhamento-observacoes" rows="3" class="w-full mt-1 p-2 border rounded-md"></textarea></div></div><div class="mt-6 flex justify-between items-center"><div id="acompanhamento-delete-container" class="hidden"><button type="button" class="text-red-600 hover:underline text-sm delete-btn" data-type="acompanhamento">Excluir</button></div><div><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md ml-2">Salvar</button></div></div></form></div></div>
@@ -526,11 +526,11 @@
                     </div>
                     <div class="justificativa-container mt-3 pt-3 border-t border-gray-200 ${presenca.status === 'falta' ? '' : 'hidden'}">
                         <div class="text-sm font-medium mb-2">Justificativa:</div>
-                        <div class="space-y-2 pl-2">
-                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="Falta justificada" class="form-radio h-4 w-4" ${isJustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Falta justificada</span></label>
-                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="Falta injustificada" class="form-radio h-4 w-4" ${isInjustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Falta injustificada</span></label>
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 pl-2">
+                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="Falta justificada" class="form-radio h-4 w-4" ${isJustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Justificada</span></label>
+                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="Falta injustificada" class="form-radio h-4 w-4" ${isInjustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Injustificada</span></label>
                             <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="outros" class="form-radio h-4 w-4" ${isOutros ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Outros</span></label>
-                            <input type="text" class="justificativa-outros-input mt-1 p-1 w-full border rounded-md text-sm" placeholder="Digite o motivo (opcional)..." value="${isOutros ? presenca.justificativa : ''}" ${!isEditable ? 'disabled' : ''}>
+                            <input type="text" class="justificativa-outros-input p-1 border rounded-md text-sm flex-grow min-w-0" placeholder="Motivo..." value="${isOutros ? presenca.justificativa : ''}" ${!isEditable ? 'disabled' : ''}>
                         </div>
                     </div>
                 `;
@@ -630,7 +630,7 @@
             const { data: turmas } = await safeQuery(db.from('turmas').select('id, nome_turma'));
             turmasCache = turmas || [];
 
-            const { data: users } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, papel').in('papel', ['professor', 'admin']).eq('status', 'ativo'));
+            const { data: users } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, papel, email_confirmado').in('papel', ['professor', 'admin']).eq('status', 'ativo'));
             usuariosCache = users || [];
             
             const { data: allAlunos } = await safeQuery(db.from('alunos').select('id, nome_completo'));
@@ -747,35 +747,33 @@
                 alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Nenhum aluno encontrado.</td></tr>';
                 return;
             }
-            alunosTableBody.innerHTML = data.map(aluno => `
+            alunosTableBody.innerHTML = data.map(aluno => {
+                let statusClass = 'bg-gray-100 text-gray-800';
+                if (aluno.status === 'ativo') statusClass = 'bg-green-100 text-green-800';
+                else if (aluno.status === 'inativo') statusClass = 'bg-red-100 text-red-800';
+                else if (aluno.status === 'transferido') statusClass = 'bg-blue-100 text-blue-800';
+
+                return `
                 <tr class="border-b">
                     <td class="p-3">${aluno.nome_completo}</td>
                     <td class="p-3">${aluno.matricula || ''}</td>
                     <td class="p-3">${aluno.turmas ? aluno.turmas.nome_turma : 'Sem turma'}</td>
                     <td class="p-3">${aluno.nome_responsavel || ''}</td>
                     <td class="p-3">${aluno.telefone || ''}</td>
-                    <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${aluno.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${aluno.status}</span></td>
+                    <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${aluno.status}</span></td>
                     <td class="p-3">
                         <button class="text-blue-600 hover:underline edit-aluno-btn" data-id="${aluno.id}">Editar</button>
                         <button class="text-indigo-600 hover:underline ml-2 historico-aluno-btn" data-id="${aluno.id}">Ver Histórico</button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         async function openAlunoModal(editId = null) {
             alunoForm.reset();
             alunoTurmaSelect.innerHTML = '<option value="">Selecione...</option>';
             
-            const sortedTurmas = [...turmasCache].sort((a, b) => {
-                const numA = parseInt(a.nome_turma.match(/\d+/g));
-                const numB = parseInt(b.nome_turma.match(/\d+/g));
-                if (numA && numB && numA !== numB) {
-                    return numA - numB;
-                }
-                return a.nome_turma.localeCompare(b.nome_turma, undefined, {numeric: true});
-            });
-
+            const sortedTurmas = [...turmasCache].sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, {numeric: true}));
             sortedTurmas.forEach(t => alunoTurmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
             
             document.getElementById('aluno-delete-container').classList.add('hidden');
@@ -967,30 +965,36 @@
 
         // --- Gerenciamento de Professores ---
         async function renderProfessoresPanel() {
-            professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
-            const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status').eq('papel', 'professor')
+            professoresTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
+            const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status, email_confirmado').eq('papel', 'professor')
                 .order('status', { ascending: true }) 
                 .order('nome', { ascending: true })
             );
             if (error) {
-                professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+                professoresTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
                 return;
             }
             if (data.length === 0) {
-                professoresTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Nenhum professor cadastrado.</td></tr>';
+                professoresTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Nenhum professor cadastrado.</td></tr>';
                 return;
             }
-            professoresTableBody.innerHTML = data.map(p => `
+            professoresTableBody.innerHTML = data.map(p => {
+                const emailStatusIndicator = p.email_confirmado 
+                    ? `<div class="has-tooltip relative"><div class="w-3 h-3 bg-green-500 rounded-full"></div><div class="tooltip">E-mail Confirmado</div></div>` 
+                    : `<div class="has-tooltip relative"><div class="w-3 h-3 bg-red-500 rounded-full"></div><div class="tooltip">Confirmação Pendente</div></div>`;
+                
+                return `
                 <tr class="border-b">
                     <td class="p-3">${p.nome}</td>
                     <td class="p-3">${p.email || 'Não informado'}</td>
                     <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${p.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.status}</span></td>
+                    <td class="p-3 flex justify-center items-center">${emailStatusIndicator}</td>
                     <td class="p-3">
                         <button class="text-blue-600 hover:underline mr-4 edit-professor-btn" data-id="${p.id}">Editar</button>
                         <button class="text-orange-600 hover:underline reset-password-btn" data-email="${p.email}">Resetar Senha</button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
         
         async function openProfessorModal(editId = null) {
@@ -1099,7 +1103,7 @@
             }
 
             turmasTableBody.innerHTML = data.map(t => {
-                const profs = t.professores_turmas.map(pt => pt.usuarios.nome).join(', ');
+                const profs = t.professores_turmas.map(pt => pt.usuarios ? pt.usuarios.nome : 'Professor Removido').join(', ');
                 return `
                 <tr class="border-b">
                     <td class="p-3">${t.nome_turma}</td>
@@ -1563,32 +1567,6 @@
                 const target = e.target;
                 const closest = (selector) => target.closest(selector);
 
-                // Lógica de Notificações
-                const notificationPanel = document.getElementById('notification-panel');
-                if (closest('#notification-bell')) {
-                    e.stopPropagation();
-                    notificationPanel.classList.toggle('hidden');
-                } else if (!notificationPanel.classList.contains('hidden') && !closest('#notification-panel')) {
-                    notificationPanel.classList.add('hidden');
-                }
-                const notificationItem = closest('.notification-item');
-                if (notificationItem) markNotificationAsRead(notificationItem.dataset.id);
-                if (closest('#clear-notifications-btn')) markAllNotificationsAsRead();
-                
-                // Lógica de Paginação APOIA
-                const pageBtn = closest('#apoia-pagination button[data-page]');
-                if (pageBtn) renderApoiaPanel(parseInt(pageBtn.dataset.page));
-                
-                // Lógica de Toggle de Senha
-                if (closest('#toggle-password-btn')) {
-                    const isPassword = passwordInput.type === 'password';
-                    passwordInput.type = isPassword ? 'text' : 'password';
-                    eyeIcon.classList.toggle('hidden', isPassword);
-                    eyeOffIcon.classList.toggle('hidden', !isPassword);
-                }
-
-                // --- CORREÇÃO ESTÁ AQUI ---
-                // Lógica de Navegação do Admin
                 const navLink = closest('.admin-nav-link');
                 if (navLink) {
                     e.preventDefault();
@@ -1597,10 +1575,8 @@
                     const targetPanelId = navLink.dataset.target;
                     document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
                     const panel = document.getElementById(targetPanelId);
-                    
                     if (panel) {
                         panel.classList.remove('hidden');
-                        // A lógica foi corrigida para chamar a função correta baseada no ID do painel
                         if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
                         if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel();
                         if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
@@ -1611,17 +1587,11 @@
                         if (targetPanelId === 'admin-config-panel') renderConfigPanel();
                     }
                 }
-                // --- FIM DA CORREÇÃO ---
-
-                // Botões de Abrir Modals
                 if (closest('#add-aluno-btn')) openAlunoModal();
                 const editAlunoBtn = closest('.edit-aluno-btn');
                 if (editAlunoBtn) openAlunoModal(editAlunoBtn.dataset.id);
                 const historicoAlunoBtn = closest('.historico-aluno-btn');
                 if (historicoAlunoBtn) openAlunoHistoricoModal(historicoAlunoBtn.dataset.id);
-                if (closest('#add-acompanhamento-btn')) openAcompanhamentoModal();
-                const editAcompanhamentoBtn = closest('.edit-acompanhamento-btn');
-                if (editAcompanhamentoBtn) openAcompanhamentoModal(editAcompanhamentoBtn.dataset.id);
                 if (closest('#add-professor-btn')) openProfessorModal();
                 const editProfessorBtn = closest('.edit-professor-btn');
                 if (editProfessorBtn) openProfessorModal(editProfessorBtn.dataset.id);
@@ -1632,8 +1602,6 @@
                 const editEventoBtn = closest('.edit-evento-btn');
                 if (editEventoBtn) openEventoModal(editEventoBtn.dataset.id);
                 if (closest('.cancel-modal-btn')) closeAllModals();
-
-                // Botões de Ação
                 const deleteBtn = closest('.delete-btn');
                 if (deleteBtn) {
                     let id;
@@ -1684,13 +1652,16 @@
 
             // Listeners de Change e Input
             ['#chamada-lista-alunos', '#correcao-chamada-lista-alunos'].forEach(selector => {
-                document.querySelector(selector).addEventListener('change', e => {
-                    if (e.target.classList.contains('status-radio')) {
-                        const container = e.target.closest('[data-aluno-id]');
-                        const justDiv = container.querySelector('.justificativa-container');
-                        justDiv.classList.toggle('hidden', e.target.value !== 'falta');
-                    }
-                });
+                const container = document.querySelector(selector);
+                if(container) {
+                    container.addEventListener('change', e => {
+                        if (e.target.classList.contains('status-radio')) {
+                            const row = e.target.closest('[data-aluno-id]');
+                            const justDiv = row.querySelector('.justificativa-container');
+                            justDiv.classList.toggle('hidden', e.target.value !== 'falta');
+                        }
+                    });
+                }
             });
             turmaSelect.addEventListener('change', loadChamada);
             dataSelect.addEventListener('change', loadChamada);
@@ -1699,8 +1670,6 @@
             document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
             document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
             document.getElementById('aluno-search-input').addEventListener('input', (e) => renderAlunosPanel(e.target.value));
-            document.getElementById('correcao-turma-select').addEventListener('change', loadCorrecaoChamada);
-            document.getElementById('correcao-data-select').addEventListener('change', loadCorrecaoChamada);
             document.getElementById('correcao-turma-select').addEventListener('change', loadCorrecaoChamada);
             document.getElementById('correcao-data-select').addEventListener('change', loadCorrecaoChamada);
 
