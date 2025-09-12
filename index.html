@@ -250,7 +250,7 @@
                         <div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-20"><div class="p-4 font-bold border-b flex justify-between items-center"><span>Notificações</span><button id="clear-notifications-btn" class="text-xs text-blue-600 hover:underline font-medium">Limpar Todas</button></div><div id="notification-list" class="p-2 max-h-64 overflow-y-auto"></div></div>
                     </div></div>
                     <div id="admin-content">
-                        <div id="admin-dashboard-panel" class="admin-panel"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Resumo do Dia</h2></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><div id="dashboard-summary" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><div data-type="presencas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-green-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Presenças</p><p id="dashboard-presencas" class="text-2xl font-bold">...</p></div></div><div data-type="faltas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-red-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Faltas</p><p id="dashboard-faltas" class="text-2xl font-bold">...</p></div></div><div class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1"><div class="bg-yellow-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Em Acompanhamento</p><p id="dashboard-acompanhamento" class="text-2xl font-bold">...</p></div></div><div data-type="assiduidade" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-purple-100 rounded-full p-3 mr-4"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg></div><div><p class="text-sm text-gray-500">Análise de Assiduidade</p><p class="text-lg font-bold">Gerar Relatórios</p></div></div></div><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-2">Alunos Ausentes</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div></div><div class="bg-white p-6 rounded-lg shadow-md"><div id="dashboard-calendar-container"><div class="flex items-center justify-between mb-4"><button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200">&lt;</button><h3 id="calendar-month-year" class="text-lg font-bold"></h3><button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-600"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 text-center mt-2"></div></div></div></div></div>
+                        <div id="admin-dashboard-panel" class="admin-panel"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Resumo do Dia</h2></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><div id="dashboard-summary" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><div data-type="presencas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-green-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Presenças</p><p id="dashboard-presencas" class="text-2xl font-bold">...</p></div></div><div data-type="faltas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-red-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Faltas</p><p id="dashboard-faltas" class="text-2xl font-bold">...</p></div></div><div class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1"><div class="bg-yellow-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Em Acompanhamento</p><p id="dashboard-acompanhamento" class="text-2xl font-bold">...</p></div></div><div data-type="assiduidade" id="assiduidade-card" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-purple-100 rounded-full p-3 mr-4"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg></div><div><p class="text-sm text-gray-500">Análise de Assiduidade</p><p class="text-lg font-bold">Gerar Relatórios</p></div></div></div><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-2">Alunos Ausentes</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div></div><div class="bg-white p-6 rounded-lg shadow-md"><div id="dashboard-calendar-container"><div class="flex items-center justify-between mb-4"><button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200">&lt;</button><h3 id="calendar-month-year" class="text-lg font-bold"></h3><button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-600"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 text-center mt-2"></div></div></div></div></div>
                         <div id="admin-alunos-panel" class="admin-panel hidden">
                             <div class="flex justify-between items-center mb-4">
                                 <h2 class="text-2xl font-bold">Cadastro Geral de Alunos</h2>
@@ -305,13 +305,12 @@
         <div id="promover-massa-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6"><h3 class="text-xl font-bold mb-6">Promover Ano Letivo em Massa</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4"><div class="space-y-3"><div><label for="promover-massa-ano-origem" class="block text-sm font-medium text-gray-700">Ano de Origem</label><select id="promover-massa-ano-origem" class="w-full mt-1 p-2 border rounded-md"></select></div></div><div class="space-y-3"><div><label for="promover-massa-ano-destino" class="block text-sm font-medium text-gray-700">Ano de Destino</label><select id="promover-massa-ano-destino" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="promover-massa-mapeamento-container" class="hidden"><h4 class="font-semibold mb-2 mt-4 text-gray-800">Mapeamento de Turmas</h4><p class="text-sm text-gray-600 mb-3">O sistema tentou mapear as turmas automaticamente. Revise e ajuste o destino conforme necessário. Apenas turmas com um destino selecionado serão processadas.</p><div class="max-h-72 overflow-y-auto border rounded-md p-3 bg-gray-50 space-y-3" id="promover-massa-mapeamento-list"></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="promover-massa-btn" class="px-6 py-2 bg-teal-600 text-white font-semibold rounded-md disabled:bg-teal-300" disabled>Promover em Massa</button></div></div></div>
         <div id="promover-massa-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold mb-4 text-teal-600">Confirmar Promoção em Massa</h3><p id="promover-massa-confirm-message" class="mb-4"></p><div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 rounded-md text-sm mb-4">Esta ação é irreversível e irá mover todos os alunos das turmas de origem mapeadas para as turmas de destino.</div><div class="mb-4"><label class="flex items-center"><input type="checkbox" id="promover-massa-confirm-checkbox" class="form-checkbox h-5 w-5 text-teal-600"><span class="ml-2 text-sm">Sim, eu entendo e quero continuar.</span></label></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="confirm-promocao-massa-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md disabled:bg-teal-300" disabled>Executar Promoção em Massa</button></div></div></div>
         <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6"><h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3><div class="border-b border-gray-200"><nav class="-mb-px flex space-x-6" id="assiduidade-tabs"><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos-turmas">Alunos & Turmas</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores</a></nav></div><div id="assiduidade-content" class="mt-6"><div id="assiduidade-alunos-turmas" class="assiduidade-panel"><h4 class="font-semibold mb-3">Filtros para Alunos e Turmas</h4><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><div><label for="assiduidade-aluno-data-inicio" class="block text-sm font-medium">Data de Início</label><input type="date" id="assiduidade-aluno-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-aluno-data-fim" class="block text-sm font-medium">Data de Fim</label><input type="date" id="assiduidade-aluno-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-aluno-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-aluno-ano" class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="assiduidade-aluno-turma" class="block text-sm font-medium">Turma</label><select id="assiduidade-aluno-turma" class="w-full mt-1 p-2 border rounded-md"></select></div><div class="lg:col-span-2"><label for="assiduidade-aluno-aluno" class="block text-sm font-medium">Aluno Específico (Opcional)</label><select id="assiduidade-aluno-aluno" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-professores" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Professores</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="assiduidade-prof-data-inicio" class="block text-sm font-medium">Data de Início</label><input type="date" id="assiduidade-prof-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-prof-data-fim" class="block text-sm font-medium">Data de Fim</label><input type="date" id="assiduidade-prof-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div class="md:col-span-2"><label for="assiduidade-prof-professor" class="block text-sm font-medium">Professor Específico (Opcional)</label><select id="assiduidade-prof-professor" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div></div><div class="mt-8 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="gerar-assiduidade-btn" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-md">Gerar Relatório</button></div></div></div>
-
     </div>
 
     <script type="module">
         const { createClient } = supabase;
         const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI2NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYyOTQ3ODgsImV4cCI6MjAzMTg3MDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
         
         if (SUPABASE_URL === 'SUA_URL_DO_PROJETO') throw new Error("Credenciais da Supabase não configuradas.");
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -946,7 +945,7 @@
                         <button class="text-indigo-600 hover:underline ml-2 historico-aluno-btn" data-id="${aluno.id}">Ver Histórico</button>
                     </td>
                 </tr>
-            `}).join('');
+                `}).join('');
         }
 
         async function openAlunoModal(editId = null) {
@@ -1124,7 +1123,7 @@
               if (error) {
                    tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
                    return;
-              }
+             }
               if (data.length === 0) {
                    tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
                    return;
@@ -1173,7 +1172,7 @@
                         <button class="text-orange-600 hover:underline reset-password-btn" data-email="${p.email}">Resetar Senha</button>
                     </td>
                 </tr>
-            `}).join('');
+                `}).join('');
         }
         
         async function openProfessorModal(editId = null) {
@@ -1302,7 +1301,7 @@
                         <button class="text-red-600 hover:underline delete-turma-btn" data-id="${t.id}">Excluir</button>
                     </td>
                 </tr>
-            `}).join('');
+                `}).join('');
         }
 
         async function openTurmaModal(editId = null) {
@@ -1503,7 +1502,7 @@
                     <td class="p-3">${evento.descricao}</td>
                     <td class="p-3"><button class="text-blue-600 hover:underline edit-evento-btn" data-id="${evento.id}">Editar</button></td>
                 </tr>
-            `}).join('');
+                `}).join('');
         }
 
         async function openEventoModal(editId = null) {
@@ -1735,18 +1734,18 @@
         }
 
         async function handleConfirmPromocaoMassa() {
-             const btn = document.getElementById('confirm-promocao-massa-btn');
-             const mapeamento = JSON.parse(btn.dataset.mapeamento);
+              const btn = document.getElementById('confirm-promocao-massa-btn');
+              const mapeamento = JSON.parse(btn.dataset.mapeamento);
 
-             const { error } = await db.rpc('promover_alunos_em_massa', { mapeamentos: mapeamento });
+              const { error } = await db.rpc('promover_alunos_em_massa', { mapeamento });
 
-             if (error) {
-                 showToast("Erro ao executar promoção em massa: " + error.message, true);
-             } else {
-                 showToast("Alunos promovidos em massa com sucesso!");
-                 closeAllModals();
-                 await renderAlunosPanel({ defaultToLatestYear: true });
-             }
+              if (error) {
+                   showToast("Erro ao executar promoção em massa: " + error.message, true);
+              } else {
+                   showToast("Alunos promovidos em massa com sucesso!");
+                   closeAllModals();
+                   await renderAlunosPanel({ defaultToLatestYear: true });
+              }
         }
         
         // --- Lógica de Exclusão ---
@@ -1856,16 +1855,18 @@
             }
         }
         
-        // ===============================================================
-        // =================== ANÁLISE DE ASSIDUIDADE ====================
-        // ===============================================================
-        
+        // --- Análise de Assiduidade ---
         function openAssiduidadeModal() {
-            // Popula filtros
+            // Popula filtros de Alunos/Turmas
             const anoSel = document.getElementById('assiduidade-aluno-ano');
+            const turmaSel = document.getElementById('assiduidade-aluno-turma');
+            const alunoSel = document.getElementById('assiduidade-aluno-aluno');
             anoSel.innerHTML = '<option value="">Todos os Anos</option>';
             anosLetivosCache.forEach(ano => anoSel.innerHTML += `<option value="${ano}">${ano}</option>`);
+            turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
+            alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
 
+            // Popula filtros de Professores
             const profSel = document.getElementById('assiduidade-prof-professor');
             profSel.innerHTML = '<option value="">Todos os Professores</option>';
             usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
@@ -1874,10 +1875,15 @@
         }
 
         async function generateAssiduidadeReport() {
-            // Lógica para gerar e abrir o relatório em uma nova aba
-            showToast("Gerando relatório de assiduidade...");
-            // ... (implementação detalhada virá aqui)
+            // Lógica para abrir nova aba e gerar o relatório
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write('<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>@media print{.no-print{display:none!important;}.print-header{display:flex!important;justify-content:space-between;align-items:center;padding-bottom:1rem;margin-bottom:1.5rem;border-bottom:2px solid #e5e7eb;}.print-header img{max-height:60px;width:auto;}.print-header-info h2{font-size:1.25rem;font-weight:700;margin:0;}.print-header-info p{font-size:.875rem;margin:0}}</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2 id="print-title"></h2><p id="print-period"></p></div></div><div class="loader">Carregando dados...</div></div></body></html>');
+            
+            // Simplesmente feche o modal depois de abrir a nova janela
+            closeModal(assiduidadeModal);
+            showToast("Gerando relatório em uma nova aba...");
         }
+
 
         // ===============================================================
         // =================== EVENT LISTENERS ===========================
@@ -2089,7 +2095,7 @@
                            renderDashboardCalendar();
                            loadDailySummary(dashboardSelectedDate);
                       }
-                }
+                 }
                 if(closest('#open-promover-alunos-modal-btn')) openPromoverAlunosModal();
                 if(closest('#open-promover-massa-modal-btn')) openPromoverMassaModal();
                 if(closest('#promover-alunos-btn')) handlePromoverAlunos();
@@ -2112,16 +2118,16 @@
                 }
             });
              if(document.getElementById('clear-notifications-btn')) {
-                 document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
-            }
+                document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
+             }
              if(document.getElementById('notification-list')) {
-                 document.getElementById('notification-list').addEventListener('click', (e) => {
-                     const item = e.target.closest('.notification-item');
-                     if(item) {
-                         markNotificationAsRead(item.dataset.id);
-                     }
-                 });
-            }
+                document.getElementById('notification-list').addEventListener('click', (e) => {
+                    const item = e.target.closest('.notification-item');
+                    if(item) {
+                        markNotificationAsRead(item.dataset.id);
+                    }
+                });
+             }
 
 
             // Listeners de Change e Input
