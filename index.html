@@ -50,12 +50,13 @@
         }
         .calendar-day {
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, transform 0.2s;
         }
         .calendar-day-selected {
-            background-color: #16a34a !important; /* Verde forte */
-            color: white !important;
-            border-radius: 9999px;
+            background-color: transparent !important;
+            border: 2px solid #16a34a; /* Aro verde forte */
+            color: #16a34a !important;
+            transform: scale(1.15); /* Um pouco maior */
             font-weight: bold;
         }
         .calendar-day-event {
@@ -1925,7 +1926,14 @@
                         if (e.target.classList.contains('status-radio')) {
                             const row = e.target.closest('[data-aluno-id]');
                             const justDiv = row.querySelector('.justificativa-container');
-                            justDiv.classList.toggle('hidden', e.target.value !== 'falta');
+                            const isFalta = e.target.value === 'falta';
+                            justDiv.classList.toggle('hidden', !isFalta);
+                            if (isFalta) {
+                                const injustificadaRadio = row.querySelector('input[value="Falta injustificada"]');
+                                if (injustificadaRadio) {
+                                    injustificadaRadio.checked = true;
+                                }
+                            }
                         }
                     });
                 }
