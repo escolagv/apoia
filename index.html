@@ -622,19 +622,8 @@
 
             const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => {
                 const status = row.querySelector('.status-radio:checked').value;
-                let justificativa = null;
-                if (status === 'falta') {
-                    const justRadio = row.querySelector(`input[name="just-${row.dataset.alunoId}"]:checked`);
-                    if (justRadio) {
-                        if (justRadio.value === 'outros') {
-                            justificativa = row.querySelector('.justificativa-outros-input').value.trim() || 'Outros';
-                        } else {
-                            justificativa = justRadio.value;
-                        }
-                    } else {
-                         justificativa = 'Falta injustificada';
-                    }
-                }
+                const justificativa = status === 'falta' ? 'Falta injustificada' : null;
+                
                 return {
                     aluno_id: parseInt(row.dataset.alunoId),
                     turma_id: parseInt(turmaSelect.value),
@@ -651,7 +640,7 @@
                 console.error("Erro detalhado ao salvar chamada:", error);
                 let userMessage = 'Erro ao salvar chamada: ' + error.message;
                 if (error.message.includes('security policy')) {
-                    userMessage = "Falha ao salvar. Você pode não ter permissão para esta turma. Tente reassociar o professor à turma no painel de admin.";
+                    userMessage = "Falha ao salvar. Você pode não ter permissão para esta turma. Verifique no painel de admin se este professor está corretamente associado à turma.";
                 }
                 showToast(userMessage, true);
             } else {
