@@ -594,11 +594,11 @@
                             <label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600 status-radio" ${presenca.status === 'falta' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Falta</span></label>
                         </div>
                     </div>
-                    <div class="justificativa-container mt-3 pt-3 border-t border-gray-200 ${presenca.status === 'falta' ? '' : 'hidden'}">
-                        <div class="text-sm font-medium mb-2">Justificativa:</div>
-                        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 pl-2">
-                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="Falta justificada" class="form-radio h-4 w-4" ${isJustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Justificada</span></label>
-                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="Falta injustificada" class="form-radio h-4 w-4" ${isInjustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Injustificada</span></label>
+                    <div class="justificativa-container mt-2 pt-2 border-t border-gray-200 ${presenca.status === 'falta' ? 'flex' : 'hidden'} items-center gap-x-3">
+                        <div class="text-sm font-medium">Justificativa:</div>
+                        <div class="flex items-center gap-x-3">
+                            <label class="flex items-center cursor-pointer"><input type="radio" name="just-${aluno.id}" value="Falta justificada" class="form-radio h-4 w-4" ${isJustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Justificada</span></label>
+                            <label class="flex items-center cursor-pointer"><input type="radio" name="just-${aluno.id}" value="Falta injustificada" class="form-radio h-4 w-4" ${isInjustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Injustificada</span></label>
                         </div>
                     </div>
                 `;
@@ -782,7 +782,7 @@
             faltasEl.textContent = '...';
             ausentesListEl.innerHTML = '<li>Carregando...</li>';
 
-            const { data } = await safeQuery(db.from('presencas').select('aluno_id, status, alunos ( id, nome_completo ), turmas ( nome_turma )').eq('data', selectedDate).eq('status', 'falta'));
+            const { data } = await safeQuery(db.from('presencas').select('justificativa, alunos ( id, nome_completo ), turmas ( nome_turma )').eq('data', selectedDate).eq('status', 'falta'));
             
             if (!data) {
                 ausentesListEl.innerHTML = `<li>Erro ao carregar dados.</li>`;
@@ -797,7 +797,10 @@
             if (data.length === 0) {
                 ausentesListEl.innerHTML = '<li>Nenhum aluno ausente.</li>';
             } else {
-                ausentesListEl.innerHTML = data.map(a => `<li><a href="#" class="text-blue-600 hover:underline dashboard-aluno-link" data-aluno-id="${a.alunos.id}">${a.alunos.nome_completo}</a> <span class="text-gray-500">(${a.turmas.nome_turma})</span></li>`).join('');
+                ausentesListEl.innerHTML = data.map(a => {
+                    const justificativaTexto = a.justificativa ? `- ${a.justificativa}` : '';
+                    return `<li><a href="#" class="text-blue-600 hover:underline dashboard-aluno-link" data-aluno-id="${a.alunos.id}">${a.alunos.nome_completo}</a> <span class="text-gray-500">(${a.turmas.nome_turma}) ${justificativaTexto}</span></li>`
+                }).join('');
             }
         }
 
