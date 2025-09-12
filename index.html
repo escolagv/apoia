@@ -610,6 +610,8 @@
 
             const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => {
                 const status = row.querySelector('.status-radio:checked').value;
+                // Lógica de negócio: Para professores, a falta é sempre injustificada por padrão.
+                // A justificativa detalhada é uma tarefa administrativa.
                 const justificativa = status === 'falta' ? 'Falta injustificada' : null;
                 
                 return {
