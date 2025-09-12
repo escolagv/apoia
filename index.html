@@ -113,6 +113,17 @@
             transform: translateY(-4px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+        .date-clear-btn {
+            cursor: pointer;
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+        .date-clear-btn:hover {
+            color: #374151;
+        }
         .print-header {
             display: none;
         }
@@ -304,7 +315,7 @@
         <div id="promover-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold mb-4 text-indigo-600">Confirmar Promoção</h3><p id="promover-confirm-message" class="mb-4"></p><div id="promover-confirm-warning" class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 rounded-md text-sm mb-4"></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="confirm-promocao-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Sim, Promover Alunos</button></div></div></div>
         <div id="promover-massa-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6"><h3 class="text-xl font-bold mb-6">Promover Ano Letivo em Massa</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4"><div class="space-y-3"><div><label for="promover-massa-ano-origem" class="block text-sm font-medium text-gray-700">Ano de Origem</label><select id="promover-massa-ano-origem" class="w-full mt-1 p-2 border rounded-md"></select></div></div><div class="space-y-3"><div><label for="promover-massa-ano-destino" class="block text-sm font-medium text-gray-700">Ano de Destino</label><select id="promover-massa-ano-destino" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="promover-massa-mapeamento-container" class="hidden"><h4 class="font-semibold mb-2 mt-4 text-gray-800">Mapeamento de Turmas</h4><p class="text-sm text-gray-600 mb-3">O sistema tentou mapear as turmas automaticamente. Revise e ajuste o destino conforme necessário. Apenas turmas com um destino selecionado serão processadas.</p><div class="max-h-72 overflow-y-auto border rounded-md p-3 bg-gray-50 space-y-3" id="promover-massa-mapeamento-list"></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="promover-massa-btn" class="px-6 py-2 bg-teal-600 text-white font-semibold rounded-md disabled:bg-teal-300" disabled>Promover em Massa</button></div></div></div>
         <div id="promover-massa-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold mb-4 text-teal-600">Confirmar Promoção em Massa</h3><p id="promover-massa-confirm-message" class="mb-4"></p><div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 rounded-md text-sm mb-4">Esta ação é irreversível e irá mover todos os alunos das turmas de origem mapeadas para as turmas de destino.</div><div class="mb-4"><label class="flex items-center"><input type="checkbox" id="promover-massa-confirm-checkbox" class="form-checkbox h-5 w-5 text-teal-600"><span class="ml-2 text-sm">Sim, eu entendo e quero continuar.</span></label></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="confirm-promocao-massa-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md disabled:bg-teal-300" disabled>Executar Promoção em Massa</button></div></div></div>
-        <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6"><h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3><div class="border-b border-gray-200"><nav class="-mb-px flex space-x-6" id="assiduidade-tabs"><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos-turmas">Alunos & Turmas</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores</a></nav></div><div id="assiduidade-content" class="mt-6"><div id="assiduidade-alunos-turmas" class="assiduidade-panel"><h4 class="font-semibold mb-3">Filtros para Alunos e Turmas</h4><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><div><label for="assiduidade-aluno-data-inicio" class="block text-sm font-medium">Data de Início</label><input type="date" id="assiduidade-aluno-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-aluno-data-fim" class="block text-sm font-medium">Data de Fim</label><input type="date" id="assiduidade-aluno-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-aluno-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-aluno-ano" class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="assiduidade-aluno-turma" class="block text-sm font-medium">Turma</label><select id="assiduidade-aluno-turma" class="w-full mt-1 p-2 border rounded-md"></select></div><div class="lg:col-span-2"><label for="assiduidade-aluno-aluno" class="block text-sm font-medium">Aluno Específico (Opcional)</label><select id="assiduidade-aluno-aluno" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-professores" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Professores</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="assiduidade-prof-data-inicio" class="block text-sm font-medium">Data de Início</label><input type="date" id="assiduidade-prof-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-prof-data-fim" class="block text-sm font-medium">Data de Fim</label><input type="date" id="assiduidade-prof-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div class="md:col-span-2"><label for="assiduidade-prof-professor" class="block text-sm font-medium">Professor Específico (Opcional)</label><select id="assiduidade-prof-professor" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div></div><div class="mt-8 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="gerar-assiduidade-btn" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-md">Gerar Relatório</button></div></div></div>
+        <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6"><h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3><div class="border-b border-gray-200"><nav class="-mb-px flex space-x-6" id="assiduidade-tabs"><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos-turmas">Alunos & Turmas</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores</a></nav></div><div id="assiduidade-content" class="mt-6"><div id="assiduidade-alunos-turmas" class="assiduidade-panel"><h4 class="font-semibold mb-3">Filtros para Alunos e Turmas</h4><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><div><label for="assiduidade-aluno-data-inicio" class="block text-sm font-medium">Data de Início</label><div class="relative mt-1"><input type="date" id="assiduidade-aluno-data-inicio" class="w-full p-2 border rounded-md"><span class="date-clear-btn" data-target="assiduidade-aluno-data-inicio">×</span></div></div><div><label for="assiduidade-aluno-data-fim" class="block text-sm font-medium">Data de Fim</label><div class="relative mt-1"><input type="date" id="assiduidade-aluno-data-fim" class="w-full p-2 border rounded-md"><span class="date-clear-btn" data-target="assiduidade-aluno-data-fim">×</span></div></div><div><label for="assiduidade-aluno-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-aluno-ano" class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="assiduidade-aluno-turma" class="block text-sm font-medium">Turma</label><select id="assiduidade-aluno-turma" class="w-full mt-1 p-2 border rounded-md"></select></div><div class="lg:col-span-2"><label for="assiduidade-aluno-aluno" class="block text-sm font-medium">Aluno Específico (Opcional)</label><select id="assiduidade-aluno-aluno" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-professores" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Professores</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="assiduidade-prof-data-inicio" class="block text-sm font-medium">Data de Início</label><div class="relative mt-1"><input type="date" id="assiduidade-prof-data-inicio" class="w-full p-2 border rounded-md"><span class="date-clear-btn" data-target="assiduidade-prof-data-inicio">×</span></div></div><div><label for="assiduidade-prof-data-fim" class="block text-sm font-medium">Data de Fim</label><div class="relative mt-1"><input type="date" id="assiduidade-prof-data-fim" class="w-full p-2 border rounded-md"><span class="date-clear-btn" data-target="assiduidade-prof-data-fim">×</span></div></div><div class="md:col-span-2"><label for="assiduidade-prof-professor" class="block text-sm font-medium">Professor Específico (Opcional)</label><select id="assiduidade-prof-professor" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div></div><div class="mt-8 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="gerar-assiduidade-btn" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-md">Gerar Relatório</button></div></div></div>
     </div>
 
     <script type="module">
@@ -1866,6 +1877,14 @@
             turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
             alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
 
+            // Define o ano atual como padrão
+            const currentYear = new Date().getFullYear();
+            if (anosLetivosCache.includes(currentYear)) {
+                anoSel.value = currentYear;
+                anoSel.dispatchEvent(new Event('change')); // Dispara o evento para carregar as turmas
+            }
+
+
             // Popula filtros de Professores
             const profSel = document.getElementById('assiduidade-prof-professor');
             profSel.innerHTML = '<option value="">Todos os Professores</option>';
@@ -1875,15 +1894,49 @@
         }
 
         async function generateAssiduidadeReport() {
-            // Lógica para abrir nova aba e gerar o relatório
             const newWindow = window.open('', '_blank');
-            newWindow.document.write('<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>@media print{.no-print{display:none!important;}.print-header{display:flex!important;justify-content:space-between;align-items:center;padding-bottom:1rem;margin-bottom:1.5rem;border-bottom:2px solid #e5e7eb;}.print-header img{max-height:60px;width:auto;}.print-header-info h2{font-size:1.25rem;font-weight:700;margin:0;}.print-header-info p{font-size:.875rem;margin:0}}</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2 id="print-title"></h2><p id="print-period"></p></div></div><div class="loader">Carregando dados...</div></div></body></html>');
+            newWindow.document.write('<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>body{font-family: "Inter", sans-serif;} .print-header{display:none;} @media print{.no-print{display:none!important;}.printable-area{position:absolute;left:0;top:0;width:100%;}body *{visibility:hidden;}.printable-area, .printable-area *{visibility:visible;}.print-header{display:flex!important;justify-content:space-between;align-items:center;padding-bottom:1rem;margin-bottom:1.5rem;border-bottom:2px solid #e5e7eb;}.print-header img{max-height:60px;width:auto;}.print-header-info h2{font-size:1.25rem;font-weight:700;margin:0;}.print-header-info p{font-size:.875rem;margin:0}}</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content"><div class="text-center"><div style="border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:48px;height:48px;animation:spin 1s linear infinite;margin:auto;"></div><p class="mt-4">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>');
             
-            // Simplesmente feche o modal depois de abrir a nova janela
             closeModal(assiduidadeModal);
-            showToast("Gerando relatório em uma nova aba...");
-        }
+            
+            const activeTab = document.querySelector('#assiduidade-tabs a[aria-current="page"]').dataset.target;
+            
+            let reportHtml = '';
+            
+            try {
+                if (activeTab === 'assiduidade-alunos-turmas') {
+                    // Lógica para relatório de alunos e turmas
+                    // ... (código será adicionado aqui)
+                } else {
+                    // Lógica para relatório de professores
+                    // ... (código será adicionado aqui)
+                }
 
+                // Simulação de conteúdo por enquanto
+                reportHtml = `
+                    <div class="print-header hidden">
+                        <img src="./logo.png" alt="Logo da Escola">
+                        <div class="print-header-info">
+                            <h2 id="print-title">Relatório de Assiduidade</h2>
+                            <p id="print-period">Período: 01/01/2025 a 31/01/2025</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mb-6 no-print">
+                        <h1 class="text-3xl font-bold">Relatório de Assiduidade</h1>
+                        <button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <p>Relatório gerado com sucesso!</p>
+                        </div>
+                `;
+
+            } catch(e) {
+                console.error("Erro ao gerar relatório:", e);
+                reportHtml = `<div class="text-red-500 font-bold text-center">Ocorreu um erro ao gerar o relatório: ${e.message}</div>`;
+            }
+
+            newWindow.document.getElementById('report-content').innerHTML = reportHtml;
+        }
 
         // ===============================================================
         // =================== EVENT LISTENERS ===========================
@@ -1987,6 +2040,11 @@
             document.body.addEventListener('click', (e) => {
                 const target = e.target;
                 const closest = (selector) => target.closest(selector);
+
+                if (closest('.date-clear-btn')) {
+                    const targetId = closest('.date-clear-btn').dataset.target;
+                    document.getElementById(targetId).value = '';
+                }
 
                 const navLink = closest('.admin-nav-link');
                 if (navLink) {
