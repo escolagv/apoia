@@ -1945,11 +1945,13 @@
                             const row = e.target.closest('[data-aluno-id]');
                             const justDiv = row.querySelector('.justificativa-container');
                             const isFalta = e.target.value === 'falta';
-                            justDiv.classList.toggle('hidden', !isFalta);
-                            if (isFalta) {
-                                const injustificadaRadio = row.querySelector('input[value="Falta injustificada"]');
-                                if (injustificadaRadio) {
-                                    injustificadaRadio.checked = true;
+                            if (justDiv) { // Apenas executa se o container de justificativa existir (painel admin)
+                                justDiv.classList.toggle('hidden', !isFalta);
+                                if (isFalta) {
+                                    const injustificadaRadio = row.querySelector('input[value="Falta injustificada"]');
+                                    if (injustificadaRadio) {
+                                        injustificadaRadio.checked = true;
+                                    }
                                 }
                             }
                         }
