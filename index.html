@@ -619,8 +619,7 @@
         async function saveChamada() {
             salvarChamadaBtn.disabled = true;
             salvarChamadaBtn.innerHTML = '<div class="loader mx-auto"></div>';
-            // NOTA: Se o salvamento falhar para professores, verifique as políticas de Row Level Security (RLS) no Supabase.
-            // O código abaixo envia os dados corretamente. O bloqueio provavelmente está no banco de dados.
+
             const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => {
                 const status = row.querySelector('.status-radio:checked').value;
                 let justificativa = null;
@@ -633,7 +632,7 @@
                             justificativa = justRadio.value;
                         }
                     } else {
-                         justificativa = 'Falta injustificada'; // Default se nada for marcado
+                         justificativa = 'Falta injustificada';
                     }
                 }
                 return {
@@ -649,7 +648,12 @@
             const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
             
             if(error) {
-                showToast('Erro ao salvar: ' + error.message, true);
+                console.error("Erro detalhado ao salvar chamada:", error);
+                let userMessage = 'Erro ao salvar chamada: ' + error.message;
+                if (error.message.includes('security policy')) {
+                    userMessage = "Falha ao salvar. Você pode não ter permissão para esta turma. Tente reassociar o professor à turma no painel de admin.";
+                }
+                showToast(userMessage, true);
             } else {
                 showToast('Chamada salva com sucesso!');
             }
@@ -860,18 +864,27 @@
         }
 
         // --- Gerenciamento de Alunos ---
-        async function renderAlunosPanel(searchTerm = '') {
+        async function renderAlunosPanel(options = {}) {
+            const { defaultToLatestYear = false } = options;
+            const searchTerm = document.getElementById('aluno-search-input').value;
             const anoLetivoFilter = document.getElementById('aluno-ano-letivo-filter');
             const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
             
-            const currentAnoVal = anoLetivoFilter.value;
+            let currentAnoVal = anoLetivoFilter.value;
             anoLetivoFilter.innerHTML = '<option value="">Todos os Anos</option>';
             anosLetivosCache.filter(ano => ano != null).forEach(ano => {
                  anoLetivoFilter.innerHTML += `<option value="${ano}">${ano}</option>`;
             });
-            anoLetivoFilter.value = currentAnoVal;
 
-            const currentTurmaVal = alunoTurmaFilter.value;
+            if (defaultToLatestYear && anosLetivosCache.length > 0) {
+                 anoLetivoFilter.value = anosLetivosCache[0];
+            } else {
+                 anoLetivoFilter.value = currentAnoVal;
+            }
+            
+            currentAnoVal = anoLetivoFilter.value; // Update after potentially setting default
+            
+            const currentTurmaVal = defaultToLatestYear ? '' : alunoTurmaFilter.value;
             alunoTurmaFilter.innerHTML = '<option value="">Todas as Turmas</option>';
             if (currentAnoVal) {
                 turmasCache.filter(t => t.ano_letivo == currentAnoVal).forEach(t => {
@@ -1832,7 +1845,7 @@
                     if (panel) {
                         panel.classList.remove('hidden');
                         if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
-                        if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel();
+                        if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
                         if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
                         if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
                         if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
@@ -1969,14 +1982,14 @@
             document.getElementById('delete-confirm-checkbox').addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
             document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
             document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
-            document.getElementById('aluno-search-input').addEventListener('input', (e) => renderAlunosPanel(e.target.value));
+            document.getElementById('aluno-search-input').addEventListener('input', (e) => renderAlunosPanel());
             document.getElementById('turma-ano-letivo-filter').addEventListener('change', renderTurmasPanel);
             document.getElementById('aluno-ano-letivo-filter').addEventListener('change', () => {
                 document.getElementById('aluno-turma-filter').value = ''; 
-                renderAlunosPanel(document.getElementById('aluno-search-input').value);
+                renderAlunosPanel();
             });
              document.getElementById('aluno-turma-filter').addEventListener('change', () => {
-                renderAlunosPanel(document.getElementById('aluno-search-input').value);
+                renderAlunosPanel();
             });
             correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
             correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
