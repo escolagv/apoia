@@ -579,6 +579,8 @@
 
             alunos.forEach(aluno => {
                 const presenca = presencasMap.get(aluno.id) || { status: 'presente', justificativa: null };
+                const isJustificada = presenca.justificativa === 'Falta justificada';
+                const isInjustificada = presenca.justificativa === 'Falta injustificada' || (!presenca.justificativa && presenca.status === 'falta');
                 
                 const alunoDiv = document.createElement('div');
                 alunoDiv.className = 'p-3 bg-gray-50 rounded-lg';
@@ -590,6 +592,13 @@
                         <div class="flex items-center gap-4">
                             <label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600 status-radio" ${presenca.status === 'presente' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Presente</span></label>
                             <label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600 status-radio" ${presenca.status === 'falta' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Falta</span></label>
+                        </div>
+                    </div>
+                    <div class="justificativa-container mt-3 pt-3 border-t border-gray-200 ${presenca.status === 'falta' ? '' : 'hidden'}">
+                        <div class="text-sm font-medium mb-2">Justificativa:</div>
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 pl-2">
+                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="Falta justificada" class="form-radio h-4 w-4" ${isJustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Justificada</span></label>
+                            <label class="flex items-center"><input type="radio" name="just-${aluno.id}" value="Falta injustificada" class="form-radio h-4 w-4" ${isInjustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Injustificada</span></label>
                         </div>
                     </div>
                 `;
@@ -610,9 +619,11 @@
 
             const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => {
                 const status = row.querySelector('.status-radio:checked').value;
-                // Lógica de negócio: Para professores, a falta é sempre injustificada por padrão.
-                // A justificativa detalhada é uma tarefa administrativa.
-                const justificativa = status === 'falta' ? 'Falta injustificada' : null;
+                let justificativa = null;
+                if (status === 'falta') {
+                    const justRadio = row.querySelector(`input[name="just-${row.dataset.alunoId}"]:checked`);
+                    justificativa = justRadio ? justRadio.value : 'Falta injustificada';
+                }
                 
                 return {
                     aluno_id: parseInt(row.dataset.alunoId),
@@ -1947,7 +1958,7 @@
                             const row = e.target.closest('[data-aluno-id]');
                             const justDiv = row.querySelector('.justificativa-container');
                             const isFalta = e.target.value === 'falta';
-                            if (justDiv) { // Apenas executa se o container de justificativa existir (painel admin)
+                            if (justDiv) { // Apenas executa se o container de justificativa existir
                                 justDiv.classList.toggle('hidden', !isFalta);
                                 if (isFalta) {
                                     const injustificadaRadio = row.querySelector('input[value="Falta injustificada"]');
