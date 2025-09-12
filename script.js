@@ -1578,13 +1578,9 @@ function openAssiduidadeModal() {
         anoSelTurma.dispatchEvent(new Event('change'));
     }
 
-    // Define período padrão para o relatório de professores
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
-    document.getElementById('assiduidade-prof-data-inicio').value = firstDay;
-    document.getElementById('assiduidade-prof-data-fim').value = lastDay;
-
+    // Limpa as datas do relatório de professores
+    document.getElementById('assiduidade-prof-data-inicio').value = '';
+    document.getElementById('assiduidade-prof-data-fim').value = '';
 
     // Popula filtros de Professores
     const profSel = document.getElementById('assiduidade-prof-professor');
@@ -1808,8 +1804,8 @@ async function generateAssiduidadeReport() {
             const professorId = document.getElementById('assiduidade-prof-professor').value;
 
             if (!dataInicio || !dataFim) {
-                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione um período de início e fim para gerar o relatório de professores.</p>';
-                return;
+                 newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione um período de início e fim para gerar o relatório de professores.</p>';
+                 return;
             }
 
             // 1. Calcular dias letivos no período
