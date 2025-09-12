@@ -640,7 +640,7 @@
                 console.error("Erro detalhado ao salvar chamada:", error);
                 let userMessage = 'Erro ao salvar chamada: ' + error.message;
                 if (error.message.includes('security policy')) {
-                    userMessage = "Falha ao salvar. Você pode não ter permissão para esta turma. Verifique no painel de admin se este professor está corretamente associado à turma.";
+                    userMessage = "Falha de permissão ao salvar. Verifique no painel de admin se este professor está corretamente associado à turma.";
                 }
                 showToast(userMessage, true);
             } else {
