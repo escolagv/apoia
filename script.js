@@ -1682,7 +1682,7 @@ async function generateAssiduidadeReport() {
                         });
                     }
                 }, 100);
-            <\/script>
+            </script>
             `;
         // RELATÓRIO DE TURMAS
         } else if (activeTab === 'assiduidade-turmas') {
@@ -1779,7 +1779,7 @@ async function generateAssiduidadeReport() {
                             });
                         }
                     }, 100);
-                <\/script>
+                </script>
             `;
        // RELATÓRIO DE PROFESSORES
         } else if (activeTab === 'assiduidade-professores') {
@@ -1903,7 +1903,7 @@ async function generateAssiduidadeReport() {
                              });
                          }
                      }, 100);
-                 <\/script>
+                 </script>
              `;
         }
 
@@ -2313,6 +2313,3 @@ document.addEventListener('DOMContentLoaded', () => {
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
     console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
 });
-</script>
-</body>
-</html>
