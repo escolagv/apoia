@@ -311,7 +311,7 @@
     <script type="module">
         const { createClient } = supabase;
         const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI2NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYyOTQ3ODgsImV4cCI6MjAzMTg3MDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
         
         if (SUPABASE_URL === 'SUA_URL_DO_PROJETO') throw new Error("Credenciais da Supabase não configuradas.");
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1738,7 +1738,7 @@
              const btn = document.getElementById('confirm-promocao-massa-btn');
              const mapeamento = JSON.parse(btn.dataset.mapeamento);
 
-             const { error } = await db.rpc('promover_alunos_em_massa', { mapeamento });
+             const { error } = await db.rpc('promover_alunos_em_massa', { mapeamentos: mapeamento });
 
              if (error) {
                  showToast("Erro ao executar promoção em massa: " + error.message, true);
@@ -1854,6 +1854,29 @@
                     </tr>
                 `).join('');
             }
+        }
+        
+        // ===============================================================
+        // =================== ANÁLISE DE ASSIDUIDADE ====================
+        // ===============================================================
+        
+        function openAssiduidadeModal() {
+            // Popula filtros
+            const anoSel = document.getElementById('assiduidade-aluno-ano');
+            anoSel.innerHTML = '<option value="">Todos os Anos</option>';
+            anosLetivosCache.forEach(ano => anoSel.innerHTML += `<option value="${ano}">${ano}</option>`);
+
+            const profSel = document.getElementById('assiduidade-prof-professor');
+            profSel.innerHTML = '<option value="">Todos os Professores</option>';
+            usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
+
+            assiduidadeModal.classList.remove('hidden');
+        }
+
+        async function generateAssiduidadeReport() {
+            // Lógica para gerar e abrir o relatório em uma nova aba
+            showToast("Gerando relatório de assiduidade...");
+            // ... (implementação detalhada virá aqui)
         }
 
         // ===============================================================
@@ -2060,12 +2083,12 @@
                 
                 const calendarDayCell = closest('[data-date]');
                  if(calendarDayCell) {
-                     const newDate = calendarDayCell.dataset.date;
-                     if(newDate) {
-                         dashboardSelectedDate = newDate;
-                         renderDashboardCalendar();
-                         loadDailySummary(dashboardSelectedDate);
-                     }
+                      const newDate = calendarDayCell.dataset.date;
+                      if(newDate) {
+                           dashboardSelectedDate = newDate;
+                           renderDashboardCalendar();
+                           loadDailySummary(dashboardSelectedDate);
+                      }
                 }
                 if(closest('#open-promover-alunos-modal-btn')) openPromoverAlunosModal();
                 if(closest('#open-promover-massa-modal-btn')) openPromoverMassaModal();
@@ -2089,15 +2112,15 @@
                 }
             });
              if(document.getElementById('clear-notifications-btn')) {
-                document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
+                 document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
             }
              if(document.getElementById('notification-list')) {
-                document.getElementById('notification-list').addEventListener('click', (e) => {
-                    const item = e.target.closest('.notification-item');
-                    if(item) {
-                        markNotificationAsRead(item.dataset.id);
-                    }
-                });
+                 document.getElementById('notification-list').addEventListener('click', (e) => {
+                     const item = e.target.closest('.notification-item');
+                     if(item) {
+                         markNotificationAsRead(item.dataset.id);
+                     }
+                 });
             }
 
 
@@ -2244,4 +2267,3 @@
     </script>
 </body>
 </html>
-
