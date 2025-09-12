@@ -48,6 +48,16 @@
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5);
         }
+        .calendar-day {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .calendar-day-selected {
+            background-color: #16a34a !important; /* Verde forte */
+            color: white !important;
+            border-radius: 9999px;
+            font-weight: bold;
+        }
         .calendar-day-event {
             background-color: #3b82f6;
             color: white;
@@ -226,7 +236,7 @@
                         <div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-20"><div class="p-4 font-bold border-b flex justify-between items-center"><span>Notificações</span><button id="clear-notifications-btn" class="text-xs text-blue-600 hover:underline font-medium">Limpar Todas</button></div><div id="notification-list" class="p-2 max-h-64 overflow-y-auto"></div></div>
                     </div></div>
                     <div id="admin-content">
-                        <div id="admin-dashboard-panel" class="admin-panel"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Resumo do Dia</h2><input type="date" id="dashboard-date-picker" class="p-2 border rounded-md"></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><div id="dashboard-summary" class="flex flex-wrap gap-6 mb-6"><div data-type="presencas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-green-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Presenças</p><p id="dashboard-presencas" class="text-2xl font-bold">...</p></div></div><div data-type="faltas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-red-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Faltas</p><p id="dashboard-faltas" class="text-2xl font-bold">...</p></div></div><div class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1"><div class="bg-yellow-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Em Acompanhamento</p><p id="dashboard-acompanhamento" class="text-2xl font-bold">...</p></div></div></div><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-2">Alunos Ausentes</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div></div><div class="bg-white p-6 rounded-lg shadow-md"><div id="dashboard-calendar-container"><div class="flex items-center justify-between mb-4"><button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200">&lt;</button><h3 id="calendar-month-year" class="text-lg font-bold"></h3><button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-600"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center mt-2"></div></div></div></div></div>
+                        <div id="admin-dashboard-panel" class="admin-panel"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Resumo do Dia</h2></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><div id="dashboard-summary" class="flex flex-wrap gap-6 mb-6"><div data-type="presencas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-green-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Presenças</p><p id="dashboard-presencas" class="text-2xl font-bold">...</p></div></div><div data-type="faltas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-red-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Faltas</p><p id="dashboard-faltas" class="text-2xl font-bold">...</p></div></div><div class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1"><div class="bg-yellow-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Em Acompanhamento</p><p id="dashboard-acompanhamento" class="text-2xl font-bold">...</p></div></div></div><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-2">Alunos Ausentes</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div></div><div class="bg-white p-6 rounded-lg shadow-md"><div id="dashboard-calendar-container"><div class="flex items-center justify-between mb-4"><button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200">&lt;</button><h3 id="calendar-month-year" class="text-lg font-bold"></h3><button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-600"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center mt-2"></div></div></div></div></div>
                         <div id="admin-alunos-panel" class="admin-panel hidden">
                             <div class="flex justify-between items-center mb-4">
                                 <h2 class="text-2xl font-bold">Cadastro Geral de Alunos</h2>
@@ -293,6 +303,7 @@
         let apoiaCurrentPage = 1;
         const apoiaItemsPerPage = 10;
         let anosLetivosCache = [];
+        let dashboardSelectedDate = new Date().toISOString().split('T')[0];
 
         // --- Mapeamento dos Elementos da UI ---
         const loadingView = document.getElementById('loading-view');
@@ -318,7 +329,6 @@
         const professoresTableBody = document.getElementById('professores-table-body');
         const turmasTableBody = document.getElementById('turmas-table-body');
         const eventosTableBody = document.getElementById('eventos-table-body');
-        const dashboardDatePicker = document.getElementById('dashboard-date-picker');
         const notificationBell = document.getElementById('notification-bell');
         const notificationPanel = document.getElementById('notification-panel');
         const notificationList = document.getElementById('notification-list');
@@ -389,6 +399,7 @@
             alunosCache = [];
             anosLetivosCache = [];
             dashboardCalendar = { month: new Date().getMonth(), year: new Date().getFullYear() };
+            dashboardSelectedDate = new Date().toISOString().split('T')[0];
         }
 
         function resetLoginFormState() {
@@ -737,16 +748,14 @@
 
         // --- Dashboard ---
         async function renderDashboardPanel() {
-            dashboardDatePicker.value = new Date().toISOString().split('T')[0];
-            await loadDailySummary();
+            await loadDailySummary(dashboardSelectedDate);
             await renderDashboardCalendar();
             
             const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento'));
             document.getElementById('dashboard-acompanhamento').textContent = count === null ? 'N/A' : count;
         }
 
-        async function loadDailySummary() {
-            const selectedDate = dashboardDatePicker.value;
+        async function loadDailySummary(selectedDate) {
             const presencasEl = document.getElementById('dashboard-presencas');
             const faltasEl = document.getElementById('dashboard-faltas');
             const ausentesListEl = document.getElementById('dashboard-ausentes-list');
@@ -797,6 +806,7 @@
             for (let day = 1; day <= daysInMonth; day++) {
                 const currentDate = new Date(year, month, day);
                 const dayOfWeek = currentDate.getDay();
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 let dayEvent = null;
                 if (eventos) {
                     dayEvent = eventos.find(e => {
@@ -807,10 +817,12 @@
                 }
                 
                 let dayContainerClass = 'p-1 flex justify-center items-center';
-                let daySpanClass = 'flex items-center justify-center w-8 h-8 rounded-full';
+                let daySpanClass = 'calendar-day flex items-center justify-center w-8 h-8 rounded-full';
                 let tooltipHtml = '';
 
-                if (dayEvent) {
+                if(dateString === dashboardSelectedDate) {
+                    daySpanClass += ' calendar-day-selected';
+                } else if (dayEvent) {
                     daySpanClass += ' calendar-day-event';
                     dayContainerClass += ' relative has-tooltip';
                     tooltipHtml = `<div class="tooltip">${dayEvent.descricao}</div>`;
@@ -818,7 +830,7 @@
                     daySpanClass += ' calendar-day-weekend';
                 }
                 
-                html += `<div class="${dayContainerClass}">${tooltipHtml}<span class="${daySpanClass}">${day}</span></div>`;
+                html += `<div class="${dayContainerClass}" data-date="${dateString}">${tooltipHtml}<span class="${daySpanClass}">${day}</span></div>`;
             }
             calendarGrid.innerHTML = html;
         }
@@ -1779,6 +1791,18 @@
                     document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
                     navLink.classList.add('bg-gray-700');
                     const targetPanelId = navLink.dataset.target;
+
+                    if (targetPanelId === 'admin-relatorios-panel') {
+                        document.getElementById('relatorio-data-inicio').value = '';
+                        document.getElementById('relatorio-data-fim').value = '';
+                        document.getElementById('relatorio-turma-select').value = '';
+                        document.getElementById('relatorio-aluno-select').value = '';
+                        document.getElementById('relatorio-professor-select').value = '';
+                        document.getElementById('relatorio-status-select').value = '';
+                        relatorioTableBody.innerHTML = '';
+                        imprimirRelatorioBtn.classList.add('hidden');
+                    }
+
                     document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
                     const panel = document.getElementById(targetPanelId);
                     if (panel) {
@@ -1841,7 +1865,7 @@
                 const card = closest('.clickable-card');
                 if(card) {
                     const type = card.dataset.type;
-                    const date = dashboardDatePicker.value;
+                    const date = dashboardSelectedDate;
                     document.querySelector('.admin-nav-link[data-target="admin-relatorios-panel"]').click();
                     setTimeout(() => {
                         document.getElementById('relatorio-data-inicio').value = date;
@@ -1869,6 +1893,15 @@
                 if (notificationItem) {
                     markNotificationAsRead(notificationItem.dataset.id);
                 }
+                const calendarDay = closest('.calendar-day');
+                 if(calendarDay) {
+                    const newDate = calendarDay.parentElement.dataset.date;
+                    if(newDate) {
+                        dashboardSelectedDate = newDate;
+                        renderDashboardCalendar();
+                        loadDailySummary(dashboardSelectedDate);
+                    }
+                }
                 if(closest('#open-promover-alunos-modal-btn')) openPromoverAlunosModal();
                 if(closest('#promover-alunos-btn')) handlePromoverAlunos();
                 if(closest('#confirm-promocao-btn')) handleConfirmPromocao();
@@ -1889,7 +1922,6 @@
             });
             turmaSelect.addEventListener('change', loadChamada);
             dataSelect.addEventListener('change', loadChamada);
-            dashboardDatePicker.addEventListener('change', loadDailySummary);
             document.getElementById('delete-confirm-checkbox').addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
             document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
             document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
