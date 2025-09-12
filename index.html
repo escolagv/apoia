@@ -48,21 +48,30 @@
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5);
         }
-        .calendar-day {
+        .calendar-day-container {
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.2s;
+            transition: transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.25rem;
         }
-        .calendar-day-selected {
-            background-color: transparent !important;
-            border: 2px solid #16a34a; /* Aro verde forte */
-            color: #16a34a !important;
+        .calendar-day-container.calendar-day-selected {
+            box-shadow: 0 0 0 2px #16a34a; /* Aro verde forte */
+            border-radius: 9999px;
             transform: scale(1.15); /* Um pouco maior */
-            font-weight: bold;
+        }
+        .calendar-day-content {
+             display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
         }
         .calendar-day-event {
             background-color: #3b82f6;
             color: white;
-            border-radius: 9999px;
             font-weight: bold;
         }
         .calendar-day-weekend {
@@ -610,6 +619,8 @@
         async function saveChamada() {
             salvarChamadaBtn.disabled = true;
             salvarChamadaBtn.innerHTML = '<div class="loader mx-auto"></div>';
+            // NOTA: Se o salvamento falhar para professores, verifique as políticas de Row Level Security (RLS) no Supabase.
+            // O código abaixo envia os dados corretamente. O bloqueio provavelmente está no banco de dados.
             const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => {
                 const status = row.querySelector('.status-radio:checked').value;
                 let justificativa = null;
@@ -827,18 +838,20 @@
                     });
                 }
                 
-                let dayContainerClass = 'p-1 flex justify-center items-center';
-                let daySpanClass = 'calendar-day flex items-center justify-center w-8 h-8 rounded-full';
+                let dayContainerClass = 'calendar-day-container';
+                let daySpanClass = 'calendar-day-content';
                 let tooltipHtml = '';
 
-                if(dateString === dashboardSelectedDate) {
-                    daySpanClass += ' calendar-day-selected';
-                } else if (dayEvent) {
+                if (dayEvent) {
                     daySpanClass += ' calendar-day-event';
-                    dayContainerClass += ' relative has-tooltip';
+                    dayContainerClass += ' has-tooltip relative';
                     tooltipHtml = `<div class="tooltip">${dayEvent.descricao}</div>`;
                 } else if (dayOfWeek === 0 || dayOfWeek === 6) {
                     daySpanClass += ' calendar-day-weekend';
+                }
+
+                if(dateString === dashboardSelectedDate) {
+                    dayContainerClass += ' calendar-day-selected';
                 }
                 
                 html += `<div class="${dayContainerClass}" data-date="${dateString}">${tooltipHtml}<span class="${daySpanClass}">${day}</span></div>`;
@@ -1891,22 +1904,10 @@
                     e.preventDefault();
                     openAlunoHistoricoModal(alunoLink.dataset.alunoId);
                 }
-                if (closest('#notification-bell')) {
-                    notificationPanel.classList.toggle('hidden');
-                }
-                if (!closest('#notification-panel') && !closest('#notification-bell')) {
-                    notificationPanel.classList.add('hidden');
-                }
-                if (closest('#clear-notifications-btn')) {
-                    markAllNotificationsAsRead();
-                }
-                const notificationItem = closest('.notification-item');
-                if (notificationItem) {
-                    markNotificationAsRead(notificationItem.dataset.id);
-                }
-                const calendarDay = closest('.calendar-day');
-                 if(calendarDay) {
-                    const newDate = calendarDay.parentElement.dataset.date;
+                
+                const calendarDayCell = closest('[data-date]');
+                 if(calendarDayCell) {
+                    const newDate = calendarDayCell.dataset.date;
                     if(newDate) {
                         dashboardSelectedDate = newDate;
                         renderDashboardCalendar();
@@ -1917,6 +1918,31 @@
                 if(closest('#promover-alunos-btn')) handlePromoverAlunos();
                 if(closest('#confirm-promocao-btn')) handleConfirmPromocao();
             });
+
+            // Listener específico para o sino de notificação
+            notificationBell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notificationPanel.classList.toggle('hidden');
+            });
+            // Listener para fechar o painel de notificação ao clicar fora
+            document.addEventListener('click', (e) => {
+                const closest = (selector) => e.target.closest(selector);
+                if (!notificationPanel.classList.contains('hidden') && !closest('#notification-panel') && !closest('#notification-bell')) {
+                    notificationPanel.classList.add('hidden');
+                }
+            });
+             if(document.getElementById('clear-notifications-btn')) {
+                document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
+            }
+             if(document.getElementById('notification-list')) {
+                document.getElementById('notification-list').addEventListener('click', (e) => {
+                    const item = e.target.closest('.notification-item');
+                    if(item) {
+                        markNotificationAsRead(item.dataset.id);
+                    }
+                });
+            }
+
 
             // Listeners de Change e Input
             ['#chamada-lista-alunos', '#correcao-chamada-lista-alunos'].forEach(selector => {
