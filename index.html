@@ -219,7 +219,12 @@
                     <div class="p-4 border-t border-gray-700 space-y-4"><div class="text-xs text-center text-gray-400"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16 mx-auto mb-2"><p>Desenvolvido por:</p><p>Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-admin" class="text-blue-400 hover:underline">Suporte Técnico</a></div><button id="admin-logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button></div>
                 </aside>
                 <main class="flex-1 p-6 overflow-y-auto">
-                    <div class="flex justify-end mb-4"><div class="relative"><div id="notification-bell" class="relative cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg></div><div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-20"><div class="p-4 font-bold border-b flex justify-between items-center"><span>Notificações</span><button id="clear-notifications-btn" class="text-xs text-blue-600 hover:underline font-medium">Limpar Todas</button></div><div id="notification-list" class="p-2 max-h-64 overflow-y-auto"></div></div></div></div>
+                    <div class="flex justify-end mb-4"><div class="relative">
+                        <div id="notification-bell" class="relative cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                        </div>
+                        <div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-20"><div class="p-4 font-bold border-b flex justify-between items-center"><span>Notificações</span><button id="clear-notifications-btn" class="text-xs text-blue-600 hover:underline font-medium">Limpar Todas</button></div><div id="notification-list" class="p-2 max-h-64 overflow-y-auto"></div></div>
+                    </div></div>
                     <div id="admin-content">
                         <div id="admin-dashboard-panel" class="admin-panel"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Resumo do Dia</h2><input type="date" id="dashboard-date-picker" class="p-2 border rounded-md"></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div><div id="dashboard-summary" class="flex flex-wrap gap-6 mb-6"><div data-type="presencas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-green-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Presenças</p><p id="dashboard-presencas" class="text-2xl font-bold">...</p></div></div><div data-type="faltas" class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1 clickable-card"><div class="bg-red-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Faltas</p><p id="dashboard-faltas" class="text-2xl font-bold">...</p></div></div><div class="bg-white p-6 rounded-lg shadow-md flex items-center flex-1"><div class="bg-yellow-100 rounded-full p-3 mr-4"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div><p class="text-sm text-gray-500">Em Acompanhamento</p><p id="dashboard-acompanhamento" class="text-2xl font-bold">...</p></div></div></div><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-2">Alunos Ausentes</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div></div><div class="bg-white p-6 rounded-lg shadow-md"><div id="dashboard-calendar-container"><div class="flex items-center justify-between mb-4"><button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200">&lt;</button><h3 id="calendar-month-year" class="text-lg font-bold"></h3><button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200">&gt;</button></div><div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-600"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center mt-2"></div></div></div></div></div>
                         <div id="admin-alunos-panel" class="admin-panel hidden">
@@ -1239,6 +1244,7 @@
                     <td class="p-3">${profs || 'Sem professor'}</td>
                     <td class="p-3">
                         <button class="text-blue-600 hover:underline mr-4 edit-turma-btn" data-id="${t.id}">Editar</button>
+                        <button class="text-red-600 hover:underline delete-turma-btn" data-id="${t.id}">Excluir</button>
                     </td>
                 </tr>
             `}).join('');
@@ -1799,6 +1805,8 @@
                 if (closest('#add-turma-btn')) openTurmaModal();
                 const editTurmaBtn = closest('.edit-turma-btn');
                 if (editTurmaBtn) openTurmaModal(editTurmaBtn.dataset.id);
+                const deleteTurmaBtn = closest('.delete-turma-btn');
+                if (deleteTurmaBtn) openDeleteConfirmModal('turma', deleteTurmaBtn.dataset.id);
                 if (closest('#add-evento-btn')) openEventoModal();
                 const editEventoBtn = closest('.edit-evento-btn');
                 if (editEventoBtn) openEventoModal(editEventoBtn.dataset.id);
@@ -1847,6 +1855,19 @@
                 if(alunoLink) {
                     e.preventDefault();
                     openAlunoHistoricoModal(alunoLink.dataset.alunoId);
+                }
+                if (closest('#notification-bell')) {
+                    notificationPanel.classList.toggle('hidden');
+                }
+                if (!closest('#notification-panel') && !closest('#notification-bell')) {
+                    notificationPanel.classList.add('hidden');
+                }
+                if (closest('#clear-notifications-btn')) {
+                    markAllNotificationsAsRead();
+                }
+                const notificationItem = closest('.notification-item');
+                if (notificationItem) {
+                    markNotificationAsRead(notificationItem.dataset.id);
                 }
                 if(closest('#open-promover-alunos-modal-btn')) openPromoverAlunosModal();
                 if(closest('#promover-alunos-btn')) handlePromoverAlunos();
@@ -1939,5 +1960,4 @@
     </script>
 </body>
 </html>
-"
 
