@@ -315,7 +315,7 @@
         <div id="promover-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold mb-4 text-indigo-600">Confirmar Promoção</h3><p id="promover-confirm-message" class="mb-4"></p><div id="promover-confirm-warning" class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 rounded-md text-sm mb-4"></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="confirm-promocao-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Sim, Promover Alunos</button></div></div></div>
         <div id="promover-massa-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6"><h3 class="text-xl font-bold mb-6">Promover Ano Letivo em Massa</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4"><div class="space-y-3"><div><label for="promover-massa-ano-origem" class="block text-sm font-medium text-gray-700">Ano de Origem</label><select id="promover-massa-ano-origem" class="w-full mt-1 p-2 border rounded-md"></select></div></div><div class="space-y-3"><div><label for="promover-massa-ano-destino" class="block text-sm font-medium text-gray-700">Ano de Destino</label><select id="promover-massa-ano-destino" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="promover-massa-mapeamento-container" class="hidden"><h4 class="font-semibold mb-2 mt-4 text-gray-800">Mapeamento de Turmas</h4><p class="text-sm text-gray-600 mb-3">O sistema tentou mapear as turmas automaticamente. Revise e ajuste o destino conforme necessário. Apenas turmas com um destino selecionado serão processadas.</p><div class="max-h-72 overflow-y-auto border rounded-md p-3 bg-gray-50 space-y-3" id="promover-massa-mapeamento-list"></div></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="promover-massa-btn" class="px-6 py-2 bg-teal-600 text-white font-semibold rounded-md disabled:bg-teal-300" disabled>Promover em Massa</button></div></div></div>
         <div id="promover-massa-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6"><h3 class="text-xl font-bold mb-4 text-teal-600">Confirmar Promoção em Massa</h3><p id="promover-massa-confirm-message" class="mb-4"></p><div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 rounded-md text-sm mb-4">Esta ação é irreversível e irá mover todos os alunos das turmas de origem mapeadas para as turmas de destino.</div><div class="mb-4"><label class="flex items-center"><input type="checkbox" id="promover-massa-confirm-checkbox" class="form-checkbox h-5 w-5 text-teal-600"><span class="ml-2 text-sm">Sim, eu entendo e quero continuar.</span></label></div><div class="mt-6 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="confirm-promocao-massa-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md disabled:bg-teal-300" disabled>Executar Promoção em Massa</button></div></div></div>
-        <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6"><h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3><div class="border-b border-gray-200"><nav class="-mb-px flex space-x-6" id="assiduidade-tabs"><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos">Alunos</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-turmas">Turmas</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores</a></nav></div><div id="assiduidade-content" class="mt-6"><div id="assiduidade-alunos" class="assiduidade-panel"><h4 class="font-semibold mb-3">Filtros para Relatório de Alunos</h4><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-aluno-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-aluno-data-inicio">×</span></div><input type="date" id="assiduidade-aluno-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-aluno-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-aluno-data-fim">×</span></div><input type="date" id="assiduidade-aluno-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-aluno-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-aluno-ano" class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="assiduidade-aluno-turma" class="block text-sm font-medium">Turma</label><select id="assiduidade-aluno-turma" class="w-full mt-1 p-2 border rounded-md"></select></div><div class="lg:col-span-2"><label for="assiduidade-aluno-aluno" class="block text-sm font-medium">Aluno Específico (Opcional)</label><select id="assiduidade-aluno-aluno" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-turmas" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Relatório de Turmas</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-turma-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-turma-data-inicio">×</span></div><input type="date" id="assiduidade-turma-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-turma-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-turma-data-fim">×</span></div><input type="date" id="assiduidade-turma-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-turma-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-turma-ano" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-professores" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Professores</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-prof-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-prof-data-inicio">×</span></div><input type="date" id="assiduidade-prof-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-prof-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-prof-data-fim">×</span></div><input type="date" id="assiduidade-prof-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div class="md:col-span-2"><label for="assiduidade-prof-professor" class="block text-sm font-medium">Professor Específico (Opcional)</label><select id="assiduidade-prof-professor" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div></div><div class="mt-8 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="gerar-assiduidade-btn" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-md">Gerar Relatório</button></div></div></div>
+        <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6"><h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3><div class="border-b border-gray-200"><nav class="-mb-px flex space-x-6" id="assiduidade-tabs"><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos">Alunos</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-turmas">Turmas</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores</a></nav></div><div id="assiduidade-content" class="mt-6"><div id="assiduidade-alunos" class="assiduidade-panel"><h4 class="font-semibold mb-3">Filtros para Relatório de Alunos</h4><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-aluno-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-aluno-data-inicio">×</span></div><input type="date" id="assiduidade-aluno-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-aluno-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-aluno-data-fim">×</span></div><input type="date" id="assiduidade-aluno-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-aluno-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-aluno-ano" class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="assiduidade-aluno-turma" class="block text-sm font-medium">Turma</label><select id="assiduidade-aluno-turma" class="w-full mt-1 p-2 border rounded-md"></select></div><div class="lg:col-span-2"><label for="assiduidade-aluno-aluno" class="block text-sm font-medium">Aluno Específico (Opcional)</label><select id="assiduidade-aluno-aluno" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-turmas" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Relatório de Turmas</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-turma-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-turma-data-inicio">×</span></div><input type="date" id="assiduidade-turma-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-turma-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-turma-data-fim">×</span></div><input type="date" id="assiduidade-turma-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-turma-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-turma-ano" class="w-full mt-1 p-2 border rounded-md"></select></div><div class="md:col-span-3"><label for="assiduidade-turma-turma" class="block text-sm font-medium">Turma Específica (Opcional)</label><select id="assiduidade-turma-turma" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-professores" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Relatório de Professores</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-prof-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-prof-data-inicio">×</span></div><input type="date" id="assiduidade-prof-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-prof-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-prof-data-fim">×</span></div><input type="date" id="assiduidade-prof-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div class="md:col-span-2"><label for="assiduidade-prof-professor" class="block text-sm font-medium">Professor Específico (Opcional)</label><select id="assiduidade-prof-professor" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div></div><div class="mt-8 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="gerar-assiduidade-btn" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-md">Gerar Relatório</button></div></div></div>
     </div>
 
     <script type="module">
@@ -1879,15 +1879,18 @@
 
             // Popula filtros de Turmas
             const anoSelTurma = document.getElementById('assiduidade-turma-ano');
+            const turmaSelTurma = document.getElementById('assiduidade-turma-turma');
             anoSelTurma.innerHTML = '<option value="">Todos os Anos</option>';
             anosLetivosCache.forEach(ano => anoSelTurma.innerHTML += `<option value="${ano}">${ano}</option>`);
+            turmaSelTurma.innerHTML = '<option value="">Todas as Turmas</option>';
 
             // Define o ano atual como padrão em ambos os filtros
             const currentYear = new Date().getFullYear();
             if (anosLetivosCache.includes(currentYear)) {
                 anoSelAluno.value = currentYear;
                 anoSelTurma.value = currentYear;
-                anoSelAluno.dispatchEvent(new Event('change')); // Dispara o evento para carregar as turmas de alunos
+                anoSelAluno.dispatchEvent(new Event('change'));
+                anoSelTurma.dispatchEvent(new Event('change'));
             }
 
             // Popula filtros de Professores
@@ -1927,6 +1930,7 @@
                     }
 
                     const stats = data.reduce((acc, record) => {
+                        if (!record.alunos) return acc;
                         const nome = record.alunos.nome_completo;
                         if (!acc[nome]) {
                             acc[nome] = { presencas: 0, faltas_j: 0, faltas_i: 0, turma: record.turmas.nome_turma };
@@ -1958,7 +1962,8 @@
                     const totalFaltasJ = Object.values(stats).reduce((sum, s) => sum + s.faltas_j, 0);
                     const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
                     
-                    newWindow.document.getElementById('report-content').innerHTML = `
+                    newWindow.document.body.innerHTML = `
+                    <div class="printable-area">
                         <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
                         <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1967,36 +1972,45 @@
                                 <h3 class="font-bold mb-4">Detalhes da Frequência</h3>
                                 <div class="max-h-96 overflow-y-auto">
                                 <table class="w-full text-sm">
-                                    <thead class="bg-gray-50"><tr><th class="p-3 text-left">Aluno</th><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas Just.</th><th class="p-3 text-center">Faltas Injust.</th><th class="p-3 text-center">Assiduidade</th></tr></thead>
+                                    <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Aluno</th><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas Just.</th><th class="p-3 text-center">Faltas Injust.</th><th class="p-3 text-center">Assiduidade</th></tr></thead>
                                     <tbody>${tableRows}</tbody>
                                 </table>
                                 </div>
                             </div>
                         </div>
-                        <script>
-                            new Chart(document.getElementById('assiduidadeChart'), {
-                                type: 'pie',
-                                data: {
-                                    labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'],
-                                    datasets: [{
-                                        data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}],
-                                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
-                                    }]
-                                },
-                                options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } }
-                            });
-                        <\/script>
+                    </div>
+                    <script>
+                        // Atraso para garantir que o DOM esteja pronto
+                        setTimeout(() => {
+                            const ctx = document.getElementById('assiduidadeChart');
+                            if (ctx) {
+                                new Chart(ctx, {
+                                    type: 'pie',
+                                    data: {
+                                        labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'],
+                                        datasets: [{
+                                            data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}],
+                                            backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
+                                        }]
+                                    },
+                                    options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } }
+                                });
+                            }
+                        }, 100);
+                    <\/script>
                     `;
                 // RELATÓRIO DE TURMAS
                 } else if (activeTab === 'assiduidade-turmas') {
                     const dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
                     const dataFim = document.getElementById('assiduidade-turma-data-fim').value;
                     const anoLetivo = document.getElementById('assiduidade-turma-ano').value;
+                    const turmaId = document.getElementById('assiduidade-turma-turma').value;
 
-                    let query = db.from('presencas').select('status, turmas(id, nome_turma)');
+                    let query = db.from('presencas').select('status, turmas!inner(id, nome_turma, ano_letivo)');
                     if (dataInicio) query = query.gte('data', dataInicio);
                     if (dataFim) query = query.lte('data', dataFim);
                     if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
+                    if (turmaId) query = query.eq('turma_id', turmaId);
 
                     const { data, error } = await safeQuery(query);
                     if (error) throw error;
@@ -2037,47 +2051,167 @@
                         return total > 0 ? ((t.presencas / total) * 100).toFixed(1) : 0;
                     }));
 
-                     newWindow.document.getElementById('report-content').innerHTML = `
-                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
-                        <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><canvas id="assiduidadeTurmaChart"></canvas></div>
-                            <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
-                                <h3 class="font-bold mb-4">Dados Consolidados</h3>
-                                <div class="max-h-96 overflow-y-auto">
-                                <table class="w-full text-sm">
-                                    <thead class="bg-gray-50"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th></tr></thead>
-                                    <tbody>${tableRows}</tbody>
-                                </table>
+                     newWindow.document.body.innerHTML = `
+                        <div class="printable-area">
+                            <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
+                            <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><canvas id="assiduidadeTurmaChart"></canvas></div>
+                                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
+                                    <h3 class="font-bold mb-4">Dados Consolidados</h3>
+                                    <div class="max-h-96 overflow-y-auto">
+                                    <table class="w-full text-sm">
+                                        <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th></tr></thead>
+                                        <tbody>${tableRows}</tbody>
+                                    </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <script>
-                            new Chart(document.getElementById('assiduidadeTurmaChart'), {
-                                type: 'bar',
-                                data: {
-                                    labels: ${chartLabels},
-                                    datasets: [{
-                                        label: '% de Assiduidade',
-                                        data: ${chartData},
-                                        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                                        borderColor: 'rgba(59, 130, 246, 1)',
-                                        borderWidth: 1
-                                    }]
-                                },
-                                options: {
-                                    indexAxis: 'y',
-                                    scales: { x: { beginAtZero: true, max: 100 } },
-                                    responsive: true,
-                                    plugins: { legend: { display: false }, title: { display: true, text: 'Percentual de Assiduidade por Turma' } }
+                            setTimeout(() => {
+                                const ctx = document.getElementById('assiduidadeTurmaChart');
+                                if(ctx) {
+                                    new Chart(ctx, {
+                                        type: 'bar',
+                                        data: {
+                                            labels: ${chartLabels},
+                                            datasets: [{
+                                                label: '% de Assiduidade',
+                                                data: ${chartData},
+                                                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                                borderColor: 'rgba(59, 130, 246, 1)',
+                                                borderWidth: 1
+                                            }]
+                                        },
+                                        options: {
+                                            indexAxis: 'y',
+                                            scales: { x: { beginAtZero: true, max: 100 } },
+                                            responsive: true,
+                                            plugins: { legend: { display: false }, title: { display: true, text: 'Percentual de Assiduidade por Turma' } }
+                                        }
+                                    });
                                 }
-                            });
+                            }, 100);
                         <\/script>
                     `;
+                 // RELATÓRIO DE PROFESSORES
+                } else if (activeTab === 'assiduidade-professores') {
+                    const dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
+                    const dataFim = document.getElementById('assiduidade-prof-data-fim').value;
+                    const professorId = document.getElementById('assiduidade-prof-professor').value;
 
-                } else {
-                    // Lógica de professores
-                    newWindow.document.getElementById('report-content').innerHTML = '<p>Relatório de Professores em desenvolvimento.</p>';
+                    // 1. Calcular dias letivos no período
+                    const { data: eventos } = await safeQuery(db.from('eventos').select('data, data_fim').or(`data.gte.${dataInicio},data_fim.gte.${dataInicio}`).or(`data.lte.${dataFim},data_fim.lte.${dataFim}`));
+                    const diasNaoLetivos = new Set();
+                    eventos.forEach(e => {
+                        let current = new Date(e.data + 'T00:00:00');
+                        const end = e.data_fim ? new Date(e.data_fim + 'T00:00:00') : current;
+                        while (current <= end) {
+                            diasNaoLetivos.add(current.toISOString().split('T')[0]);
+                            current.setDate(current.getDate() + 1);
+                        }
+                    });
+
+                    let diasLetivos = 0;
+                    let current = new Date(dataInicio + 'T00:00:00');
+                    const end = new Date(dataFim + 'T00:00:00');
+                    while (current <= end) {
+                        const dayOfWeek = current.getDay();
+                        const dateString = current.toISOString().split('T')[0];
+                        if (dayOfWeek !== 0 && dayOfWeek !== 6 && !diasNaoLetivos.has(dateString)) {
+                            diasLetivos++;
+                        }
+                        current.setDate(current.getDate() + 1);
+                    }
+
+                    // 2. Buscar registros dos professores
+                    let query = db.from('presencas').select('registrado_por_uid, data, usuarios(nome)');
+                    if (dataInicio) query = query.gte('data', dataInicio);
+                    if (dataFim) query = query.lte('data', dataFim);
+                    if (professorId) query = query.eq('registrado_por_uid', professorId);
+
+                    const { data, error } = await safeQuery(query);
+                    if (error) throw error;
+                    if (data.length === 0) {
+                        newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum registro de chamada encontrado para os filtros selecionados.</p>';
+                        return;
+                    }
+                    
+                    const stats = data.reduce((acc, record) => {
+                        if (!record.usuarios) return acc;
+                        const profId = record.registrado_por_uid;
+                        if (!acc[profId]) {
+                            acc[profId] = { nome: record.usuarios.nome, diasComChamada: new Set() };
+                        }
+                        acc[profId].diasComChamada.add(record.data);
+                        return acc;
+                    }, {});
+
+                    const tableRows = Object.values(stats).sort((a, b) => a.nome.localeCompare(b.nome)).map(prof => {
+                        const diasRegistrados = prof.diasComChamada.size;
+                        const taxa = diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) + '%' : 'N/A';
+                        return `
+                             <tr class="border-b">
+                                <td class="p-3">${prof.nome}</td>
+                                <td class="p-3 text-center font-semibold">${diasRegistrados}</td>
+                                <td class="p-3 text-center">${diasLetivos}</td>
+                                <td class="p-3 text-center font-bold">${taxa}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    const sortedProfStats = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome));
+                    const chartLabels = JSON.stringify(sortedProfStats.map(p => p.nome));
+                    const chartData = JSON.stringify(sortedProfStats.map(p => {
+                        const diasRegistrados = p.diasComChamada.size;
+                        return diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) : 0;
+                    }));
+
+                    newWindow.document.body.innerHTML = `
+                         <div class="printable-area">
+                            <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Chamadas</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
+                            <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Chamadas</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><canvas id="lancamentoChart"></canvas></div>
+                                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
+                                    <h3 class="font-bold mb-4">Dados Consolidados</h3>
+                                    <div class="max-h-96 overflow-y-auto">
+                                    <table class="w-full text-sm">
+                                        <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Professor</th><th class="p-3 text-center">Dias com Chamada</th><th class="p-3 text-center">Total Dias Letivos</th><th class="p-3 text-center">Taxa de Lançamento</th></tr></thead>
+                                        <tbody>${tableRows}</tbody>
+                                    </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <script>
+                            setTimeout(() => {
+                                const ctx = document.getElementById('lancamentoChart');
+                                if (ctx) {
+                                    new Chart(ctx, {
+                                        type: 'bar',
+                                        data: {
+                                            labels: ${chartLabels},
+                                            datasets: [{
+                                                label: '% de Lançamento',
+                                                data: ${chartData},
+                                                backgroundColor: 'rgba(139, 92, 246, 0.5)',
+                                                borderColor: 'rgba(139, 92, 246, 1)',
+                                                borderWidth: 1
+                                            }]
+                                        },
+                                        options: {
+                                            indexAxis: 'y',
+                                            scales: { x: { beginAtZero: true, max: 100 } },
+                                            responsive: true,
+                                            plugins: { legend: { display: false }, title: { display: true, text: 'Taxa de Lançamento de Chamadas por Professor' } }
+                                        }
+                                    });
+                                }
+                            }, 100);
+                        <\/script>
+                    `;
                 }
 
             } catch(e) {
@@ -2459,6 +2593,16 @@
                         .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
                 }
                 turmaSel.dispatchEvent(new Event('change'));
+            });
+
+            document.getElementById('assiduidade-turma-ano').addEventListener('change', e => {
+                const ano = e.target.value;
+                const turmaSel = document.getElementById('assiduidade-turma-turma');
+                turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
+                if(ano) {
+                    turmasCache.filter(t => t.ano_letivo == ano)
+                        .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+                }
             });
 
             document.getElementById('assiduidade-aluno-turma').addEventListener('change', e => {
