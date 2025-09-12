@@ -1578,6 +1578,14 @@ function openAssiduidadeModal() {
         anoSelTurma.dispatchEvent(new Event('change'));
     }
 
+    // Define período padrão para o relatório de professores
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+    document.getElementById('assiduidade-prof-data-inicio').value = firstDay;
+    document.getElementById('assiduidade-prof-data-fim').value = lastDay;
+
+
     // Popula filtros de Professores
     const profSel = document.getElementById('assiduidade-prof-professor');
     profSel.innerHTML = '<option value="">Todos os Professores</option>';
@@ -1647,7 +1655,7 @@ async function generateAssiduidadeReport() {
             const totalFaltasJ = Object.values(stats).reduce((sum, s) => sum + s.faltas_j, 0);
             const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
             
-            newWindow.document.body.innerHTML = `
+            const reportHTML = `
             <div class="printable-area">
                 <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
@@ -1663,9 +1671,9 @@ async function generateAssiduidadeReport() {
                         </div>
                     </div>
                 </div>
-            </div>
-            <script>
-                // Atraso para garantir que o DOM esteja pronto
+            </div>`;
+            
+            const chartScriptContent = `
                 setTimeout(() => {
                     const ctx = document.getElementById('assiduidadeChart');
                     if (ctx) {
@@ -1681,9 +1689,14 @@ async function generateAssiduidadeReport() {
                             options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } }
                         });
                     }
-                }, 100);
-            </script>
+                }, 200);
             `;
+            
+            newWindow.document.getElementById('report-content').innerHTML = reportHTML;
+            const scriptEl = newWindow.document.createElement('script');
+            scriptEl.textContent = chartScriptContent;
+            newWindow.document.body.appendChild(scriptEl);
+
         // RELATÓRIO DE TURMAS
         } else if (activeTab === 'assiduidade-turmas') {
             const dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
@@ -1739,7 +1752,7 @@ async function generateAssiduidadeReport() {
             const chartDataFaltasJ = JSON.stringify(sortedStats.map(t => t.faltas_j));
             const chartDataFaltasI = JSON.stringify(sortedStats.map(t => t.faltas_i));
 
-             newWindow.document.body.innerHTML = `
+            const reportHTML = `
                 <div class="printable-area">
                     <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
                     <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
@@ -1755,32 +1768,38 @@ async function generateAssiduidadeReport() {
                             </div>
                         </div>
                     </div>
-                </div>
-                <script>
-                    setTimeout(() => {
-                        const ctx = document.getElementById('assiduidadeTurmaChart');
-                        if(ctx) {
-                            new Chart(ctx, {
-                                type: 'bar',
-                                data: {
-                                    labels: ${chartLabels},
-                                    datasets: [
-                                        { label: 'Presenças', data: ${chartDataPresencas}, backgroundColor: '#10B981' },
-                                        { label: 'Faltas Justificadas', data: ${chartDataFaltasJ}, backgroundColor: '#F59E0B' },
-                                        { label: 'Faltas Injustificadas', data: ${chartDataFaltasI}, backgroundColor: '#EF4444' }
-                                    ]
-                                },
-                                options: {
-                                    indexAxis: 'y',
-                                    scales: { x: { stacked: true }, y: { stacked: true } },
-                                    responsive: true,
-                                    plugins: { legend: { position: 'top' }, title: { display: true, text: 'Composição da Frequência por Turma' } }
-                                }
-                            });
-                        }
-                    }, 100);
-                </script>
+                </div>`;
+            
+            const chartScriptContent = `
+                setTimeout(() => {
+                    const ctx = document.getElementById('assiduidadeTurmaChart');
+                    if(ctx) {
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: ${chartLabels},
+                                datasets: [
+                                    { label: 'Presenças', data: ${chartDataPresencas}, backgroundColor: '#10B981' },
+                                    { label: 'Faltas Justificadas', data: ${chartDataFaltasJ}, backgroundColor: '#F59E0B' },
+                                    { label: 'Faltas Injustificadas', data: ${chartDataFaltasI}, backgroundColor: '#EF4444' }
+                                ]
+                            },
+                            options: {
+                                indexAxis: 'y',
+                                scales: { x: { stacked: true }, y: { stacked: true } },
+                                responsive: true,
+                                plugins: { legend: { position: 'top' }, title: { display: true, text: 'Composição da Frequência por Turma' } }
+                            }
+                        });
+                    }
+                }, 200);
             `;
+
+            newWindow.document.getElementById('report-content').innerHTML = reportHTML;
+            const scriptEl = newWindow.document.createElement('script');
+            scriptEl.textContent = chartScriptContent;
+            newWindow.document.body.appendChild(scriptEl);
+
        // RELATÓRIO DE PROFESSORES
         } else if (activeTab === 'assiduidade-professores') {
             const dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
@@ -1861,7 +1880,7 @@ async function generateAssiduidadeReport() {
                 return diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) : 0;
             }));
 
-            newWindow.document.body.innerHTML = `
+            const reportHTML = `
                  <div class="printable-area">
                      <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Chamadas</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
                      <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Chamadas</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
@@ -1877,8 +1896,9 @@ async function generateAssiduidadeReport() {
                              </div>
                          </div>
                      </div>
-                 </div>
-                 <script>
+                 </div>`;
+
+            const chartScriptContent = `
                      setTimeout(() => {
                          const ctx = document.getElementById('lancamentoChart');
                          if (ctx) {
@@ -1902,9 +1922,12 @@ async function generateAssiduidadeReport() {
                                  }
                              });
                          }
-                     }, 100);
-                 </script>
-             `;
+                     }, 200);
+                 `;
+            newWindow.document.getElementById('report-content').innerHTML = reportHTML;
+            const scriptEl = newWindow.document.createElement('script');
+            scriptEl.textContent = chartScriptContent;
+            newWindow.document.body.appendChild(scriptEl);
         }
 
     } catch(e) {
