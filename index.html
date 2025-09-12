@@ -303,7 +303,7 @@
         let apoiaCurrentPage = 1;
         const apoiaItemsPerPage = 10;
         let anosLetivosCache = [];
-        let dashboardSelectedDate = new Date().toISOString().split('T')[0];
+        let dashboardSelectedDate; // Será definido após a correção do fuso horário
 
         // --- Mapeamento dos Elementos da UI ---
         const loadingView = document.getElementById('loading-view');
@@ -373,6 +373,16 @@
         const calendarGrid = document.getElementById('calendar-grid');
 
         // --- Funções Auxiliares ---
+        function getLocalDateString() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        dashboardSelectedDate = getLocalDateString();
+
         function showView(viewId) {
             loadingView.classList.add('hidden');
             appContainer.classList.remove('hidden');
@@ -399,7 +409,7 @@
             alunosCache = [];
             anosLetivosCache = [];
             dashboardCalendar = { month: new Date().getMonth(), year: new Date().getFullYear() };
-            dashboardSelectedDate = new Date().toISOString().split('T')[0];
+            dashboardSelectedDate = getLocalDateString();
         }
 
         function resetLoginFormState() {
@@ -539,7 +549,7 @@
         async function loadChamada() {
             const turmaId = turmaSelect.value;
             const data = dataSelect.value;
-            const isEditable = data === new Date().toISOString().split('T')[0];
+            const isEditable = data === getLocalDateString();
 
             listaAlunosContainer.innerHTML = '';
             chamadaHeader.textContent = 'Selecione uma turma e data';
@@ -1044,7 +1054,7 @@
             const id = document.getElementById('acompanhamento-id').value;
             const acompanhamentoData = {
                 aluno_id: document.getElementById('acompanhamento-aluno-select').value,
-                data_encaminhamento: new Date().toISOString().split('T')[0],
+                data_encaminhamento: getLocalDateString(),
                 motivo: document.getElementById('acompanhamento-motivo').value,
                 status: document.getElementById('acompanhamento-status').value,
                 observacoes: document.getElementById('acompanhamento-observacoes').value
@@ -1985,7 +1995,7 @@
 
 
             // Inicialização
-            dataSelect.value = new Date().toISOString().split('T')[0];
+            dataSelect.value = getLocalDateString();
             ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
             console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
         });
