@@ -1653,7 +1653,7 @@ async function generateAssiduidadeReport() {
                     acc[turma.id] = { nome: turma.nome_turma, presencas: 0, faltas_j: 0, faltas_i: 0 };
                 }
                 if (record.status === 'presente') acc[turma.id].presencas++;
-  _             else {
+                else {
                     if (record.justificativa === 'Falta justificada') acc[turma.id].faltas_j++;
                     else acc[turma.id].faltas_i++;
                 }
