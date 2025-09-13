@@ -1600,32 +1600,28 @@ async function generateAssiduidadeReport() {
         @media print {
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .no-print { display: none !important; }
-            .printable-area {
-                display: block !important;
-                grid-template-columns: 1fr !important;
-            }
-            .printable-area > div {
-                grid-column: span 1 !important;
-                page-break-inside: avoid;
-            }
+            .printable-area .grid { display: block !important; }
+            .printable-area .grid > div { page-break-inside: avoid; }
             .chart-container {
                 width: 100% !important;
-                height: 300px !important;
-                max-width: 500px;
-                margin: auto;
+                max-width: 450px !important;
+                margin: 2rem auto;
+                height: auto !important;
             }
         }
     `;
-    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>${printStyles}</style><\/head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
+    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>${printStyles}<\/style><\/head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
     closeModal(assiduidadeModal);
     
     try {
         const activeTab = document.querySelector('#assiduidade-tabs a[aria-current="page"]').dataset.target;
         
+        let dataInicio, dataFim, periodoTexto;
+
         // RELATÓRIO DE ALUNOS
         if (activeTab === 'assiduidade-alunos') {
-            const dataInicio = document.getElementById('assiduidade-aluno-data-inicio').value;
-            const dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
+            dataInicio = document.getElementById('assiduidade-aluno-data-inicio').value;
+            dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
             const turmaId = document.getElementById('assiduidade-aluno-turma').value;
             const alunoId = document.getElementById('assiduidade-aluno-aluno').value;
 
@@ -1674,9 +1670,18 @@ async function generateAssiduidadeReport() {
             const totalPresencas = Object.values(stats).reduce((sum, s) => sum + s.presencas, 0);
             const totalFaltasJ = Object.values(stats).reduce((sum, s) => sum + s.faltas_j, 0);
             const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
+
+            if (dataInicio && dataFim) {
+                const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
+                const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
+                periodoTexto = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
+            } else {
+                periodoTexto = 'Período: Geral';
+            }
             
             const reportHTML = `
-                <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>Período: ${dataInicio || 'Geral'} a ${dataFim || ''}</p></div></div>
+            <div class="printable-area">
+                <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="chart-container relative h-64 md:h-80"><canvas id="assiduidadeChart"></canvas></div></div>
@@ -1689,7 +1694,8 @@ async function generateAssiduidadeReport() {
                         </table>
                         </div>
                     </div>
-                </div>`;
+                </div>
+            </div>`;
             
             const chartScriptContent = `
                 setTimeout(() => {
@@ -1717,8 +1723,8 @@ async function generateAssiduidadeReport() {
 
         // RELATÓRIO DE TURMAS
         } else if (activeTab === 'assiduidade-turmas') {
-            const dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
-            const dataFim = document.getElementById('assiduidade-turma-data-fim').value;
+            dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
+            dataFim = document.getElementById('assiduidade-turma-data-fim').value;
             const anoLetivo = document.getElementById('assiduidade-turma-ano').value;
             const turmaId = document.getElementById('assiduidade-turma-turma').value;
 
@@ -1768,10 +1774,18 @@ async function generateAssiduidadeReport() {
             const totalPresencas = sortedStats.reduce((sum, s) => sum + s.presencas, 0);
             const totalFaltasJ = sortedStats.reduce((sum, s) => sum + s.faltas_j, 0);
             const totalFaltasI = sortedStats.reduce((sum, s) => sum + s.faltas_i, 0);
+            
+            if (dataInicio && dataFim) {
+                const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
+                const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
+                periodoTexto = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
+            } else {
+                periodoTexto = 'Período: Geral';
+            }
 
             const reportHTML = `
                 <div class="printable-area">
-                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Geral'} a ${dataFim || ''}</p></div></div>
+                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>${periodoTexto}</p></div></div>
                     <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="chart-container relative h-64 md:h-80"><canvas id="assiduidadeTurmaChart"></canvas></div></div>
@@ -1818,13 +1832,12 @@ async function generateAssiduidadeReport() {
 
        // RELATÓRIO DE PROFESSORES
         } else if (activeTab === 'assiduidade-professores') {
-            const dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
-            const dataFim = document.getElementById('assiduidade-prof-data-fim').value;
+            dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
+            dataFim = document.getElementById('assiduidade-prof-data-fim').value;
             const anoLetivo = document.getElementById('assiduidade-prof-ano').value;
             const professorId = document.getElementById('assiduidade-prof-professor').value;
             const hasDateRange = dataInicio && dataFim;
-            
-            // Se tiver um período definido, usa a função RPC detalhada
+
             if (hasDateRange) {
                 const { data, error } = await db.rpc('get_professor_assiduidade', {
                     data_inicio: dataInicio,
@@ -1850,9 +1863,11 @@ async function generateAssiduidadeReport() {
                 const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
                 const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
                 
+                periodoTexto = `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}`;
+
                 newWindow.document.getElementById('report-content').innerHTML = `
                     <div class="printable-area">
-                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Professores</h2><p>Professor: ${nomeProfessor}</p><p>Período: ${dataInicio} a ${dataFim}</p></div></div>
+                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Professores</h2><p>Professor: ${nomeProfessor}</p><p>${periodoTexto}</p></div></div>
                         <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Professores</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                         <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                             <h3 class="text-lg font-bold mb-4">Resumo do Período para: <span class="text-indigo-600">${nomeProfessor}</span></h3>
@@ -1863,8 +1878,14 @@ async function generateAssiduidadeReport() {
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dias com Chamada Lançada (${totalLancados})</h3><div class="flex flex-wrap gap-2">${lancadosHtml}</div></div>
-                            <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dias Letivos Sem Lançamento (${diasNaoLancados.length})</h3><div class="flex flex-wrap gap-2">${naoLancadosHtml}</div></div>
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="font-bold mb-4">Dias com Chamada Lançada (${totalLancados})</h3>
+                                <div class="flex flex-wrap gap-2">${lancadosHtml}</div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="font-bold mb-4">Dias Letivos Sem Lançamento (${diasNaoLancados.length})</h3>
+                                <div class="flex flex-wrap gap-2">${naoLancadosHtml}</div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1903,7 +1924,7 @@ async function generateAssiduidadeReport() {
                 
                 newWindow.document.getElementById('report-content').innerHTML = `
                      <div class="printable-area">
-                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório Geral de Lançamentos</h2></div></div>
+                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório Geral de Lançamentos</h2><p>Período: Geral</p></div></div>
                         <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório Geral de Lançamentos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <div class="max-h-96 overflow-y-auto">
@@ -1917,6 +1938,7 @@ async function generateAssiduidadeReport() {
                 `;
             }
         }
+
     } catch(e) {
         console.error("Erro ao gerar relatório:", e);
         newWindow.document.getElementById('report-content').innerHTML = `<div class="text-red-500 font-bold text-center">Ocorreu um erro ao gerar o relatório: ${e.message}</div>`;
