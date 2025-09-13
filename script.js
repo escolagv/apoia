@@ -53,10 +53,8 @@ const correcaoChamadaModal = document.getElementById('correcao-chamada-modal');
 const resetPasswordModal = document.getElementById('reset-password-modal');
 const deleteConfirmModal = document.getElementById('delete-confirm-modal');
 const alunoHistoricoModal = document.getElementById('aluno-historico-modal');
-const promoverAlunosModal = document.getElementById('promover-alunos-modal');
-const promoverConfirmModal = document.getElementById('promover-confirm-modal');
-const promoverMassaModal = document.getElementById('promover-massa-modal');
-const promoverMassaConfirmModal = document.getElementById('promover-massa-confirm-modal');
+const promoverTurmasMassaModal = document.getElementById('promover-turmas-massa-modal');
+const promoverTurmasConfirmModal = document.getElementById('promover-turmas-confirm-modal');
 const assiduidadeModal = document.getElementById('assiduidade-modal');
 // Forms
 const alunoForm = document.getElementById('aluno-form');
@@ -1244,218 +1242,107 @@ function renderAnoLetivoPanel() {
     // Apenas abre o painel. A lógica está nos botões.
 }
 
-async function openPromoverAlunosModal() {
-    const anoOrigemSel = document.getElementById('promover-ano-origem');
-    const turmaOrigemSel = document.getElementById('promover-turma-origem');
-    const anoDestinoSel = document.getElementById('promover-ano-destino');
-    const turmaDestinoSel = document.getElementById('promover-turma-destino');
-
-    [anoOrigemSel, turmaOrigemSel, anoDestinoSel, turmaDestinoSel].forEach(sel => sel.innerHTML = '');
-    document.getElementById('promover-alunos-lista-container').classList.add('hidden');
-    document.getElementById('promover-alunos-btn').disabled = true;
-
-    anoOrigemSel.innerHTML = '<option value="">Selecione o ano</option>';
-    anoDestinoSel.innerHTML = '<option value="">Selecione o ano</option>';
-    anosLetivosCache.filter(ano => ano != null).forEach(ano => {
-        anoOrigemSel.innerHTML += `<option value="${ano}">${ano}</option>`;
-        anoDestinoSel.innerHTML += `<option value="${ano}">${ano}</option>`;
-    });
-
-    promoverAlunosModal.classList.remove('hidden');
-}
- 
-async function handlePromoverAlunos() {
-    const turmaOrigemId = document.getElementById('promover-turma-origem').value;
-    const turmaDestinoId = document.getElementById('promover-turma-destino').value;
-    const turmaOrigemNome = document.getElementById('promover-turma-origem').options[document.getElementById('promover-turma-origem').selectedIndex].text;
-    const turmaDestinoNome = document.getElementById('promover-turma-destino').options[document.getElementById('promover-turma-destino').selectedIndex].text;
+async function openPromoverTurmasMassaModal() {
+    const anoOrigemSel = document.getElementById('promover-turmas-ano-origem');
+    const anoDestinoEl = document.getElementById('promover-turmas-ano-destino');
+    const listaContainer = document.getElementById('promover-turmas-lista-container');
+    const listaEl = document.getElementById('promover-turmas-lista');
     
-    const selectedAlunoIds = Array.from(document.querySelectorAll('#promover-alunos-lista input:checked')).map(cb => cb.value);
+    listaContainer.classList.add('hidden');
+    listaEl.innerHTML = '';
+    document.getElementById('promover-turmas-btn').disabled = true;
 
-    if (selectedAlunoIds.length === 0) {
-        showToast("Nenhum aluno selecionado para promover.", true);
-        return;
-    }
-
-    document.getElementById('promover-confirm-message').textContent = `Você está prestes a mover ${selectedAlunoIds.length} aluno(s) da turma "${turmaOrigemNome}" para a turma "${turmaDestinoNome}".`;
-    document.getElementById('promover-confirm-warning').textContent = `Esta ação irá alterar permanentemente a turma destes alunos no sistema. Deseja continuar?`;
-    
-    const confirmBtn = document.getElementById('confirm-promocao-btn');
-    confirmBtn.dataset.turmaDestinoId = turmaDestinoId;
-    confirmBtn.dataset.alunoIds = JSON.stringify(selectedAlunoIds);
-
-    promoverConfirmModal.classList.remove('hidden');
-}
-
-async function handleConfirmPromocao() {
-    const btn = document.getElementById('confirm-promocao-btn');
-    const turmaDestinoId = btn.dataset.turmaDestinoId;
-    const alunoIds = JSON.parse(btn.dataset.alunoIds);
-
-    const { error } = await safeQuery(
-        db.from('alunos')
-        .update({ turma_id: turmaDestinoId })
-        .in('id', alunoIds)
-    );
-
-    if (error) {
-        showToast("Erro ao promover alunos: " + error.message, true);
-    } else {
-        showToast(`${alunoIds.length} aluno(s) promovido(s) com sucesso!`);
-        closeAllModals();
-        await renderAlunosPanel();
-    }
-}
-
-// --- Promoção em Massa ---
-async function openPromoverMassaModal() {
-    const anoOrigemSel = document.getElementById('promover-massa-ano-origem');
-    const anoDestinoSel = document.getElementById('promover-massa-ano-destino');
-    
     anoOrigemSel.innerHTML = '<option value="">Selecione...</option>';
-    anoDestinoSel.innerHTML = '<option value="">Selecione...</option>';
-    
     anosLetivosCache.forEach(ano => {
         anoOrigemSel.innerHTML += `<option value="${ano}">${ano}</option>`;
-        anoDestinoSel.innerHTML += `<option value="${ano}">${ano}</option>`;
     });
 
-    // Lógica inteligente de sugestão de ano
     if (anosLetivosCache.length > 0) {
         const ultimoAno = anosLetivosCache[0];
         anoOrigemSel.value = ultimoAno;
-        const proximoAno = parseInt(ultimoAno) + 1;
-        // Se o próximo ano não existe como opção, adiciona
-        if (![...anoDestinoSel.options].some(o => o.value == proximoAno)) {
-            anoDestinoSel.innerHTML += `<option value="${proximoAno}">${proximoAno}</option>`;
-        }
-        anoDestinoSel.value = proximoAno;
-    }
-
-    document.getElementById('promover-massa-alunos-container').classList.add('hidden');
-    document.getElementById('promover-massa-btn').disabled = true;
-    promoverMassaModal.classList.remove('hidden');
-    
-    // Trigger change para carregar o mapeamento se ambos os anos já estiverem definidos
-    if(anoOrigemSel.value && anoDestinoSel.value) {
         anoOrigemSel.dispatchEvent(new Event('change'));
     }
+    
+    promoverTurmasMassaModal.classList.remove('hidden');
 }
 
-function findMatchingTurma(aluno, turmasDestino) {
-    if (!aluno.turmas) return null;
-    const matchOrigem = aluno.turmas.nome_turma.match(/(\d+).+Ano ([A-Z])/i);
-    if (!matchOrigem) return null;
-
-    const serieOrigem = parseInt(matchOrigem[1]);
-    const letraOrigem = matchOrigem[2].toUpperCase();
-    const serieDestino = serieOrigem + 1;
-
-    return turmasDestino.find(t => {
-        const matchDestino = t.nome_turma.match(new RegExp(`^${serieDestino}.+Ano ${letraOrigem}$`, 'i'));
-        return !!matchDestino;
-    });
-}
-
-async function renderMapeamentoAlunos() {
-    const anoOrigem = document.getElementById('promover-massa-ano-origem').value;
-    const anoDestino = document.getElementById('promover-massa-ano-destino').value;
-    const container = document.getElementById('promover-massa-alunos-container');
-    const listEl = document.getElementById('promover-massa-lista-agrupada');
+async function renderPromocaoTurmasLista() {
+    const anoOrigem = document.getElementById('promover-turmas-ano-origem').value;
+    const anoDestinoEl = document.getElementById('promover-turmas-ano-destino');
+    const container = document.getElementById('promover-turmas-lista-container');
+    const listEl = document.getElementById('promover-turmas-lista');
+    const promoverBtn = document.getElementById('promover-turmas-btn');
     
     listEl.innerHTML = '';
-    document.getElementById('promover-massa-btn').disabled = true;
+    promoverBtn.disabled = true;
 
-    if (!anoOrigem || !anoDestino) {
+    if (!anoOrigem) {
         container.classList.add('hidden');
+        anoDestinoEl.value = '';
         return;
     }
-
+    
+    anoDestinoEl.value = parseInt(anoOrigem) + 1;
     listEl.innerHTML = '<div class="loader mx-auto my-4"></div>';
     container.classList.remove('hidden');
 
-    const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo, turmas!inner(id, nome_turma, ano_letivo)').eq('status', 'ativo').eq('turmas.ano_letivo', anoOrigem).order('turmas(nome_turma)').order('nome_completo'));
-    const turmasDestino = turmasCache.filter(t => t.ano_letivo == anoDestino);
+    const { data: turmas } = await safeQuery(
+        db.from('turmas').select('id, nome_turma').eq('ano_letivo', anoOrigem).order('nome_turma')
+    );
 
-    if (!alunos || alunos.length === 0) {
-        listEl.innerHTML = `<p class="p-4 text-center text-gray-600">Nenhum aluno ativo encontrado para o ano de origem.</p>`;
+    if (!turmas || turmas.length === 0) {
+        listEl.innerHTML = `<p class="p-4 text-center text-gray-600">Nenhuma turma encontrada para o ano de origem.</p>`;
+        return;
+    }
+    
+    listEl.innerHTML = turmas.map(turma => `
+        <label class="flex items-center p-2 bg-white rounded-md border">
+            <input type="checkbox" class="form-checkbox h-5 w-5 promocao-turma-checkbox" value="${turma.id}" checked>
+            <span class="ml-3 text-sm">${turma.nome_turma}</span>
+        </label>
+    `).join('');
+    
+    promoverBtn.disabled = false;
+}
+
+async function handlePromoverTurmasMassa() {
+    const turmasSelecionadasIds = Array.from(document.querySelectorAll('#promover-turmas-lista input:checked')).map(cb => cb.value);
+
+    if (turmasSelecionadasIds.length === 0) {
+        showToast("Nenhuma turma foi selecionada para a promoção.", true);
         return;
     }
 
-    const agrupadoPorTurma = alunos.reduce((acc, aluno) => {
-        const nomeTurma = aluno.turmas.nome_turma;
-        if (!acc[nomeTurma]) acc[nomeTurma] = [];
-        acc[nomeTurma].push(aluno);
-        return acc;
-    }, {});
-
-    let html = '';
-    for (const nomeTurma of Object.keys(agrupadoPorTurma).sort()) {
-        html += `<div class="p-3 border-b"><h4 class="font-bold text-gray-700">${nomeTurma}</h4></div>`;
-        html += '<div class="p-3 space-y-2">';
-        agrupadoPorTurma[nomeTurma].forEach(aluno => {
-            const matchedTurma = findMatchingTurma(aluno, turmasDestino);
-            let options = '<option value="">Não Promover</option>';
-            turmasDestino.forEach(t => {
-                const selected = matchedTurma && t.id === matchedTurma.id ? 'selected' : '';
-                options += `<option value="${t.id}" ${selected}>${t.nome_turma}</option>`;
-            });
-
-            html += `
-                <div class="grid grid-cols-[auto,1fr,1fr] gap-4 items-center aluno-promocao-row">
-                    <input type="checkbox" class="form-checkbox h-5 w-5 promocao-aluno-checkbox" value="${aluno.id}" checked>
-                    <label class="text-sm">${aluno.nome_completo}</label>
-                    <select class="w-full p-1 text-sm border rounded-md promocao-turma-select">${options}</select>
-                </div>
-            `;
-        });
-        html += '</div>';
-    }
-    listEl.innerHTML = html;
-    document.getElementById('promover-massa-btn').disabled = false;
+    document.getElementById('promover-turmas-confirm-message').textContent = `Você está prestes a promover todos os alunos de ${turmasSelecionadasIds.length} turma(s).`;
+    document.getElementById('confirm-promocao-turmas-btn').dataset.turmas = JSON.stringify(turmasSelecionadasIds);
+    document.getElementById('promover-turmas-confirm-checkbox').checked = false;
+    document.getElementById('confirm-promocao-turmas-btn').disabled = true;
+    promoverTurmasConfirmModal.classList.remove('hidden');
 }
 
+async function handleConfirmPromocaoTurmasMassa() {
+    const btn = document.getElementById('confirm-promocao-turmas-btn');
+    const turmaIds = JSON.parse(btn.dataset.turmas);
+    const anoDestino = document.getElementById('promover-turmas-ano-destino').value;
 
-async function handlePromoverMassa() {
-    const promocoes = [];
-    document.querySelectorAll('.aluno-promocao-row').forEach(row => {
-        const checkbox = row.querySelector('.promocao-aluno-checkbox');
-        if (checkbox.checked) {
-            const select = row.querySelector('.promocao-turma-select');
-            if (select.value) {
-                promocoes.push({
-                    aluno_id: parseInt(checkbox.value),
-                    nova_turma_id: parseInt(select.value)
-                });
-            }
-        }
+    btn.innerHTML = '<div class="loader mx-auto"></div>';
+    btn.disabled = true;
+
+    const { error } = await db.rpc('promover_turmas_em_massa', {
+        origem_turma_ids: turmaIds,
+        ano_destino: parseInt(anoDestino)
     });
 
-    if (promocoes.length === 0) {
-        showToast("Nenhum aluno selecionado para promover com uma turma de destino válida.", true);
-        return;
+    if (error) {
+        showToast("Erro ao executar a promoção em massa: " + error.message, true);
+        console.error(error);
+    } else {
+        showToast("Turmas promovidas com sucesso! Os alunos foram movidos e novas turmas criadas conforme necessário.");
+        closeAllModals();
+        await loadAdminData();
+        await renderAlunosPanel({ defaultToLatestYear: true });
     }
-
-    document.getElementById('promover-massa-confirm-message').textContent = `Você está prestes a promover ${promocoes.length} aluno(s) para suas novas turmas.`;
-    document.getElementById('confirm-promocao-massa-btn').dataset.promocoes = JSON.stringify(promocoes);
-    document.getElementById('promover-massa-confirm-checkbox').checked = false;
-    document.getElementById('confirm-promocao-massa-btn').disabled = true;
-    promoverMassaConfirmModal.classList.remove('hidden');
-}
-
-async function handleConfirmPromocaoMassa() {
-      const btn = document.getElementById('confirm-promocao-massa-btn');
-      const promocoes = JSON.parse(btn.dataset.promocoes);
-
-      const { error } = await db.rpc('promover_alunos_individualmente', { promocoes });
-
-      if (error) {
-           showToast("Erro ao executar promoção em massa: " + error.message, true);
-      } else {
-           showToast("Alunos promovidos em massa com sucesso!");
-           closeAllModals();
-           await renderAlunosPanel({ defaultToLatestYear: true });
-      }
+    btn.innerHTML = 'Executar Promoção';
 }
  
 // --- Lógica de Exclusão ---
@@ -1630,7 +1517,7 @@ async function generateAssiduidadeReport() {
             }
         }
     `;
-    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>${printStyles}<\/style><\/head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
+    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><link rel="stylesheet" href="style.css"><\/head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
     closeModal(assiduidadeModal);
     
     try {
@@ -2182,12 +2069,9 @@ document.addEventListener('DOMContentLoaded', () => {
                    loadDailySummary(dashboardSelectedDate);
               }
          }
-        if(closest('#open-promover-alunos-modal-btn')) openPromoverAlunosModal();
-        if(closest('#open-promover-massa-modal-btn')) openPromoverMassaModal();
-        if(closest('#promover-alunos-btn')) handlePromoverAlunos();
-        if(closest('#confirm-promocao-btn')) handleConfirmPromocao();
-        if(closest('#promover-massa-btn')) handlePromoverMassa();
-        if(closest('#confirm-promocao-massa-btn')) handleConfirmPromocaoMassa();
+        if(closest('#open-promover-turmas-massa-modal-btn')) openPromoverTurmasMassaModal();
+        if(closest('#promover-turmas-btn')) handlePromoverTurmasMassa();
+        if(closest('#confirm-promocao-turmas-btn')) handleConfirmPromocaoTurmasMassa();
         if(closest('#gerar-assiduidade-btn')) generateAssiduidadeReport();
     });
 
@@ -2256,60 +2140,22 @@ document.addEventListener('DOMContentLoaded', () => {
     correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
     correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
 
-    // Listeners da Promoção de Alunos (Manual)
-    const anoOrigemSel = document.getElementById('promover-ano-origem');
-    const turmaOrigemSel = document.getElementById('promover-turma-origem');
-    const anoDestinoSel = document.getElementById('promover-ano-destino');
-    const turmaDestinoSel = document.getElementById('promover-turma-destino');
-    
-    const populateTurmas = (ano, selElement) => {
-        selElement.innerHTML = '<option value="">Selecione a turma</option>';
-        turmasCache.filter(t => t.ano_letivo == ano).forEach(t => {
-            selElement.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`;
+    // Listeners da Promoção em Massa (Nova Versão)
+    document.getElementById('promover-turmas-ano-origem').addEventListener('change', renderPromocaoTurmasLista);
+    document.getElementById('promover-turmas-confirm-checkbox').addEventListener('change', (e) => {
+        document.getElementById('confirm-promocao-turmas-btn').disabled = !e.target.checked;
+    });
+
+    const toggleAllCheckbox = document.getElementById('promover-turmas-toggle-all');
+    if(toggleAllCheckbox) {
+        toggleAllCheckbox.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.promocao-turma-checkbox');
+            const isTudoMarcado = [...checkboxes].every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !isTudoMarcado);
+            toggleAllCheckbox.textContent = !isTudoMarcado ? 'Desmarcar Todos' : 'Marcar Todos';
         });
-    };
+    }
 
-    anoOrigemSel.addEventListener('change', () => populateTurmas(anoOrigemSel.value, turmaOrigemSel));
-    anoDestinoSel.addEventListener('change', () => populateTurmas(anoDestinoSel.value, turmaDestinoSel));
-
-    turmaOrigemSel.addEventListener('change', async () => {
-        const turmaId = turmaOrigemSel.value;
-        const listaContainer = document.getElementById('promover-alunos-lista-container');
-        const listaEl = document.getElementById('promover-alunos-lista');
-        listaEl.innerHTML = '';
-        if (!turmaId) {
-            listaContainer.classList.add('hidden');
-            return;
-        }
-        const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo'));
-        if (alunos && alunos.length > 0) {
-            listaEl.innerHTML = alunos.map(a => `<label class="flex items-center"><input type="checkbox" class="form-checkbox" value="${a.id}"><span class="ml-2">${a.nome_completo}</span></label>`).join('');
-        } else {
-            listaEl.innerHTML = `<p class="text-sm text-gray-500">Nenhum aluno ativo nesta turma.</p>`;
-        }
-        listaContainer.classList.remove('hidden');
-    });
-    
-    [turmaOrigemSel, turmaDestinoSel, document.getElementById('promover-alunos-lista')].forEach(el => {
-        el.addEventListener('change', () => {
-            const allSet = turmaOrigemSel.value && turmaDestinoSel.value && document.querySelectorAll('#promover-alunos-lista input:checked').length > 0;
-            document.getElementById('promover-alunos-btn').disabled = !allSet;
-        });
-    });
-
-    document.getElementById('promover-select-all-alunos').addEventListener('change', (e) => {
-        document.querySelectorAll('#promover-alunos-lista input').forEach(cb => cb.checked = e.target.checked);
-        document.getElementById('promover-alunos-btn').disabled = !e.target.checked || !turmaOrigemSel.value || !turmaDestinoSel.value;
-    });
-
-    // Listeners da Promoção em Massa
-    const massaAnoOrigemSel = document.getElementById('promover-massa-ano-origem');
-    const massaAnoDestinoSel = document.getElementById('promover-massa-ano-destino');
-    massaAnoOrigemSel.addEventListener('change', renderMapeamentoAlunos);
-    massaAnoDestinoSel.addEventListener('change', renderMapeamentoAlunos);
-    document.getElementById('promover-massa-confirm-checkbox').addEventListener('change', (e) => {
-        document.getElementById('confirm-promocao-massa-btn').disabled = !e.target.checked;
-    });
     
     // Listeners da Análise de Assiduidade
     document.getElementById('assiduidade-tabs').addEventListener('click', (e) => {
