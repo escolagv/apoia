@@ -1828,7 +1828,7 @@ async function generateAssiduidadeReport() {
                         acc[profId] = { nome: record.usuarios.nome, diasComChamada: new Set() };
                     }
                     acc[profId].diasComChamada.add(record.data);
-      _                 return acc;
+                       return acc;
                         return acc;
                 }, {});
 
