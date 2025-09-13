@@ -13,7 +13,7 @@ let dashboardCalendar = { month: new Date().getMonth(), year: new Date().getFull
 let apoiaCurrentPage = 1;
 const apoiaItemsPerPage = 10;
 let anosLetivosCache = [];
-let dashboardSelectedDate; // Será definido após a correção do fuso horário
+let dashboardSelectedDate; 
 
 // --- Mapeamento dos Elementos da UI ---
 const loadingView = document.getElementById('loading-view');
@@ -1578,7 +1578,7 @@ function openAssiduidadeModal() {
         anoSelTurma.dispatchEvent(new Event('change'));
     }
 
-    // Limpa as datas do relatório de professores
+    // Limpa as datas do relatório de professores para não haver predefinição
     document.getElementById('assiduidade-prof-data-inicio').value = '';
     document.getElementById('assiduidade-prof-data-fim').value = '';
 
@@ -1592,7 +1592,7 @@ function openAssiduidadeModal() {
 
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
-    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><link rel="stylesheet" href="style.css"></head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
+    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><link rel="stylesheet" href="style.css"><\/head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
     closeModal(assiduidadeModal);
     
     try {
@@ -1656,7 +1656,7 @@ async function generateAssiduidadeReport() {
                 <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><canvas id="assiduidadeChart"></canvas></div>
+                    <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="relative h-64 md:h-80"><canvas id="assiduidadeChart"></canvas></div></div>
                     <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
                         <h3 class="font-bold mb-4">Detalhes da Frequência</h3>
                         <div class="max-h-96 overflow-y-auto">
@@ -1682,7 +1682,7 @@ async function generateAssiduidadeReport() {
                                     backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
                                 }]
                             },
-                            options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } }
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } }
                         });
                     }
                 }, 200);
@@ -1743,18 +1743,17 @@ async function generateAssiduidadeReport() {
                 `;
             }).join('');
 
-            const chartLabels = JSON.stringify(sortedStats.map(t => t.nome));
-            const chartDataPresencas = JSON.stringify(sortedStats.map(t => t.presencas));
-            const chartDataFaltasJ = JSON.stringify(sortedStats.map(t => t.faltas_j));
-            const chartDataFaltasI = JSON.stringify(sortedStats.map(t => t.faltas_i));
+            const totalPresencas = sortedStats.reduce((sum, s) => sum + s.presencas, 0);
+            const totalFaltasJ = sortedStats.reduce((sum, s) => sum + s.faltas_j, 0);
+            const totalFaltasI = sortedStats.reduce((sum, s) => sum + s.faltas_i, 0);
 
             const reportHTML = `
                 <div class="printable-area">
                     <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
                     <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><canvas id="assiduidadeTurmaChart"></canvas></div>
-                        <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
+                        <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="relative h-64 md:h-80"><canvas id="assiduidadeTurmaChart"></canvas></div></div>
+                        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
                             <h3 class="font-bold mb-4">Dados Consolidados</h3>
                             <div class="max-h-96 overflow-y-auto">
                             <table class="w-full text-sm">
@@ -1771,20 +1770,19 @@ async function generateAssiduidadeReport() {
                     const ctx = document.getElementById('assiduidadeTurmaChart');
                     if(ctx) {
                         new Chart(ctx, {
-                            type: 'bar',
+                            type: 'pie',
                             data: {
-                                labels: ${chartLabels},
-                                datasets: [
-                                    { label: 'Presenças', data: ${chartDataPresencas}, backgroundColor: '#10B981' },
-                                    { label: 'Faltas Justificadas', data: ${chartDataFaltasJ}, backgroundColor: '#F59E0B' },
-                                    { label: 'Faltas Injustificadas', data: ${chartDataFaltasI}, backgroundColor: '#EF4444' }
-                                ]
+                                labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'],
+                                datasets: [{
+                                    label: 'Frequência Geral',
+                                    data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}],
+                                    backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
+                                }]
                             },
                             options: {
-                                indexAxis: 'y',
-                                scales: { x: { stacked: true }, y: { stacked: true } },
                                 responsive: true,
-                                plugins: { legend: { position: 'top' }, title: { display: true, text: 'Composição da Frequência por Turma' } }
+                                maintainAspectRatio: false,
+                                plugins: { legend: { position: 'top' }, title: { display: true, text: 'Composição da Frequência (Consolidado)' } }
                             }
                         });
                     }
@@ -1802,40 +1800,35 @@ async function generateAssiduidadeReport() {
             const dataFim = document.getElementById('assiduidade-prof-data-fim').value;
             const anoLetivo = document.getElementById('assiduidade-prof-ano').value;
             const professorId = document.getElementById('assiduidade-prof-professor').value;
-
-            if (!dataInicio || !dataFim) {
-                 newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione um período de início e fim para gerar o relatório de professores.</p>';
-                 return;
-            }
-
-            // 1. Calcular dias letivos no período
-            const { data: eventos } = await safeQuery(db.from('eventos').select('data, data_fim').or(`data.gte.${dataInicio},data_fim.gte.${dataInicio}`).or(`data.lte.${dataFim},data_fim.lte.${dataFim}`));
-            const diasNaoLetivos = new Set();
-            eventos.forEach(e => {
-                let current = new Date(e.data + 'T00:00:00');
-                const end = e.data_fim ? new Date(e.data_fim + 'T00:00:00') : current;
-                while (current <= end) {
-                    diasNaoLetivos.add(current.toISOString().split('T')[0]);
-                    current.setDate(current.getDate() + 1);
-                }
-            });
+            const hasDateRange = dataInicio && dataFim;
 
             let diasLetivos = 0;
-            let current = new Date(dataInicio + 'T00:00:00');
-            const end = new Date(dataFim + 'T00:00:00');
-            while (current <= end) {
-                const dayOfWeek = current.getDay();
-                const dateString = current.toISOString().split('T')[0];
-                if (dayOfWeek !== 0 && dayOfWeek !== 6 && !diasNaoLetivos.has(dateString)) {
-                    diasLetivos++;
+            if (hasDateRange) {
+                const { data: eventos } = await safeQuery(db.from('eventos').select('data, data_fim').or(`data.gte.${dataInicio},data_fim.gte.${dataInicio}`).or(`data.lte.${dataFim},data_fim.lte.${dataFim}`));
+                const diasNaoLetivos = new Set();
+                eventos.forEach(e => {
+                    let current = new Date(e.data + 'T00:00:00');
+                    const end = e.data_fim ? new Date(e.data_fim + 'T00:00:00') : current;
+                    while (current <= end) {
+                        diasNaoLetivos.add(current.toISOString().split('T')[0]);
+                        current.setDate(current.getDate() + 1);
+                    }
+                });
+                let current = new Date(dataInicio + 'T00:00:00');
+                const end = new Date(dataFim + 'T00:00:00');
+                while (current <= end) {
+                    const dayOfWeek = current.getDay();
+                    const dateString = current.toISOString().split('T')[0];
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !diasNaoLetivos.has(dateString)) {
+                        diasLetivos++;
+                    }
+                    current.setDate(current.getDate() + 1);
                 }
-                current.setDate(current.getDate() + 1);
             }
 
-            // 2. Buscar registros dos professores
             let query = db.from('presencas').select('registrado_por_uid, data, usuarios!inner(nome), turmas!inner(ano_letivo)');
-            query = query.gte('data', dataInicio);
-            query = query.lte('data', dataFim);
+            if (dataInicio) query = query.gte('data', dataInicio);
+            if (dataFim) query = query.lte('data', dataFim);
             if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
             if (professorId) query = query.eq('registrado_por_uid', professorId);
 
@@ -1856,44 +1849,57 @@ async function generateAssiduidadeReport() {
                 return acc;
             }, {});
 
+            const tableHeader = hasDateRange
+                ? `<tr><th class="p-3 text-left">Professor</th><th class="p-3 text-center">Dias com Chamada</th><th class="p-3 text-center">Total Dias Letivos</th><th class="p-3 text-center">Taxa de Lançamento</th></tr>`
+                : `<tr><th class="p-3 text-left">Professor</th><th class="p-3 text-center">Dias com Chamada</th></tr>`;
+
             const tableRows = Object.values(stats).sort((a, b) => a.nome.localeCompare(b.nome)).map(prof => {
                 const diasRegistrados = prof.diasComChamada.size;
-                const taxa = diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) + '%' : 'N/A';
-                return `
-                     <tr class="border-b">
-                         <td class="p-3">${prof.nome}</td>
-                         <td class="p-3 text-center font-semibold">${diasRegistrados}</td>
-                         <td class="p-3 text-center">${diasLetivos}</td>
-                         <td class="p-3 text-center font-bold">${taxa}</td>
-                    </tr>
-                `;
+                if (hasDateRange) {
+                    const taxa = diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) + '%' : 'N/A';
+                    return `
+                         <tr class="border-b">
+                             <td class="p-3">${prof.nome}</td>
+                             <td class="p-3 text-center font-semibold">${diasRegistrados}</td>
+                             <td class="p-3 text-center">${diasLetivos}</td>
+                             <td class="p-3 text-center font-bold">${taxa}</td>
+                        </tr>
+                    `;
+                } else {
+                    return `
+                        <tr class="border-b">
+                             <td class="p-3">${prof.nome}</td>
+                             <td class="p-3 text-center font-semibold">${diasRegistrados}</td>
+                        </tr>
+                    `;
+                }
             }).join('');
 
             const sortedProfStats = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome));
             const chartLabels = JSON.stringify(sortedProfStats.map(p => p.nome));
             const chartData = JSON.stringify(sortedProfStats.map(p => {
                 const diasRegistrados = p.diasComChamada.size;
-                return diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) : 0;
+                return hasDateRange && diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) : diasRegistrados;
             }));
 
             const reportHTML = `
                  <div class="printable-area">
-                     <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Chamadas</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
+                     <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Chamadas</h2><p>Período: ${dataInicio || 'Geral'}</p></div></div>
                      <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Chamadas</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                         <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><canvas id="lancamentoChart"></canvas></div>
+                         <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><div class="relative h-64 md:h-96"><canvas id="lancamentoChart"></canvas></div></div>
                          <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
                              <h3 class="font-bold mb-4">Dados Consolidados</h3>
                              <div class="max-h-96 overflow-y-auto">
                              <table class="w-full text-sm">
-                                 <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Professor</th><th class="p-3 text-center">Dias com Chamada</th><th class="p-3 text-center">Total Dias Letivos</th><th class="p-3 text-center">Taxa de Lançamento</th></tr></thead>
+                                 <thead class="bg-gray-50 sticky top-0">${tableHeader}</thead>
                                  <tbody>${tableRows}</tbody>
                              </table>
                              </div>
                          </div>
                      </div>
                  </div>`;
-
+            
             const chartScriptContent = `
                      setTimeout(() => {
                          const ctx = document.getElementById('lancamentoChart');
@@ -1903,7 +1909,7 @@ async function generateAssiduidadeReport() {
                                  data: {
                                      labels: ${chartLabels},
                                      datasets: [{
-                                         label: '% de Lançamento',
+                                         label: '${hasDateRange ? "% de Lançamento" : "Dias com Lançamento"}',
                                          data: ${chartData},
                                          backgroundColor: 'rgba(139, 92, 246, 0.5)',
                                          borderColor: 'rgba(139, 92, 246, 1)',
@@ -1912,14 +1918,16 @@ async function generateAssiduidadeReport() {
                                  },
                                  options: {
                                      indexAxis: 'y',
-                                     scales: { x: { beginAtZero: true, max: 100 } },
+                                     scales: { x: { beginAtZero: true, max: ${hasDateRange ? 100 : ''} } },
                                      responsive: true,
-                                     plugins: { legend: { display: false }, title: { display: true, text: 'Taxa de Lançamento de Chamadas por Professor' } }
+                                     maintainAspectRatio: false,
+                                     plugins: { legend: { display: false }, title: { display: true, text: 'Lançamento de Chamadas por Professor' } }
                                  }
                              });
                          }
                      }, 200);
                  `;
+            
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             const scriptEl = newWindow.document.createElement('script');
             scriptEl.textContent = chartScriptContent;
