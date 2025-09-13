@@ -1332,7 +1332,7 @@ async function openPromoverMassaModal() {
         anoDestinoSel.value = proximoAno;
     }
 
-    document.getElementById('promover-massa-mapeamento-container').classList.add('hidden');
+    document.getElementById('promover-massa-alunos-container').classList.add('hidden');
     document.getElementById('promover-massa-btn').disabled = true;
     promoverMassaModal.classList.remove('hidden');
     
@@ -1342,9 +1342,10 @@ async function openPromoverMassaModal() {
     }
 }
 
-function findMatchingTurma(turmaOrigem, turmasDestino) {
-    const matchOrigem = turmaOrigem.nome_turma.match(/(\d+).+Ano ([A-Z])/i);
-    if (!matchOrigem) return null; // Não encontrou padrão "Xº Ano Y"
+function findMatchingTurma(aluno, turmasDestino) {
+    if (!aluno.turmas) return null;
+    const matchOrigem = aluno.turmas.nome_turma.match(/(\d+).+Ano ([A-Z])/i);
+    if (!matchOrigem) return null;
 
     const serieOrigem = parseInt(matchOrigem[1]);
     const letraOrigem = matchOrigem[2].toUpperCase();
@@ -1356,68 +1357,87 @@ function findMatchingTurma(turmaOrigem, turmasDestino) {
     });
 }
 
-async function renderMapeamentoTurmas() {
+async function renderMapeamentoAlunos() {
     const anoOrigem = document.getElementById('promover-massa-ano-origem').value;
     const anoDestino = document.getElementById('promover-massa-ano-destino').value;
-    const container = document.getElementById('promover-massa-mapeamento-container');
-    const listEl = document.getElementById('promover-massa-mapeamento-list');
+    const container = document.getElementById('promover-massa-alunos-container');
+    const listEl = document.getElementById('promover-massa-lista-agrupada');
+    
     listEl.innerHTML = '';
+    document.getElementById('promover-massa-btn').disabled = true;
 
-    if(!anoOrigem || !anoDestino) {
+    if (!anoOrigem || !anoDestino) {
         container.classList.add('hidden');
         return;
     }
 
-    const turmasOrigem = turmasCache.filter(t => t.ano_letivo == anoOrigem);
+    listEl.innerHTML = '<div class="loader mx-auto my-4"></div>';
+    container.classList.remove('hidden');
+
+    const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo, turmas!inner(id, nome_turma, ano_letivo)').eq('status', 'ativo').eq('turmas.ano_letivo', anoOrigem).order('turmas(nome_turma)').order('nome_completo'));
     const turmasDestino = turmasCache.filter(t => t.ano_letivo == anoDestino);
 
-    if (turmasOrigem.length === 0) {
-         listEl.innerHTML = `<p class="text-center text-gray-600">Nenhuma turma encontrada para o ano de origem.</p>`;
-    } else {
-        turmasOrigem.forEach(tOrigem => {
-            let options = '<option value="">— Não Promover —</option>';
-            turmasDestino.forEach(tDestino => {
-                options += `<option value="${tDestino.id}">${tDestino.nome_turma}</option>`;
-            });
-
-            const matchedTurma = findMatchingTurma(tOrigem, turmasDestino);
-
-            listEl.innerHTML += `
-                <div class="grid grid-cols-2 gap-4 items-center">
-                    <span class="text-sm font-medium text-gray-800">${tOrigem.nome_turma}</span>
-                    <select data-origem-id="${tOrigem.id}" class="w-full p-2 border rounded-md mapeamento-select">
-                        ${options}
-                    </select>
-                </div>
-            `;
-            if(matchedTurma) {
-                const sel = listEl.querySelector(`select[data-origem-id="${tOrigem.id}"]`);
-                if(sel) sel.value = matchedTurma.id;
-            }
-        });
-    }
-    container.classList.remove('hidden');
-    document.getElementById('promover-massa-btn').disabled = false;
-}
-
-async function handlePromoverMassa() {
-    const mapeamentos = [];
-    document.querySelectorAll('.mapeamento-select').forEach(sel => {
-        if (sel.value) { // Apenas se um destino foi selecionado
-            mapeamentos.push({
-                turma_origem_id: parseInt(sel.dataset.origemId),
-                turma_destino_id: parseInt(sel.value)
-            });
-        }
-    });
-
-    if (mapeamentos.length === 0) {
-        showToast("Nenhum mapeamento de turma foi selecionado para promoção.", true);
+    if (!alunos || alunos.length === 0) {
+        listEl.innerHTML = `<p class="p-4 text-center text-gray-600">Nenhum aluno ativo encontrado para o ano de origem.</p>`;
         return;
     }
 
-    document.getElementById('promover-massa-confirm-message').textContent = `Você está prestes a promover todos os alunos de ${mapeamentos.length} turma(s) conforme o mapeamento definido.`;
-    document.getElementById('confirm-promocao-massa-btn').dataset.mapeamento = JSON.stringify(mapeamentos);
+    const agrupadoPorTurma = alunos.reduce((acc, aluno) => {
+        const nomeTurma = aluno.turmas.nome_turma;
+        if (!acc[nomeTurma]) acc[nomeTurma] = [];
+        acc[nomeTurma].push(aluno);
+        return acc;
+    }, {});
+
+    let html = '';
+    for (const nomeTurma of Object.keys(agrupadoPorTurma).sort()) {
+        html += `<div class="p-3 border-b"><h4 class="font-bold text-gray-700">${nomeTurma}</h4></div>`;
+        html += '<div class="p-3 space-y-2">';
+        agrupadoPorTurma[nomeTurma].forEach(aluno => {
+            const matchedTurma = findMatchingTurma(aluno, turmasDestino);
+            let options = '<option value="">Não Promover</option>';
+            turmasDestino.forEach(t => {
+                const selected = matchedTurma && t.id === matchedTurma.id ? 'selected' : '';
+                options += `<option value="${t.id}" ${selected}>${t.nome_turma}</option>`;
+            });
+
+            html += `
+                <div class="grid grid-cols-[auto,1fr,1fr] gap-4 items-center aluno-promocao-row">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 promocao-aluno-checkbox" value="${aluno.id}" checked>
+                    <label class="text-sm">${aluno.nome_completo}</label>
+                    <select class="w-full p-1 text-sm border rounded-md promocao-turma-select">${options}</select>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+    listEl.innerHTML = html;
+    document.getElementById('promover-massa-btn').disabled = false;
+}
+
+
+async function handlePromoverMassa() {
+    const promocoes = [];
+    document.querySelectorAll('.aluno-promocao-row').forEach(row => {
+        const checkbox = row.querySelector('.promocao-aluno-checkbox');
+        if (checkbox.checked) {
+            const select = row.querySelector('.promocao-turma-select');
+            if (select.value) {
+                promocoes.push({
+                    aluno_id: parseInt(checkbox.value),
+                    nova_turma_id: parseInt(select.value)
+                });
+            }
+        }
+    });
+
+    if (promocoes.length === 0) {
+        showToast("Nenhum aluno selecionado para promover com uma turma de destino válida.", true);
+        return;
+    }
+
+    document.getElementById('promover-massa-confirm-message').textContent = `Você está prestes a promover ${promocoes.length} aluno(s) para suas novas turmas.`;
+    document.getElementById('confirm-promocao-massa-btn').dataset.promocoes = JSON.stringify(promocoes);
     document.getElementById('promover-massa-confirm-checkbox').checked = false;
     document.getElementById('confirm-promocao-massa-btn').disabled = true;
     promoverMassaConfirmModal.classList.remove('hidden');
@@ -1425,9 +1445,9 @@ async function handlePromoverMassa() {
 
 async function handleConfirmPromocaoMassa() {
       const btn = document.getElementById('confirm-promocao-massa-btn');
-      const mapeamento = JSON.parse(btn.dataset.mapeamento);
+      const promocoes = JSON.parse(btn.dataset.promocoes);
 
-      const { error } = await db.rpc('promover_alunos_em_massa', { mapeamento });
+      const { error } = await db.rpc('promover_alunos_individualmente', { promocoes });
 
       if (error) {
            showToast("Erro ao executar promoção em massa: " + error.message, true);
@@ -1680,11 +1700,10 @@ async function generateAssiduidadeReport() {
             }
             
             const reportHTML = `
-            <div class="printable-area">
                 <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="chart-container relative h-64 md:h-80"><canvas id="assiduidadeChart"></canvas></div></div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 print:block">
+                    <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md print:w-full print:max-w-md print:mx-auto"><div class="chart-container relative h-64 md:h-80"><canvas id="assiduidadeChart"></canvas></div></div>
                     <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
                         <h3 class="font-bold mb-4">Detalhes da Frequência</h3>
                         <div class="max-h-96 overflow-y-auto">
@@ -1694,8 +1713,7 @@ async function generateAssiduidadeReport() {
                         </table>
                         </div>
                     </div>
-                </div>
-            </div>`;
+                </div>`;
             
             const chartScriptContent = `
                 setTimeout(() => {
@@ -1787,8 +1805,8 @@ async function generateAssiduidadeReport() {
                 <div class="printable-area">
                     <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>${periodoTexto}</p></div></div>
                     <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="chart-container relative h-64 md:h-80"><canvas id="assiduidadeTurmaChart"></canvas></div></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 print:block">
+                        <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md print:w-full print:max-w-md print:mx-auto"><div class="chart-container relative h-64 md:h-80"><canvas id="assiduidadeTurmaChart"></canvas></div></div>
                         <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
                             <h3 class="font-bold mb-4">Dados Consolidados</h3>
                             <div class="max-h-96 overflow-y-auto">
@@ -1863,7 +1881,9 @@ async function generateAssiduidadeReport() {
                 const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
                 const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
                 
-                periodoTexto = `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}`;
+                const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
+                const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
+                periodoTexto = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
 
                 newWindow.document.getElementById('report-content').innerHTML = `
                     <div class="printable-area">
@@ -2285,8 +2305,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listeners da Promoção em Massa
     const massaAnoOrigemSel = document.getElementById('promover-massa-ano-origem');
     const massaAnoDestinoSel = document.getElementById('promover-massa-ano-destino');
-    massaAnoOrigemSel.addEventListener('change', renderMapeamentoTurmas);
-    massaAnoDestinoSel.addEventListener('change', renderMapeamentoTurmas);
+    massaAnoOrigemSel.addEventListener('change', renderMapeamentoAlunos);
+    massaAnoDestinoSel.addEventListener('change', renderMapeamentoAlunos);
     document.getElementById('promover-massa-confirm-checkbox').addEventListener('change', (e) => {
         document.getElementById('confirm-promocao-massa-btn').disabled = !e.target.checked;
     });
