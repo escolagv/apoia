@@ -5,11 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Chamada</title>
-
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -27,6 +22,7 @@
         <div id="login-view" class="hidden min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
             <div class="max-w-md w-full mx-auto">
                 <div class="text-center">
+                    <img src="logo.png" alt="Logo da Escola" class="mx-auto h-28 w-auto">
                     <img src="logo.png" alt="Logo da Escola" class="mx-auto h-40 w-auto">
                     <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
                         Sistema de Chamadas
@@ -130,7 +126,7 @@
                 </header>
 
                 <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
-                    
+
                     <div id="admin-dashboard-panel" class="admin-panel">
                         <h2 class="text-2xl font-semibold text-gray-800 mb-6">Dashboard</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -238,8 +234,8 @@
             }
         });
     </script>
-    
+
     <script type="module" src="script.js"></script>
-    
+
 </body>
 </html>
