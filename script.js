@@ -1596,7 +1596,27 @@ function openAssiduidadeModal() {
 
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
-    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><link rel="stylesheet" href="style.css"><\/head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
+    const printStyles = `
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .printable-area {
+                display: block !important;
+                grid-template-columns: 1fr !important;
+            }
+            .printable-area > div {
+                grid-column: span 1 !important;
+                page-break-inside: avoid;
+            }
+            .chart-container {
+                width: 100% !important;
+                height: 300px !important;
+                max-width: 500px;
+                margin: auto;
+            }
+        }
+    `;
+    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>${printStyles}</style><\/head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
     closeModal(assiduidadeModal);
     
     try {
@@ -1636,7 +1656,7 @@ async function generateAssiduidadeReport() {
                 return acc;
             }, {});
 
-            const tableRows = Object.entries(stats).map(([nome, { presencas, faltas_j, faltas_i, turma }]) => {
+            const tableRows = Object.entries(stats).sort((a,b) => a[0].localeCompare(b[0])).map(([nome, { presencas, faltas_j, faltas_i, turma }]) => {
                 const total = presencas + faltas_j + faltas_i;
                 const percentual = total > 0 ? ((presencas / total) * 100).toFixed(1) + '%' : 'N/A';
                 return `
@@ -1656,11 +1676,10 @@ async function generateAssiduidadeReport() {
             const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
             
             const reportHTML = `
-            <div class="printable-area">
                 <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>Período: ${dataInicio || 'Geral'} a ${dataFim || ''}</p></div></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="relative h-64 md:h-80"><canvas id="assiduidadeChart"></canvas></div></div>
+                    <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="chart-container relative h-64 md:h-80"><canvas id="assiduidadeChart"></canvas></div></div>
                     <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
                         <h3 class="font-bold mb-4">Detalhes da Frequência</h3>
                         <div class="max-h-96 overflow-y-auto">
@@ -1670,8 +1689,7 @@ async function generateAssiduidadeReport() {
                         </table>
                         </div>
                     </div>
-                </div>
-            </div>`;
+                </div>`;
             
             const chartScriptContent = `
                 setTimeout(() => {
@@ -1756,7 +1774,7 @@ async function generateAssiduidadeReport() {
                     <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Geral'} a ${dataFim || ''}</p></div></div>
                     <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="relative h-64 md:h-80"><canvas id="assiduidadeTurmaChart"></canvas></div></div>
+                        <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="chart-container relative h-64 md:h-80"><canvas id="assiduidadeTurmaChart"></canvas></div></div>
                         <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
                             <h3 class="font-bold mb-4">Dados Consolidados</h3>
                             <div class="max-h-96 overflow-y-auto">
@@ -1804,65 +1822,101 @@ async function generateAssiduidadeReport() {
             const dataFim = document.getElementById('assiduidade-prof-data-fim').value;
             const anoLetivo = document.getElementById('assiduidade-prof-ano').value;
             const professorId = document.getElementById('assiduidade-prof-professor').value;
+            const hasDateRange = dataInicio && dataFim;
             
-            if (!dataInicio || !dataFim) {
-                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione um período de início e fim para gerar este relatório detalhado.</p>';
-                return;
-            }
+            // Se tiver um período definido, usa a função RPC detalhada
+            if (hasDateRange) {
+                const { data, error } = await db.rpc('get_professor_assiduidade', {
+                    data_inicio: dataInicio,
+                    data_fim: dataFim,
+                    ano_letivo_selecionado: anoLetivo || null,
+                    professor_uid_selecionado: professorId || null
+                });
 
-            const { data, error } = await db.rpc('get_professor_assiduidade', {
-                data_inicio: dataInicio,
-                data_fim: dataFim,
-                ano_letivo_selecionado: anoLetivo || null,
-                professor_uid_selecionado: professorId || null
-            });
+                if (error) throw error;
+                if (data.length === 0) {
+                    newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dia letivo encontrado para o período e filtros selecionados.</p>';
+                    return;
+                }
 
-            if (error) throw error;
-            if (data.length === 0) {
-                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dia letivo encontrado para o período e filtros selecionados.</p>';
-                return;
-            }
+                const diasLancados = data.filter(d => d.status === 'Lançado');
+                const diasNaoLancados = data.filter(d => d.status !== 'Lançado');
+                
+                const lancadosHtml = diasLancados.length > 0 ? diasLancados.map(d => `<span class="bg-green-100 text-green-800 text-xs font-medium mr-2 mb-2 px-2.5 py-0.5 rounded-full inline-block">${new Date(d.dia).toLocaleDateString('pt-BR')}</span>`).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
+                const naoLancadosHtml = diasNaoLancados.length > 0 ? diasNaoLancados.map(d => `<span class="bg-red-100 text-red-800 text-xs font-medium mr-2 mb-2 px-2.5 py-0.5 rounded-full inline-block">${new Date(d.dia).toLocaleDateString('pt-BR')}</span>`).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
 
-            const diasLancados = data.filter(d => d.status === 'Lançado');
-            const diasNaoLancados = data.filter(d => d.status !== 'Lançado');
-            
-            const lancadosHtml = diasLancados.length > 0 ? diasLancados.map(d => `<span class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">${new Date(d.dia).toLocaleDateString('pt-BR')}</span>`).join(' ') : '<p class="text-sm text-gray-500">Nenhum.</p>';
-            const naoLancadosHtml = diasNaoLancados.length > 0 ? diasNaoLancados.map(d => `<span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">${new Date(d.dia).toLocaleDateString('pt-BR')}</span>`).join(' ') : '<p class="text-sm text-gray-500">Nenhum.</p>';
-
-            const totalDiasLetivos = data.length;
-            const totalLancados = diasLancados.length;
-            const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
-            const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
-            
-            const reportHTML = `
-                <div class="printable-area">
-                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Chamadas</h2><p>Professor: ${nomeProfessor}</p><p>Período: ${dataInicio} a ${dataFim}</p></div></div>
-                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Chamadas</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
-                    
-                    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                        <h3 class="text-lg font-bold mb-4">Resumo do Período para: <span class="text-indigo-600">${nomeProfessor}</span></h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                            <div><p class="text-sm text-gray-500">Total de Dias Letivos</p><p class="text-2xl font-bold">${totalDiasLetivos}</p></div>
-                            <div><p class="text-sm text-gray-500">Dias com Chamada Lançada</p><p class="text-2xl font-bold text-green-600">${totalLancados}</p></div>
-                            <div><p class="text-sm text-gray-500">Taxa de Lançamento</p><p class="text-2xl font-bold text-blue-600">${taxa}</p></div>
+                const totalDiasLetivos = data.length;
+                const totalLancados = diasLancados.length;
+                const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
+                const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
+                
+                newWindow.document.getElementById('report-content').innerHTML = `
+                    <div class="printable-area">
+                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Professores</h2><p>Professor: ${nomeProfessor}</p><p>Período: ${dataInicio} a ${dataFim}</p></div></div>
+                        <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Professores</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
+                        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                            <h3 class="text-lg font-bold mb-4">Resumo do Período para: <span class="text-indigo-600">${nomeProfessor}</span></h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                                <div><p class="text-sm text-gray-500">Total de Dias Letivos</p><p class="text-2xl font-bold">${totalDiasLetivos}</p></div>
+                                <div><p class="text-sm text-gray-500">Dias com Chamada Lançada</p><p class="text-2xl font-bold text-green-600">${totalLancados}</p></div>
+                                <div><p class="text-sm text-gray-500">Taxa de Lançamento</p><p class="text-2xl font-bold text-blue-600">${taxa}</p></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dias com Chamada Lançada (${totalLancados})</h3><div class="flex flex-wrap gap-2">${lancadosHtml}</div></div>
+                            <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dias Letivos Sem Lançamento (${diasNaoLancados.length})</h3><div class="flex flex-wrap gap-2">${naoLancadosHtml}</div></div>
                         </div>
                     </div>
+                `;
+            } else {
+                // Se NÃO tiver período, faz a contagem geral e simples
+                let query = db.from('presencas').select('registrado_por_uid, data, usuarios!inner(nome), turmas!inner(ano_letivo)');
+                if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
+                if (professorId) query = query.eq('registrado_por_uid', professorId);
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                const { data, error } = await safeQuery(query);
+                if (error) throw error;
+                if (data.length === 0) {
+                    newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum registro de chamada encontrado para os filtros selecionados.</p>';
+                    return;
+                }
+                
+                const stats = data.reduce((acc, record) => {
+                    if (!record.usuarios) return acc;
+                    const profId = record.registrado_por_uid;
+                    if (!acc[profId]) {
+                        acc[profId] = { nome: record.usuarios.nome, diasComChamada: new Set() };
+                    }
+                    acc[profId].diasComChamada.add(record.data);
+                    return acc;
+                }, {});
+
+                const tableRows = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome)).map(prof => {
+                    const diasRegistrados = prof.diasComChamada.size;
+                    return `
+                        <tr class="border-b">
+                            <td class="p-3">${prof.nome}</td>
+                            <td class="p-3 text-center font-semibold">${diasRegistrados}</td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                newWindow.document.getElementById('report-content').innerHTML = `
+                     <div class="printable-area">
+                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório Geral de Lançamentos</h2></div></div>
+                        <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório Geral de Lançamentos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                         <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="font-bold mb-4">Dias com Chamada Lançada (${totalLancados})</h3>
-                            <div class="flex flex-wrap gap-2">${lancadosHtml}</div>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="font-bold mb-4">Dias Letivos Sem Lançamento (${diasNaoLancados.length})</h3>
-                            <div class="flex flex-wrap gap-2">${naoLancadosHtml}</div>
+                            <div class="max-h-96 overflow-y-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Professor</th><th class="p-3 text-center">Total de Dias com Chamada Lançada</th></tr></thead>
+                                    <tbody>${tableRows}</tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-            newWindow.document.getElementById('report-content').innerHTML = reportHTML;
+                `;
+            }
         }
-
     } catch(e) {
         console.error("Erro ao gerar relatório:", e);
         newWindow.document.getElementById('report-content').innerHTML = `<div class="text-red-500 font-bold text-center">Ocorreu um erro ao gerar o relatório: ${e.message}</div>`;
