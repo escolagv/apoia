@@ -1,7 +1,7 @@
 const { createClient } = supabase;
 const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co'; 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
- 
+
 if (SUPABASE_URL === 'SUA_URL_DO_PROJETO') throw new Error("Credenciais da Supabase não configuradas.");
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -91,7 +91,7 @@ function getLocalDateString() {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
- 
+
 dashboardSelectedDate = getLocalDateString();
 
 function showView(viewId) {
@@ -135,13 +135,13 @@ function resetLoginFormState() {
         }
     }
 }
- 
+
 function showToast(message, isError = false) {
     const toast = document.createElement('div');
     toast.className = `toast p-4 rounded-lg shadow-lg text-white ${isError ? 'bg-red-500' : 'bg-green-500'}`;
     toast.textContent = message;
     toastContainer.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.classList.add('hide');
         toast.addEventListener('transitionend', () => toast.remove());
@@ -157,7 +157,7 @@ function closeModal(modalElement) {
 function closeAllModals() {
     allModals.forEach(modal => modal.classList.add('hidden'));
 }
- 
+
 async function safeQuery(queryBuilder) {
     const { data, error, count } = await queryBuilder;
     if (error) {
@@ -185,7 +185,7 @@ function resetInactivityTimer() {
 // ===============================================================
 // ================= LÓGICA DE AUTENTICAÇÃO ======================
 // ===============================================================
- 
+
 async function handleAuthChange(session) {
     if (!session) {
         resetApplicationState();
@@ -202,7 +202,7 @@ async function handleAuthChange(session) {
             const errorMessage = !data 
                 ? 'Seu usuário foi autenticado, mas não possui um perfil no sistema. Contate o suporte.'
                 : 'Seu perfil de usuário não está ativo. Contate o suporte.';
-            
+
             showToast(errorMessage, true);
             await db.auth.signOut();
             return;
@@ -241,14 +241,14 @@ db.auth.onAuthStateChange(async (event, session) => {
         resetPasswordModal.classList.remove('hidden');
     }
 });
- 
+
 // ===============================================================
 // ============= LÓGICA DO PAINEL DO PROFESSOR ===================
 // ===============================================================
 async function loadProfessorData(professorUid) {
     const { data: rels } = await safeQuery(db.from('professores_turmas').select('turma_id').eq('professor_id', professorUid));
     if (!rels || rels.length === 0) return;
-    
+
     const turmaIds = rels.map(r => r.turma_id);
     const { data } = await safeQuery(db.from('turmas').select('id, nome_turma').in('id', turmaIds));
 
@@ -282,7 +282,7 @@ async function loadChamada() {
         const presenca = presencasMap.get(aluno.id) || { status: 'presente', justificativa: null };
         const isJustificada = presenca.justificativa === 'Falta justificada';
         const isInjustificada = presenca.justificativa === 'Falta injustificada' || (!presenca.justificativa && presenca.status === 'falta');
-        
+
         const alunoDiv = document.createElement('div');
         alunoDiv.className = 'p-3 bg-gray-50 rounded-lg';
         alunoDiv.dataset.alunoId = aluno.id;
@@ -313,7 +313,7 @@ async function loadChamada() {
          showToast('Visualizando chamada. Apenas a chamada do dia atual pode ser editada.', false);
     }
 }
- 
+
 async function saveChamada() {
     salvarChamadaBtn.disabled = true;
     salvarChamadaBtn.innerHTML = '<div class="loader mx-auto"></div>';
@@ -325,7 +325,7 @@ async function saveChamada() {
             const justRadio = row.querySelector(`input[name="just-${row.dataset.alunoId}"]:checked`);
             justificativa = justRadio ? justRadio.value : 'Falta injustificada';
         }
-        
+
         return {
             aluno_id: parseInt(row.dataset.alunoId),
             turma_id: parseInt(turmaSelect.value),
@@ -335,9 +335,9 @@ async function saveChamada() {
             registrado_por_uid: currentUser.id
         };
     });
-    
+
     const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
-    
+
     if(error) {
         console.error("Erro detalhado ao salvar chamada:", error);
         let userMessage = 'Erro ao salvar chamada: ' + error.message;
@@ -348,7 +348,7 @@ async function saveChamada() {
     } else {
         showToast('Chamada salva com sucesso!');
     }
-    
+
     salvarChamadaBtn.disabled = false;
     salvarChamadaBtn.textContent = 'Salvar Chamada';
 }
@@ -380,7 +380,7 @@ async function loadCorrecaoChamada() {
         const isJustificada = presenca.justificativa === 'Falta justificada';
         const isInjustificada = presenca.justificativa === 'Falta injustificada' || (!presenca.justificativa && presenca.status === 'falta');
         const isOutros = !isJustificada && !isInjustificada && presenca.justificativa;
-        
+
         const alunoDiv = document.createElement('div');
         alunoDiv.className = 'p-3 bg-gray-50 rounded-lg';
         alunoDiv.dataset.alunoId = aluno.id;
@@ -411,7 +411,7 @@ async function loadCorrecaoChamada() {
 // ===============================================================
 // ============= LÓGICA DO PAINEL DO ADMINISTRADOR ===============
 // ===============================================================
- 
+
 async function loadNotifications() {
     const { data, error, count } = await safeQuery(db.from('alertas').select('*', { count: 'exact' }).eq('lido', false).order('created_at', { ascending: false }));
 
@@ -419,7 +419,7 @@ async function loadNotifications() {
         console.error("Erro ao buscar notificações:", error);
         return;
     }
-    
+
     document.getElementById('clear-notifications-btn').classList.toggle('hidden', count === 0);
 
     if (count > 0) {
@@ -448,14 +448,14 @@ async function markAllNotificationsAsRead() {
     if (error) showToast("Erro ao limpar notificações.", true);
     else await loadNotifications();
 }
- 
+
 async function loadAdminData() {
     const { data: turmas } = await safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo'));
     turmasCache = (turmas || []).sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true }));
 
     const { data: users } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, papel, email_confirmado').in('papel', ['professor', 'admin']).eq('status', 'ativo'));
     usuariosCache = (users || []).sort((a,b) => a.nome.localeCompare(b.nome));
-    
+
     const { data: allAlunos } = await safeQuery(db.from('alunos').select('id, nome_completo, turma_id').eq('status', 'ativo'));
     alunosCache = (allAlunos || []).sort((a,b) => a.nome_completo.localeCompare(b.nome_completo));
 
@@ -467,7 +467,7 @@ async function loadAdminData() {
 async function renderDashboardPanel() {
     await loadDailySummary(dashboardSelectedDate);
     await renderDashboardCalendar();
-    
+
     const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento'));
     document.getElementById('dashboard-acompanhamento').textContent = count === null ? 'N/A' : count;
 }
@@ -482,14 +482,14 @@ async function loadDailySummary(selectedDate) {
     ausentesListEl.innerHTML = '<li>Carregando...</li>';
 
     const { data } = await safeQuery(db.from('presencas').select('justificativa, alunos ( id, nome_completo ), turmas ( nome_turma )').eq('data', selectedDate).eq('status', 'falta'));
-    
+
     if (!data) {
         ausentesListEl.innerHTML = `<li>Erro ao carregar dados.</li>`;
         return;
     }
 
     const { count: totalPresencas } = await safeQuery(db.from('presencas').select('*', { count: 'exact', head: true }).eq('data', selectedDate).eq('status', 'presente'));
-    
+
     presencasEl.textContent = totalPresencas || 0;
     faltasEl.textContent = data.length;
 
@@ -513,11 +513,11 @@ async function renderDashboardCalendar() {
 
     const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
     const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
-    
+
     const { data: eventos } = await safeQuery(db.from('eventos').select('*')
         .or(`data.gte.${monthStart},data_fim.gte.${monthStart}`)
         .or(`data.lte.${monthEnd},data_fim.lte.${monthEnd}`));
-    
+
     let html = '';
     for (let i = 0; i < firstDayOfMonth; i++) {
         html += '<div></div>';
@@ -535,7 +535,7 @@ async function renderDashboardCalendar() {
                 return currentDate >= startDate && currentDate <= endDate;
             });
         }
-        
+
         let dayContainerClass = 'calendar-day-container';
         let daySpanClass = 'calendar-day-content';
         let tooltipHtml = '';
@@ -551,7 +551,7 @@ async function renderDashboardCalendar() {
         if(dateString === dashboardSelectedDate) {
             dayContainerClass += ' calendar-day-selected';
         }
-        
+
         html += `<div class="${dayContainerClass}" data-date="${dateString}">${tooltipHtml}<span class="${daySpanClass}">${day}</span></div>`;
     }
     calendarGrid.innerHTML = html;
@@ -563,7 +563,7 @@ async function renderAlunosPanel(options = {}) {
     const searchTerm = document.getElementById('aluno-search-input').value;
     const anoLetivoFilter = document.getElementById('aluno-ano-letivo-filter');
     const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
-    
+
     let currentAnoVal = anoLetivoFilter.value;
     anoLetivoFilter.innerHTML = '<option value="">Todos os Anos</option>';
     anosLetivosCache.filter(ano => ano != null).forEach(ano => {
@@ -575,9 +575,9 @@ async function renderAlunosPanel(options = {}) {
     } else {
          anoLetivoFilter.value = currentAnoVal;
     }
-    
+
     currentAnoVal = anoLetivoFilter.value; // Update after potentially setting default
-    
+
     const currentTurmaVal = defaultToLatestYear ? '' : alunoTurmaFilter.value;
     alunoTurmaFilter.innerHTML = '<option value="">Todas as Turmas</option>';
     if (currentAnoVal) {
@@ -586,9 +586,9 @@ async function renderAlunosPanel(options = {}) {
         });
     }
     alunoTurmaFilter.value = currentTurmaVal;
-    
+
     alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Carregando...</td></tr>';
-    
+
     let queryBuilder = db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`)
         .order('turma_id', { nullsFirst: false })
         .order('status', { ascending: true }) 
@@ -639,9 +639,9 @@ async function renderAlunosPanel(options = {}) {
 async function openAlunoModal(editId = null) {
     alunoForm.reset();
     alunoTurmaSelect.innerHTML = '<option value="">Selecione...</option>';
-    
+
     turmasCache.forEach(t => alunoTurmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma} (${t.ano_letivo})</option>`);
-    
+
     document.getElementById('aluno-delete-container').classList.add('hidden');
 
     if (editId) {
@@ -748,7 +748,7 @@ async function openAcompanhamentoModal(editId = null) {
     const alunoSelect = document.getElementById('acompanhamento-aluno-select');
     const deleteContainer = document.getElementById('acompanhamento-delete-container');
     deleteContainer.classList.add('hidden');
-    
+
     if (editId) {
         const { data } = await safeQuery(db.from('apoia_encaminhamentos').select('*, alunos(nome_completo)').eq('id', editId).single());
         document.getElementById('acompanhamento-modal-title').textContent = 'Editar Acompanhamento';
@@ -779,7 +779,7 @@ async function handleAcompanhamentoFormSubmit(e) {
         status: document.getElementById('acompanhamento-status').value,
         observacoes: document.getElementById('acompanhamento-observacoes').value
     };
-    
+
     const queryBuilder = id ? db.from('apoia_encaminhamentos').update(acompanhamentoData).eq('id', id) : db.from('apoia_encaminhamentos').insert(acompanhamentoData);
     const { error } = await safeQuery(queryBuilder);
 
@@ -791,7 +791,7 @@ async function handleAcompanhamentoFormSubmit(e) {
         await renderApoiaPanel();
     }
 }
- 
+
 async function handleGerarApoiaRelatorio() {
      const tableBody = document.getElementById('apoia-relatorio-table-body');
     tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Gerando relatório...</td></tr>';
@@ -848,7 +848,7 @@ async function renderProfessoresPanel() {
         const emailStatusIndicator = p.email_confirmado 
             ? `<div class="has-tooltip relative"><div class="w-3 h-3 bg-green-500 rounded-full"></div><div class="tooltip">E-mail Confirmado</div></div>` 
             : `<div class="has-tooltip relative"><div class="w-3 h-3 bg-red-500 rounded-full"></div><div class="tooltip">Confirmação Pendente</div></div>`;
-        
+
         return `
         <tr class="border-b">
             <td class="p-3">${p.nome}</td>
@@ -862,13 +862,13 @@ async function renderProfessoresPanel() {
         </tr>
         `}).join('');
 }
- 
+
 async function openProfessorModal(editId = null) {
     professorForm.reset();
     const passwordContainer = document.getElementById('password-field-container');
     const statusContainer = document.getElementById('status-field-container');
     document.getElementById('professor-delete-container').classList.add('hidden');
-    
+
     if (editId) {
         const { data } = await safeQuery(db.from('usuarios').select('*').eq('id', editId).single());
         document.getElementById('professor-modal-title').textContent = 'Editar Professor';
@@ -908,13 +908,13 @@ async function handleProfessorFormSubmit(e) {
             showToast('A senha temporária deve ter no mínimo 6 caracteres.', true);
             return;
         }
-        
+
         const { data: authData, error: authError } = await db.auth.signUp({ email, password });
         if (authError) {
             showToast('Erro ao criar login do professor: ' + authError.message, true);
             return;
         }
-        
+
         const { error: profileError } = await safeQuery(db.from('usuarios').insert({
             user_uid: authData.user.id,
             nome: nome,
@@ -950,7 +950,7 @@ async function handleResetPassword(email) {
         }
     }
 }
- 
+
 // --- Gerenciamento de Turmas ---
 async function renderTurmasPanel() {
     const anoLetivoFilter = document.getElementById('turma-ano-letivo-filter');
@@ -959,13 +959,13 @@ async function renderTurmasPanel() {
 
     turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
     let queryBuilder = db.from('turmas').select(`id, nome_turma, ano_letivo, professores_turmas(usuarios(nome))`);
-    
+
     if (anoLetivoFilter.value) {
         queryBuilder = queryBuilder.eq('ano_letivo', anoLetivoFilter.value);
     }
 
     const { data, error } = await safeQuery(queryBuilder);
-    
+
     if (error) {
         turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
         return;
@@ -1029,11 +1029,11 @@ async function handleTurmaFormSubmit(e) {
     const nome = document.getElementById('turma-nome').value;
     const ano_letivo = document.getElementById('turma-ano-letivo').value;
     const selectedProfIds = Array.from(turmaProfessoresList.querySelectorAll('input:checked')).map(input => input.value);
-    
+
     if (id) {
         const { error: updateError } = await safeQuery(db.from('turmas').update({ nome_turma: nome, ano_letivo: ano_letivo }).eq('id', id));
         if (updateError) { showToast('Erro ao atualizar turma.', true); return; }
-        
+
         await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
         const rels = selectedProfIds.map(profId => ({ turma_id: id, professor_id: profId }));
         if (rels.length > 0) await safeQuery(db.from('professores_turmas').insert(rels));
@@ -1050,7 +1050,7 @@ async function handleTurmaFormSubmit(e) {
     await loadAdminData();
     await renderTurmasPanel();
 }
- 
+
 // --- Gerenciamento de Relatórios ---
 async function renderRelatoriosPanel() {
     const turmaFilter = document.getElementById('relatorio-turma-select');
@@ -1118,7 +1118,7 @@ async function renderConfigPanel() {
     try {
         const { data, error } = await safeQuery(db.from('configuracoes').select('*').limit(1).single());
         if (error && error.code !== 'PGRST116') throw error;
-        
+
         if (data) {
             document.getElementById('config-faltas-consecutivas').value = data.faltas_consecutivas_limite || '';
             document.getElementById('config-faltas-intercaladas').value = data.faltas_intercaladas_limite || '';
@@ -1154,12 +1154,12 @@ async function handleConfigFormSubmit(e) {
         showToast('Erro ao salvar configurações: ' + err.message, true);
     }
 }
- 
+
 // --- Gerenciamento de Calendário ---
 async function renderCalendarioPanel() {
     const dataInicioFilter = document.getElementById('evento-data-inicio-filter').value;
     const dataFimFilter = document.getElementById('evento-data-fim-filter').value;
-    
+
     eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
     let queryBuilder = db.from('eventos').select('*').order('data', { ascending: false });
 
@@ -1219,7 +1219,7 @@ async function handleEventoFormSubmit(e) {
         data: document.getElementById('evento-data-inicio').value,
         data_fim: document.getElementById('evento-data-fim').value || null
     };
-    
+
     if (!eventoData.data) {
         showToast('A data de início é obrigatória.', true);
         return;
@@ -1236,7 +1236,7 @@ async function handleEventoFormSubmit(e) {
         await renderDashboardCalendar();
     }
 }
- 
+
 // --- Gestão de Ano Letivo ---
 function renderAnoLetivoPanel() {
     // Apenas abre o painel. A lógica está nos botões.
@@ -1247,7 +1247,7 @@ async function openPromoverTurmasMassaModal() {
     const anoDestinoEl = document.getElementById('promover-turmas-ano-destino');
     const listaContainer = document.getElementById('promover-turmas-lista-container');
     const listaEl = document.getElementById('promover-turmas-lista');
-    
+
     listaContainer.classList.add('hidden');
     listaEl.innerHTML = '';
     document.getElementById('promover-turmas-btn').disabled = true;
@@ -1262,7 +1262,7 @@ async function openPromoverTurmasMassaModal() {
         anoOrigemSel.value = ultimoAno;
         anoOrigemSel.dispatchEvent(new Event('change'));
     }
-    
+
     promoverTurmasMassaModal.classList.remove('hidden');
 }
 
@@ -1272,7 +1272,7 @@ async function renderPromocaoTurmasLista() {
     const container = document.getElementById('promover-turmas-lista-container');
     const listEl = document.getElementById('promover-turmas-lista');
     const promoverBtn = document.getElementById('promover-turmas-btn');
-    
+
     listEl.innerHTML = '';
     promoverBtn.disabled = true;
 
@@ -1281,7 +1281,7 @@ async function renderPromocaoTurmasLista() {
         anoDestinoEl.value = '';
         return;
     }
-    
+
     anoDestinoEl.value = parseInt(anoOrigem) + 1;
     listEl.innerHTML = '<div class="loader mx-auto my-4"></div>';
     container.classList.remove('hidden');
@@ -1294,14 +1294,14 @@ async function renderPromocaoTurmasLista() {
         listEl.innerHTML = `<p class="p-4 text-center text-gray-600">Nenhuma turma encontrada para o ano de origem.</p>`;
         return;
     }
-    
+
     listEl.innerHTML = turmas.map(turma => `
         <label class="flex items-center p-2 bg-white rounded-md border">
             <input type="checkbox" class="form-checkbox h-5 w-5 promocao-turma-checkbox" value="${turma.id}" checked>
             <span class="ml-3 text-sm">${turma.nome_turma}</span>
         </label>
     `).join('');
-    
+
     promoverBtn.disabled = false;
 }
 
@@ -1344,7 +1344,7 @@ async function handleConfirmPromocaoTurmasMassa() {
     }
     btn.innerHTML = 'Executar Promoção';
 }
- 
+
 // --- Lógica de Exclusão ---
 function openDeleteConfirmModal(type, id) {
     const messageEl = document.getElementById('delete-confirm-message');
@@ -1451,7 +1451,7 @@ async function openAlunoHistoricoModal(alunoId) {
         `).join('');
     }
 }
- 
+
 // --- Análise de Assiduidade ---
 function openAssiduidadeModal() {
     // Popula filtros de Alunos
@@ -1484,7 +1484,7 @@ function openAssiduidadeModal() {
         anoSelAluno.dispatchEvent(new Event('change'));
         anoSelTurma.dispatchEvent(new Event('change'));
     }
-    
+
     // Limpa as datas para não haver predefinição
     document.getElementById('assiduidade-aluno-data-inicio').value = '';
     document.getElementById('assiduidade-aluno-data-fim').value = '';
@@ -1519,10 +1519,10 @@ async function generateAssiduidadeReport() {
     `;
     newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><link rel="stylesheet" href="style.css"><\/head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
     closeModal(assiduidadeModal);
-    
+
     try {
         const activeTab = document.querySelector('#assiduidade-tabs a[aria-current="page"]').dataset.target;
-        
+
         let dataInicio, dataFim, periodoTexto;
 
         // RELATÓRIO DE ALUNOS
@@ -1573,7 +1573,7 @@ async function generateAssiduidadeReport() {
                     </tr>
                 `;
             }).join('');
-            
+
             const totalPresencas = Object.values(stats).reduce((sum, s) => sum + s.presencas, 0);
             const totalFaltasJ = Object.values(stats).reduce((sum, s) => sum + s.faltas_j, 0);
             const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
@@ -1585,7 +1585,7 @@ async function generateAssiduidadeReport() {
             } else {
                 periodoTexto = 'Período: Geral';
             }
-            
+
             const reportHTML = `
                 <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
@@ -1601,7 +1601,7 @@ async function generateAssiduidadeReport() {
                         </div>
                     </div>
                 </div>`;
-            
+
             const chartScriptContent = `
                 setTimeout(() => {
                     const ctx = document.getElementById('assiduidadeChart');
@@ -1620,7 +1620,7 @@ async function generateAssiduidadeReport() {
                     }
                 }, 200);
             `;
-            
+
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             const scriptEl = newWindow.document.createElement('script');
             scriptEl.textContent = chartScriptContent;
@@ -1679,7 +1679,7 @@ async function generateAssiduidadeReport() {
             const totalPresencas = sortedStats.reduce((sum, s) => sum + s.presencas, 0);
             const totalFaltasJ = sortedStats.reduce((sum, s) => sum + s.faltas_j, 0);
             const totalFaltasI = sortedStats.reduce((sum, s) => sum + s.faltas_i, 0);
-            
+
             if (dataInicio && dataFim) {
                 const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
                 const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
@@ -1705,7 +1705,7 @@ async function generateAssiduidadeReport() {
                         </div>
                     </div>
                 </div>`;
-            
+
             const chartScriptContent = `
                 setTimeout(() => {
                     const ctx = document.getElementById('assiduidadeTurmaChart');
@@ -1759,9 +1759,9 @@ async function generateAssiduidadeReport() {
 
                 const diasLancados = data.filter(d => d.status === 'Lançado');
                 const diasNaoLancados = data.filter(d => d.status !== 'Lançado');
-                
+
                 const lancadosHtml = diasLancados.length > 0 ? diasLancados.map(d => `<span class="bg-green-100 text-green-800 text-xs font-medium mr-2 mb-2 px-2.5 py-0.5 rounded-full inline-block">${new Date(d.dia).toLocaleDateString('pt-BR')}</span>`).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
-                
+
                 // ======================= INÍCIO DA MODIFICAÇÃO =======================
                 const naoLancadosHtml = diasNaoLancados.length > 0
                     ? diasNaoLancados.map(d => `
@@ -1777,7 +1777,7 @@ async function generateAssiduidadeReport() {
                 const totalLancados = diasLancados.length;
                 const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
                 const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
-                
+
                 const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
                 const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
                 periodoTexto = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
@@ -1820,7 +1820,7 @@ async function generateAssiduidadeReport() {
                     newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum registro de chamada encontrado para os filtros selecionados.</p>';
                     return;
                 }
-                
+
                 const stats = data.reduce((acc, record) => {
                     if (!record.usuarios) return acc;
                     const profId = record.registrado_por_uid;
@@ -1828,6 +1828,7 @@ async function generateAssiduidadeReport() {
                         acc[profId] = { nome: record.usuarios.nome, diasComChamada: new Set() };
                     }
                     acc[profId].diasComChamada.add(record.data);
+      _                 return acc;
                         return acc;
                 }, {});
 
@@ -1840,7 +1841,7 @@ async function generateAssiduidadeReport() {
                         </tr>
                     `;
                 }).join('');
-                
+
                 newWindow.document.getElementById('report-content').innerHTML = `
                      <div class="printable-area">
                         <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório Geral de Lançamentos</h2><p>Período: Geral</p></div></div>
@@ -1882,7 +1883,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Supervisão de Sessão
     setInterval(async () => { if (currentUser) { const { error } = await db.auth.refreshSession(); if(error) console.error(error); }}, 10 * 60 * 1000);
     document.addEventListener('visibilitychange', async () => { if (!document.hidden && currentUser) await db.auth.refreshSession(); });
-    
+
     // Submissão de Formulários
     document.body.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -2070,7 +2071,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             openAlunoHistoricoModal(alunoLink.dataset.alunoId);
         }
-        
+
         const calendarDayCell = closest('[data-date]');
          if(calendarDayCell) {
               const newDate = calendarDayCell.dataset.date;
@@ -2167,7 +2168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    
+
     // Listeners da Análise de Assiduidade
     document.getElementById('assiduidade-tabs').addEventListener('click', (e) => {
         e.preventDefault();
