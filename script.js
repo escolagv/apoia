@@ -1804,9 +1804,9 @@ async function generateAssiduidadeReport() {
             const dataFim = document.getElementById('assiduidade-prof-data-fim').value;
             const anoLetivo = document.getElementById('assiduidade-prof-ano').value;
             const professorId = document.getElementById('assiduidade-prof-professor').value;
-
+            
             if (!dataInicio || !dataFim) {
-                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione um período de início e fim para gerar este relatório.</p>';
+                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione um período de início e fim para gerar este relatório detalhado.</p>';
                 return;
             }
 
@@ -1832,33 +1832,35 @@ async function generateAssiduidadeReport() {
             const totalDiasLetivos = data.length;
             const totalLancados = diasLancados.length;
             const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
-
-            newWindow.document.body.innerHTML = `
+            const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
+            
+            const reportHTML = `
                 <div class="printable-area">
-                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Professores</h2><p>Período: ${dataInicio} a ${dataFim}</p></div></div>
-                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Professores</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
+                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Chamadas</h2><p>Professor: ${nomeProfessor}</p><p>Período: ${dataInicio} a ${dataFim}</p></div></div>
+                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Chamadas</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                     
                     <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                        <h3 class="text-lg font-bold mb-4">Resumo do Período</h3>
+                        <h3 class="text-lg font-bold mb-4">Resumo do Período para: <span class="text-indigo-600">${nomeProfessor}</span></h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                            <div><p class="text-sm text-gray-500">Dias Letivos</p><p class="text-2xl font-bold">${totalDiasLetivos}</p></div>
-                            <div><p class="text-sm text-gray-500">Dias com Chamada</p><p class="text-2xl font-bold text-green-600">${totalLancados}</p></div>
+                            <div><p class="text-sm text-gray-500">Total de Dias Letivos</p><p class="text-2xl font-bold">${totalDiasLetivos}</p></div>
+                            <div><p class="text-sm text-gray-500">Dias com Chamada Lançada</p><p class="text-2xl font-bold text-green-600">${totalLancados}</p></div>
                             <div><p class="text-sm text-gray-500">Taxa de Lançamento</p><p class="text-2xl font-bold text-blue-600">${taxa}</p></div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="font-bold mb-4">Dias com Chamada Lançada</h3>
+                            <h3 class="font-bold mb-4">Dias com Chamada Lançada (${totalLancados})</h3>
                             <div class="flex flex-wrap gap-2">${lancadosHtml}</div>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="font-bold mb-4">Dias Letivos Sem Lançamento</h3>
+                            <h3 class="font-bold mb-4">Dias Letivos Sem Lançamento (${diasNaoLancados.length})</h3>
                             <div class="flex flex-wrap gap-2">${naoLancadosHtml}</div>
                         </div>
                     </div>
                 </div>
             `;
+            newWindow.document.getElementById('report-content').innerHTML = reportHTML;
         }
 
     } catch(e) {
