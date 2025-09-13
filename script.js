@@ -1577,8 +1577,12 @@ function openAssiduidadeModal() {
         anoSelAluno.dispatchEvent(new Event('change'));
         anoSelTurma.dispatchEvent(new Event('change'));
     }
-
-    // Limpa as datas do relatório de professores
+    
+    // Limpa as datas para não haver predefinição
+    document.getElementById('assiduidade-aluno-data-inicio').value = '';
+    document.getElementById('assiduidade-aluno-data-fim').value = '';
+    document.getElementById('assiduidade-turma-data-inicio').value = '';
+    document.getElementById('assiduidade-turma-data-fim').value = '';
     document.getElementById('assiduidade-prof-data-inicio').value = '';
     document.getElementById('assiduidade-prof-data-fim').value = '';
 
@@ -1653,7 +1657,7 @@ async function generateAssiduidadeReport() {
             
             const reportHTML = `
             <div class="printable-area">
-                <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
+                <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>Período: ${dataInicio || 'Geral'} a ${dataFim || ''}</p></div></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="relative h-64 md:h-80"><canvas id="assiduidadeChart"></canvas></div></div>
@@ -1749,7 +1753,7 @@ async function generateAssiduidadeReport() {
 
             const reportHTML = `
                 <div class="printable-area">
-                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
+                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Geral'} a ${dataFim || ''}</p></div></div>
                     <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div class="relative h-64 md:h-80"><canvas id="assiduidadeTurmaChart"></canvas></div></div>
@@ -1800,137 +1804,61 @@ async function generateAssiduidadeReport() {
             const dataFim = document.getElementById('assiduidade-prof-data-fim').value;
             const anoLetivo = document.getElementById('assiduidade-prof-ano').value;
             const professorId = document.getElementById('assiduidade-prof-professor').value;
-            const hasDateRange = dataInicio && dataFim;
 
-            let diasLetivos = 0;
-            if (hasDateRange) {
-                const { data: eventos } = await safeQuery(db.from('eventos').select('data, data_fim').or(`data.gte.${dataInicio},data_fim.gte.${dataInicio}`).or(`data.lte.${dataFim},data_fim.lte.${dataFim}`));
-                const diasNaoLetivos = new Set();
-                eventos.forEach(e => {
-                    let current = new Date(e.data + 'T00:00:00');
-                    const end = e.data_fim ? new Date(e.data_fim + 'T00:00:00') : current;
-                    while (current <= end) {
-                        diasNaoLetivos.add(current.toISOString().split('T')[0]);
-                        current.setDate(current.getDate() + 1);
-                    }
-                });
-                let current = new Date(dataInicio + 'T00:00:00');
-                const end = new Date(dataFim + 'T00:00:00');
-                while (current <= end) {
-                    const dayOfWeek = current.getDay();
-                    const dateString = current.toISOString().split('T')[0];
-                    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !diasNaoLetivos.has(dateString)) {
-                        diasLetivos++;
-                    }
-                    current.setDate(current.getDate() + 1);
-                }
-            }
-
-            let query = db.from('presencas').select('registrado_por_uid, data, usuarios!inner(nome), turmas!inner(ano_letivo)');
-            if (dataInicio) query = query.gte('data', dataInicio);
-            if (dataFim) query = query.lte('data', dataFim);
-            if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
-            if (professorId) query = query.eq('registrado_por_uid', professorId);
-
-            const { data, error } = await safeQuery(query);
-            if (error) throw error;
-            if (data.length === 0) {
-                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum registro de chamada encontrado para os filtros selecionados.</p>';
+            if (!dataInicio || !dataFim) {
+                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione um período de início e fim para gerar este relatório.</p>';
                 return;
             }
+
+            const { data, error } = await db.rpc('get_professor_assiduidade', {
+                data_inicio: dataInicio,
+                data_fim: dataFim,
+                ano_letivo_selecionado: anoLetivo || null,
+                professor_uid_selecionado: professorId || null
+            });
+
+            if (error) throw error;
+            if (data.length === 0) {
+                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dia letivo encontrado para o período e filtros selecionados.</p>';
+                return;
+            }
+
+            const diasLancados = data.filter(d => d.status === 'Lançado');
+            const diasNaoLancados = data.filter(d => d.status !== 'Lançado');
             
-            const stats = data.reduce((acc, record) => {
-                if (!record.usuarios) return acc;
-                const profId = record.registrado_por_uid;
-                if (!acc[profId]) {
-                    acc[profId] = { nome: record.usuarios.nome, diasComChamada: new Set() };
-                }
-                acc[profId].diasComChamada.add(record.data);
-                return acc;
-            }, {});
+            const lancadosHtml = diasLancados.length > 0 ? diasLancados.map(d => `<span class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">${new Date(d.dia).toLocaleDateString('pt-BR')}</span>`).join(' ') : '<p class="text-sm text-gray-500">Nenhum.</p>';
+            const naoLancadosHtml = diasNaoLancados.length > 0 ? diasNaoLancados.map(d => `<span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">${new Date(d.dia).toLocaleDateString('pt-BR')}</span>`).join(' ') : '<p class="text-sm text-gray-500">Nenhum.</p>';
 
-            const tableHeader = hasDateRange
-                ? `<tr><th class="p-3 text-left">Professor</th><th class="p-3 text-center">Dias com Chamada</th><th class="p-3 text-center">Total Dias Letivos</th><th class="p-3 text-center">Taxa de Lançamento</th></tr>`
-                : `<tr><th class="p-3 text-left">Professor</th><th class="p-3 text-center">Dias com Chamada</th></tr>`;
+            const totalDiasLetivos = data.length;
+            const totalLancados = diasLancados.length;
+            const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
 
-            const tableRows = Object.values(stats).sort((a, b) => a.nome.localeCompare(b.nome)).map(prof => {
-                const diasRegistrados = prof.diasComChamada.size;
-                if (hasDateRange) {
-                    const taxa = diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) + '%' : 'N/A';
-                    return `
-                         <tr class="border-b">
-                             <td class="p-3">${prof.nome}</td>
-                             <td class="p-3 text-center font-semibold">${diasRegistrados}</td>
-                             <td class="p-3 text-center">${diasLetivos}</td>
-                             <td class="p-3 text-center font-bold">${taxa}</td>
-                        </tr>
-                    `;
-                } else {
-                    return `
-                        <tr class="border-b">
-                             <td class="p-3">${prof.nome}</td>
-                             <td class="p-3 text-center font-semibold">${diasRegistrados}</td>
-                        </tr>
-                    `;
-                }
-            }).join('');
+            newWindow.document.body.innerHTML = `
+                <div class="printable-area">
+                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Professores</h2><p>Período: ${dataInicio} a ${dataFim}</p></div></div>
+                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Professores</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                        <h3 class="text-lg font-bold mb-4">Resumo do Período</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                            <div><p class="text-sm text-gray-500">Dias Letivos</p><p class="text-2xl font-bold">${totalDiasLetivos}</p></div>
+                            <div><p class="text-sm text-gray-500">Dias com Chamada</p><p class="text-2xl font-bold text-green-600">${totalLancados}</p></div>
+                            <div><p class="text-sm text-gray-500">Taxa de Lançamento</p><p class="text-2xl font-bold text-blue-600">${taxa}</p></div>
+                        </div>
+                    </div>
 
-            const sortedProfStats = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome));
-            const chartLabels = JSON.stringify(sortedProfStats.map(p => p.nome));
-            const chartData = JSON.stringify(sortedProfStats.map(p => {
-                const diasRegistrados = p.diasComChamada.size;
-                return hasDateRange && diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) : diasRegistrados;
-            }));
-
-            const reportHTML = `
-                 <div class="printable-area">
-                     <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Chamadas</h2><p>Período: ${dataInicio || 'Geral'}</p></div></div>
-                     <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Chamadas</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
-                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                         <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><div class="relative h-64 md:h-96"><canvas id="lancamentoChart"></canvas></div></div>
-                         <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
-                             <h3 class="font-bold mb-4">Dados Consolidados</h3>
-                             <div class="max-h-96 overflow-y-auto">
-                             <table class="w-full text-sm">
-                                 <thead class="bg-gray-50 sticky top-0">${tableHeader}</thead>
-                                 <tbody>${tableRows}</tbody>
-                             </table>
-                             </div>
-                         </div>
-                     </div>
-                 </div>`;
-            
-            const chartScriptContent = `
-                     setTimeout(() => {
-                         const ctx = document.getElementById('lancamentoChart');
-                         if (ctx) {
-                             new Chart(ctx, {
-                                 type: 'bar',
-                                 data: {
-                                     labels: ${chartLabels},
-                                     datasets: [{
-                                         label: '${hasDateRange ? "% de Lançamento" : "Dias com Lançamento"}',
-                                         data: ${chartData},
-                                         backgroundColor: 'rgba(139, 92, 246, 0.5)',
-                                         borderColor: 'rgba(139, 92, 246, 1)',
-                                         borderWidth: 1
-                                     }]
-                                 },
-                                 options: {
-                                     indexAxis: 'y',
-                                     scales: { x: { beginAtZero: true, max: ${hasDateRange ? 100 : null} } },
-                                     responsive: true,
-                                     maintainAspectRatio: false,
-                                     plugins: { legend: { display: false }, title: { display: true, text: 'Lançamento de Chamadas por Professor' } }
-                                 }
-                             });
-                         }
-                     }, 200);
-                 `;
-            newWindow.document.getElementById('report-content').innerHTML = reportHTML;
-            const scriptEl = newWindow.document.createElement('script');
-            scriptEl.textContent = chartScriptContent;
-            newWindow.document.body.appendChild(scriptEl);
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="font-bold mb-4">Dias com Chamada Lançada</h3>
+                            <div class="flex flex-wrap gap-2">${lancadosHtml}</div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="font-bold mb-4">Dias Letivos Sem Lançamento</h3>
+                            <div class="flex flex-wrap gap-2">${naoLancadosHtml}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
     } catch(e) {
@@ -1938,6 +1866,7 @@ async function generateAssiduidadeReport() {
         newWindow.document.getElementById('report-content').innerHTML = `<div class="text-red-500 font-bold text-center">Ocorreu um erro ao gerar o relatório: ${e.message}</div>`;
     }
 }
+
 
 // ===============================================================
 // =================== EVENT LISTENERS ===========================
