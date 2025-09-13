@@ -4,8 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Chamada</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>Sistema de Chamadas</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -17,14 +22,16 @@
     <div id="loading-view" class="flex items-center justify-center min-h-screen bg-gray-100">
         <div class="loader"></div>
     </div>
-
+    
     <div id="app-container" class="hidden">
 
         <div id="login-view" class="hidden min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
             <div class="max-w-md w-full mx-auto">
                 <div class="text-center">
-                    <img src="logo.png" alt="Logo da Escola" class="mx-auto h-28 w-auto">
-                    <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Sistema de Chamadas</h2>
+                    <img src="logo.png" alt="Logo da Escola" class="mx-auto h-40 w-auto">
+                    <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
+                        Sistema de Chamadas
+                    </h2>
                 </div>
                 <form id="login-form" class="mt-8 space-y-6">
                     <div class="rounded-md shadow-sm -space-y-px">
@@ -43,7 +50,9 @@
                     </div>
                     <div id="login-error" class="text-red-500 text-sm text-center h-4"></div>
                     <div>
-                        <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Entrar</button>
+                        <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Entrar
+                        </button>
                     </div>
                 </form>
             </div>
@@ -58,27 +67,103 @@
                     <a href="#" class="admin-nav-link flex items-center px-2 py-2 text-sm font-medium rounded-md bg-gray-700" data-target="admin-dashboard-panel"><i class="ph ph-house mr-3"></i>Dashboard</a>
                     <a href="#" class="admin-nav-link flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700" data-target="admin-alunos-panel"><i class="ph ph-student mr-3"></i>Alunos</a>
                     <a href="#" class="admin-nav-link flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700" data-target="admin-professores-panel"><i class="ph ph-chalkboard-teacher mr-3"></i>Professores</a>
-                    </nav>
+                    <a href="#" class="admin-nav-link flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700" data-target="admin-turmas-panel"><i class="ph ph-users-three mr-3"></i>Turmas</a>
+                    <a href="#" class="admin-nav-link flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700" data-target="admin-apoia-panel"><i class="ph ph-lifebuoy mr-3"></i>Apoia</a>
+                    <a href="#" class="admin-nav-link flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700" data-target="admin-relatorios-panel"><i class="ph ph-chart-bar mr-3"></i>Relatórios</a>
+                    <a href="#" class="admin-nav-link flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700" data-target="admin-calendario-panel"><i class="ph ph-calendar mr-3"></i>Calendário</a>
+                    <a href="#" class="admin-nav-link flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700" data-target="admin-ano-letivo-panel"><i class="ph ph-graduation-cap mr-3"></i>Ano Letivo</a>
+                    <a href="#" class="admin-nav-link flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700" data-target="admin-config-panel"><i class="ph ph-gear mr-3"></i>Configurações</a>
+                </nav>
                  <div class="px-4 py-4 border-t border-gray-700"><a id="support-link-admin" href="#" target="_blank" class="block text-sm text-gray-300 hover:underline text-center mb-4">Precisa de Ajuda?</a><button id="admin-logout-btn" class="w-full bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700">Sair</button></div>
             </aside>
+
             <div class="flex-1 flex flex-col overflow-hidden">
                 <header class="bg-white shadow-sm flex justify-end items-center px-6 py-3">
                     <div class="relative"><button id="notification-bell" class="relative text-gray-500 hover:text-gray-700 focus:outline-none"><i class="ph ph-bell text-2xl"></i></button><div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl overflow-hidden z-10"><div class="p-4 font-semibold border-b">Notificações</div><div id="notification-list" class="max-h-96 overflow-y-auto"></div><button id="clear-notifications-btn" class="w-full text-center p-2 text-sm text-blue-600 hover:bg-gray-100 hidden">Limpar tudo</button></div></div>
                 </header>
+
                 <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
-                    </main>
+                    <div id="admin-dashboard-panel" class="admin-panel">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-6">Dashboard</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div class="bg-white overflow-hidden shadow rounded-lg clickable-card cursor-pointer hover:shadow-md" data-type="presencas"><div class="p-5"><div class="flex items-center justify-between"><div><p class="text-base font-medium text-gray-900">Registro de Frequência</p><p class="text-sm font-normal text-gray-500">Presentes Hoje</p></div><div id="dashboard-presencas" class="text-3xl font-bold text-green-600">0</div></div></div></div>
+                            <div class="bg-white overflow-hidden shadow rounded-lg clickable-card cursor-pointer hover:shadow-md" data-type="faltas"><div class="p-5"><div class="flex items-center justify-between"><div><p class="text-base font-medium text-gray-900">Registro de Frequência</p><p class="text-sm font-normal text-gray-500">Ausentes Hoje</p></div><div id="dashboard-faltas" class="text-3xl font-bold text-red-600">0</div></div></div></div>
+                            <div class="bg-white overflow-hidden shadow rounded-lg"><div class="p-5"><div class="flex items-center justify-between"><div><p class="text-base font-medium text-gray-900">Registrado no APOIA</p><p class="text-sm font-normal text-gray-500">Ativos</p></div><div id="dashboard-acompanhamento" class="text-3xl font-bold text-yellow-600">0</div></div></div></div>
+                            <div class="bg-white overflow-hidden shadow rounded-lg clickable-card cursor-pointer hover:shadow-md" data-type="assiduidade"><div class="p-5"><div class="flex items-center"><div class="flex-shrink-0 bg-indigo-500 rounded-md p-3"><i class="ph ph-chart-pie-slice h-6 w-6 text-white"></i></div><div class="ml-4"><p class="text-base font-medium text-gray-900">Análise de Assiduidade</p><p class="text-sm font-normal text-gray-500">Gerar Relatórios</p></div></div></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow"><h3 class="font-semibold text-gray-800 mb-4">Ausentes do Dia</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div>
+                            <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow"><div class="flex justify-between items-center mb-4"><button id="prev-month-btn" class="p-1 rounded-full hover:bg-gray-200"><i class="ph ph-caret-left text-lg"></i></button><h3 id="calendar-month-year" class="font-semibold text-gray-800"></h3><button id="next-month-btn" class="p-1 rounded-full hover:bg-gray-200"><i class="ph ph-caret-right text-lg"></i></button></div><div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm"></div></div>
+                        </div>
+                    </div>
+
+                    <div id="admin-alunos-panel" class="admin-panel hidden">
+                        <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-semibold text-gray-800">Gerenciar Alunos</h2><button id="add-aluno-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Adicionar Aluno</button></div>
+                        <div class="mb-4 flex flex-wrap gap-4"><input type="text" id="aluno-search-input" placeholder="Buscar por nome, matrícula..." class="flex-grow p-2 border rounded-md"><select id="aluno-ano-letivo-filter" class="p-2 border rounded-md"></select><select id="aluno-turma-filter" class="p-2 border rounded-md"></select></div>
+                        <div class="bg-white shadow rounded-lg overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Matrícula</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Turma</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Responsável</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th></tr></thead><tbody id="alunos-table-body" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                    </div>
+                    <div id="admin-professores-panel" class="admin-panel hidden">
+                         <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-semibold text-gray-800">Gerenciar Professores</h2><button id="add-professor-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Adicionar Professor</button></div>
+                         <div class="bg-white shadow rounded-lg overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="p-3 text-center text-xs font-medium text-gray-500 uppercase">Verificado</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th></tr></thead><tbody id="professores-table-body" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                    </div>
+                    <div id="admin-turmas-panel" class="admin-panel hidden">
+                        <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-semibold text-gray-800">Gerenciar Turmas</h2><button id="add-turma-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Adicionar Turma</button></div>
+                        <div class="mb-4"><select id="turma-ano-letivo-filter" class="p-2 border rounded-md"></select></div>
+                        <div class="bg-white shadow rounded-lg overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Nome da Turma (Ano)</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Professores</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th></tr></thead><tbody id="turmas-table-body" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                    </div>
+                    <div id="admin-apoia-panel" class="admin-panel hidden">
+                        <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-semibold text-gray-800">Acompanhamento APOIA</h2><button id="add-acompanhamento-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Adicionar Aluno</button></div>
+                        <div class="bg-white shadow rounded-lg overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Aluno</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th></tr></thead><tbody id="apoia-table-body"></tbody></table></div>
+                        <div id="apoia-pagination" class="mt-4 flex justify-center space-x-1"></div>
+                    </div>
+                    <div id="admin-relatorios-panel" class="admin-panel hidden">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Gerar Relatórios</h2>
+                        <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                            <p class="font-medium">Relatório de Frequência</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
+                                <div><label class="block text-sm">Data Início</label><input type="date" id="relatorio-data-inicio" class="w-full p-2 border rounded-md"></div>
+                                <div><label class="block text-sm">Data Fim</label><input type="date" id="relatorio-data-fim" class="w-full p-2 border rounded-md"></div>
+                                <div><label class="block text-sm">Turma</label><select id="relatorio-turma-select" class="w-full p-2 border rounded-md"></select></div>
+                                <div><label class="block text-sm">Aluno</label><select id="relatorio-aluno-select" class="w-full p-2 border rounded-md"></select></div>
+                                <div><label class="block text-sm">Professor</label><select id="relatorio-professor-select" class="w-full p-2 border rounded-md"></select></div>
+                                <div><label class="block text-sm">Status</label><select id="relatorio-status-select" class="w-full p-2 border rounded-md"><option value="">Todos</option><option value="presente">Presente</option><option value="falta">Falta</option></select></div>
+                            </div>
+                            <div class="text-right"><button id="gerar-relatorio-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md">Gerar</button><button id="imprimir-relatorio-btn" class="bg-gray-600 text-white px-4 py-2 rounded-md hidden ml-2">Imprimir</button></div>
+                        </div>
+                        <div class="mt-6 bg-white shadow rounded-lg overflow-x-auto" id="relatorio-resultados"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Aluno</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Turma</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Justificativa</th><th class="p-3 text-left text-xs font-medium text-gray-500 uppercase">Registrado por</th></tr></thead><tbody id="relatorio-table-body"></tbody></table></div>
+                    </div>
+                </main>
             </div>
         </div>
     </div>
+    
+    <div id="all-modals-container">
+        </div>
 
-    <div id="all-modals-container"></div>
     <div id="toast-container" class="fixed bottom-5 right-5 z-[100] space-y-2"></div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const toggleBtn = document.getElementById('toggle-password-btn');
-            if (toggleBtn) { toggleBtn.addEventListener('click', () => { const passwordInput = document.getElementById('password'); const eyeIcon = document.getElementById('eye-icon'); const eyeOffIcon = document.getElementById('eye-off-icon'); if (passwordInput.type === 'password') { passwordInput.type = 'text'; eyeIcon.classList.add('hidden'); eyeOffIcon.classList.remove('hidden'); } else { passwordInput.type = 'password'; eyeIcon.classList.remove('hidden'); eyeOffIcon.classList.add('hidden'); } }); }
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    const passwordInput = document.getElementById('password');
+                    const eyeIcon = document.getElementById('eye-icon');
+                    const eyeOffIcon = document.getElementById('eye-off-icon');
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        eyeIcon.classList.add('hidden');
+                        eyeOffIcon.classList.remove('hidden');
+                    } else {
+                        passwordInput.type = 'password';
+                        eyeIcon.classList.remove('hidden');
+                        eyeOffIcon.classList.add('hidden');
+                    }
+                });
+            }
         });
     </script>
+    
     <script type="module" src="script.js"></script>
 </body>
 </html>
