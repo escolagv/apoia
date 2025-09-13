@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+
     <title>Sistema de Chamadas</title>
 
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -18,10 +20,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body class="bg-gray-100 text-gray-800">
 
     <div id="toast-container" class="fixed top-5 right-5 z-[100] space-y-2"></div>
@@ -58,63 +60,67 @@
         </div>
 
         <div id="professor-view" class="hidden">
-            </div>
-
-        <div id="admin-view" class="hidden flex h-screen bg-gray-200">
-            <aside class="w-64 bg-gray-800 text-white flex flex-col">
-                <div class="p-4 border-b border-gray-700 flex flex-col items-center gap-3"><img src="./logo_admin.png" alt="Logo da Escola" class="h-16"><div><h1 class="text-xl font-bold">Painel Admin</h1><p id="admin-info" class="text-sm text-gray-400 text-center"></p></div></div>
-                <nav id="admin-sidebar-nav" class="flex-1 p-4 space-y-2">
-                    <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md bg-gray-700" data-target="admin-dashboard-panel"><i class="ph-fill ph-house"></i>Dashboard</a>
-                    <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-professores-panel"><i class="ph-fill ph-chalkboard-teacher"></i>Professores</a>
-                    <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-turmas-panel"><i class="ph-fill ph-users-three"></i>Turmas</a>
-                    <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-alunos-panel"><i class="ph-fill ph-student"></i>Alunos</a>
-                    <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-apoia-panel"><i class="ph-fill ph-lifebuoy"></i>Acompanhamento APOIA</a>
-                    <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-calendario-panel"><i class="ph-fill ph-calendar"></i>Calendário</a>
-                    <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-ano-letivo-panel"><i class="ph-fill ph-graduation-cap"></i>Ano Letivo</a>
-                    <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-relatorios-panel"><i class="ph-fill ph-chart-bar"></i>Relatórios Faltas</a>
-                    <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-config-panel"><i class="ph-fill ph-gear"></i>Configurações</a>
-                </nav>
-                <div class="p-4 border-t border-gray-700 space-y-4"><div class="text-xs text-center text-gray-400"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16 mx-auto mb-2"><p>Desenvolvido por:</p><p>Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-admin" class="text-blue-400 hover:underline">Suporte Técnico</a></div><button id="admin-logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button></div>
-            </aside>
-            <main class="flex-1 p-6 overflow-y-auto">
-                <div class="flex justify-end mb-4">
-                    <div class="relative">
-                        <div id="notification-bell" class="relative cursor-pointer"><i class="ph-fill ph-bell text-2xl text-gray-600"></i></div>
-                        <div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-20"><div class="p-4 font-bold border-b flex justify-between items-center"><span>Notificações</span><button id="clear-notifications-btn" class="text-xs text-blue-600 hover:underline font-medium">Limpar Todas</button></div><div id="notification-list" class="p-2 max-h-64 overflow-y-auto"></div></div>
+            <header class="bg-white shadow-md p-4 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <img src="./logo.png" alt="Logo da Escola" class="h-10">
+                    <div>
+                        <h1 class="text-xl font-bold">Painel do Professor</h1>
+                        <p id="professor-info" class="text-sm text-gray-600"></p>
                     </div>
                 </div>
-                <div id="admin-content">
-                    <div id="admin-dashboard-panel" class="admin-panel">
-                        <h2 class="text-2xl font-bold mb-4">Resumo do Dia</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                            <div data-type="presencas" class="bg-white p-5 rounded-lg shadow-md flex items-center justify-between clickable-card"><div><p class="text-base font-medium text-gray-900">Registro de Frequência</p><p class="text-sm font-normal text-gray-500">Presentes Hoje</p></div><p id="dashboard-presencas" class="text-3xl font-bold text-green-600">0</p></div>
-                            <div data-type="faltas" class="bg-white p-5 rounded-lg shadow-md flex items-center justify-between clickable-card"><div><p class="text-base font-medium text-gray-900">Registro de Frequência</p><p class="text-sm font-normal text-gray-500">Ausentes Hoje</p></div><p id="dashboard-faltas" class="text-3xl font-bold text-red-600">0</p></div>
-                            <div class="bg-white p-5 rounded-lg shadow-md flex items-center justify-between"><div><p class="text-base font-medium text-gray-900">Registrado no APOIA</p><p class="text-sm font-normal text-gray-500">Ativos</p></div><p id="dashboard-acompanhamento" class="text-3xl font-bold text-yellow-600">0</p></div>
-                            <div data-type="assiduidade" id="assiduidade-card" class="bg-white p-5 rounded-lg shadow-md flex items-center clickable-card">
-                                <div class="bg-purple-100 rounded-full p-3 mr-4"><i class="ph-fill ph-chart-pie-slice text-2xl text-purple-600"></i></div>
-                                <div><p class="text-base font-medium text-gray-900">Análise de Assiduidade</p><p class="text-sm font-normal text-gray-500">Gerar Relatórios</p></div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-2">Alunos Ausentes</h3><ul id="dashboard-ausentes-list" class="space-y-2 text-sm"></ul></div>
-                            <div class="bg-white p-6 rounded-lg shadow-md"><div id="dashboard-calendar-container"><div class="flex items-center justify-between mb-4"><button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200"><i class="ph ph-caret-left"></i></button><h3 id="calendar-month-year" class="text-lg font-bold"></h3><button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200"><i class="ph ph-caret-right"></i></button></div><div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-600"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div><div id="calendar-grid" class="grid grid-cols-7 text-center mt-2"></div></div></div>
-                        </div>
+                <button id="professor-logout-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
+            </header>
+            <main class="p-4 md:p-6">
+                <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold mb-4">Lançar Chamada</h2>
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <div class="flex-1"><label for="professor-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="professor-turma-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"><option value="">Carregando turmas...</option></select></div>
+                        <div class="flex-1"><label for="professor-data-select" class="block text-sm font-medium text-gray-700">Data</label><input type="date" id="professor-data-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"></div>
                     </div>
-                    <div id="admin-alunos-panel" class="admin-panel hidden"></div>
-                    <div id="admin-professores-panel" class="admin-panel hidden"></div>
-                    <div id="admin-turmas-panel" class="admin-panel hidden"></div>
-                    <div id="admin-apoia-panel" class="admin-panel hidden"></div>
-                    <div id="admin-calendario-panel" class="admin-panel hidden"></div>
-                    <div id="admin-ano-letivo-panel" class="admin-panel hidden"></div>
-                    <div id="admin-relatorios-panel" class="admin-panel hidden"></div>
-                    <div id="admin-config-panel" class="admin-panel hidden"></div>
+                    <div id="chamada-lista-container">
+                        <div class="flex justify-between items-center mb-4"><h3 id="chamada-header" class="text-lg font-semibold">Selecione uma turma e data</h3></div>
+                        <div id="chamada-lista-alunos" class="space-y-4"></div>
+                    </div>
+                    <div class="mt-8 text-center"><button id="salvar-chamada-btn" class="hidden w-full md:w-auto px-8 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400">Salvar Chamada</button></div>
                 </div>
             </main>
+            <footer class="text-center p-4 text-xs text-gray-500">
+                <div class="flex items-center justify-center gap-4"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16"><div><p>Desenvolvido por: Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-prof" class="text-blue-600 hover:underline">Suporte Técnico via WhatsApp</a></div></div>
+            </footer>
         </div>
-    </div>
 
-    <div id="all-modals-container">
+        <div id="admin-view" class="hidden">
+            <div class="flex h-screen bg-gray-200">
+                <aside class="w-64 bg-gray-800 text-white flex flex-col">
+                    <div class="p-4 border-b border-gray-700 flex flex-col items-center gap-3"><img src="./logo_admin.png" alt="Logo da Escola" class="h-16"><div><h1 class="text-xl font-bold">Painel Admin</h1><p id="admin-info" class="text-sm text-gray-400 text-center"></p></div></div>
+                    <nav id="admin-sidebar-nav" class="flex-1 p-4 space-y-2">
+                        <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md bg-gray-700" data-target="admin-dashboard-panel"><i class="ph-fill ph-house"></i>Dashboard</a>
+                        <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-professores-panel"><i class="ph-fill ph-chalkboard-teacher"></i>Professores</a>
+                        <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-turmas-panel"><i class="ph-fill ph-users-three"></i>Turmas</a>
+                        <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-alunos-panel"><i class="ph-fill ph-student"></i>Alunos</a>
+                        <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-apoia-panel"><i class="ph-fill ph-lifebuoy"></i>Acompanhamento APOIA</a>
+                        <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-calendario-panel"><i class="ph-fill ph-calendar"></i>Calendário</a>
+                        <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-ano-letivo-panel"><i class="ph-fill ph-graduation-cap"></i>Ano Letivo</a>
+                        <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-relatorios-panel"><i class="ph-fill ph-chart-bar"></i>Relatórios Faltas</a>
+                        <a href="#" class="admin-nav-link flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-config-panel"><i class="ph-fill ph-gear"></i>Configurações</a>
+                    </nav>
+                    <div class="p-4 border-t border-gray-700 space-y-4"><div class="text-xs text-center text-gray-400"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16 mx-auto mb-2"><p>Desenvolvido por:</p><p>Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-admin" class="text-blue-400 hover:underline">Suporte Técnico</a></div><button id="admin-logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button></div>
+                </aside>
+                <main class="flex-1 p-6 overflow-y-auto">
+                    <div class="flex justify-end mb-4"><div class="relative">
+                        <div id="notification-bell" class="relative cursor-pointer"><i class="ph-fill ph-bell text-2xl text-gray-600"></i></div>
+                        <div id="notification-panel" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-20"><div class="p-4 font-bold border-b flex justify-between items-center"><span>Notificações</span><button id="clear-notifications-btn" class="text-xs text-blue-600 hover:underline font-medium">Limpar Todas</button></div><div id="notification-list" class="p-2 max-h-64 overflow-y-auto"></div></div>
+                    </div></div>
+                    <div id="admin-content">
+                        </div>
+                </main>
+            </div>
         </div>
+
+        <div id="all-modals-container">
+            </div>
+
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
