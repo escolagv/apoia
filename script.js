@@ -1578,7 +1578,7 @@ function openAssiduidadeModal() {
         anoSelTurma.dispatchEvent(new Event('change'));
     }
 
-    // Limpa as datas do relatório de professores para não haver predefinição
+    // Limpa as datas do relatório de professores
     document.getElementById('assiduidade-prof-data-inicio').value = '';
     document.getElementById('assiduidade-prof-data-fim').value = '';
 
@@ -1918,7 +1918,7 @@ async function generateAssiduidadeReport() {
                                  },
                                  options: {
                                      indexAxis: 'y',
-                                     scales: { x: { beginAtZero: true, max: ${hasDateRange ? 100 : ''} } },
+                                     scales: { x: { beginAtZero: true, max: ${hasDateRange ? 100 : null} } },
                                      responsive: true,
                                      maintainAspectRatio: false,
                                      plugins: { legend: { display: false }, title: { display: true, text: 'Lançamento de Chamadas por Professor' } }
@@ -1927,7 +1927,6 @@ async function generateAssiduidadeReport() {
                          }
                      }, 200);
                  `;
-            
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             const scriptEl = newWindow.document.createElement('script');
             scriptEl.textContent = chartScriptContent;
