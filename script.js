@@ -366,6 +366,7 @@ async function loadCorrecaoChamada() {
     });
 }
 
+
 // ===============================================================
 // ============= LÓGICA DO PAINEL DO ADMINISTRADOR ===============
 // ===============================================================
@@ -1084,7 +1085,7 @@ async function handleEventoFormSubmit(e) {
     }
 }
 
-// --- Gestão de Ano Letivo ---
+// --- Gestão de Ano Letivo (NOVA VERSÃO) ---
 function renderAnoLetivoPanel() {
     // A lógica está nos botões
 }
@@ -1352,33 +1353,27 @@ async function generateAssiduidadeReport() {
             }
         }
     `;
-    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>${printStyles}</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px; border-top-color: #3498db;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
+    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><link rel="stylesheet" href="style.css"><\/head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
     closeModal(assiduidadeModal);
-    
     try {
         const activeTab = document.querySelector('#assiduidade-tabs a[aria-current="page"]').dataset.target;
-        
         let dataInicio, dataFim, periodoTexto;
-
         if (activeTab === 'assiduidade-alunos') {
             dataInicio = document.getElementById('assiduidade-aluno-data-inicio').value;
             dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
             const turmaId = document.getElementById('assiduidade-aluno-turma').value;
             const alunoId = document.getElementById('assiduidade-aluno-aluno').value;
-
             let query = db.from('presencas').select('status, justificativa, alunos!inner(nome_completo), turmas!inner(nome_turma)');
             if (dataInicio) query = query.gte('data', dataInicio);
             if (dataFim) query = query.lte('data', dataFim);
             if (turmaId) query = query.eq('turma_id', turmaId);
             if (alunoId) query = query.eq('aluno_id', alunoId);
-
             const { data, error } = await safeQuery(query);
             if (error) throw error;
             if (data.length === 0) {
                 newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dado encontrado para os filtros selecionados.</p>';
                 return;
             }
-
             const stats = data.reduce((acc, record) => {
                 if (!record.alunos) return acc;
                 const nome = record.alunos.nome_completo;
@@ -1392,26 +1387,30 @@ async function generateAssiduidadeReport() {
                 }
                 return acc;
             }, {});
-
-            const tableRows = Object.entries(stats).sort((a,b) => a[0].localeCompare(b[0])).map(([nome, { presencas, faltas_j, faltas_i, turma }]) => {
+            const tableRows = Object.entries(stats).sort((a, b) => a[0].localeCompare(b[0])).map(([nome, { presencas, faltas_j, faltas_i, turma }]) => {
                 const total = presencas + faltas_j + faltas_i;
                 const percentual = total > 0 ? ((presencas / total) * 100).toFixed(1) + '%' : 'N/A';
                 return `
                     <tr class="border-b">
-                        <td class="p-3">${nome}</td><td class="p-3">${turma}</td>
+                        <td class="p-3">${nome}</td>
+                        <td class="p-3">${turma}</td>
                         <td class="p-3 text-center text-green-600 font-semibold">${presencas}</td>
                         <td class="p-3 text-center text-yellow-600 font-semibold">${faltas_j}</td>
                         <td class="p-3 text-center text-red-600 font-semibold">${faltas_i}</td>
                         <td class="p-3 text-center font-bold">${percentual}</td>
-                    </tr>`;
+                    </tr>
+                `;
             }).join('');
-            
             const totalPresencas = Object.values(stats).reduce((sum, s) => sum + s.presencas, 0);
             const totalFaltasJ = Object.values(stats).reduce((sum, s) => sum + s.faltas_j, 0);
             const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
-
-            periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
-            
+            if (dataInicio && dataFim) {
+                const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
+                const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
+                periodoTexto = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
+            } else {
+                periodoTexto = 'Período: Geral';
+            }
             const reportHTML = `
                 <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
@@ -1427,7 +1426,6 @@ async function generateAssiduidadeReport() {
                         </div>
                     </div>
                 </div>`;
-            
             const chartScriptContent = `
                 setTimeout(() => {
                     const ctx = document.getElementById('assiduidadeChart');
@@ -1436,73 +1434,74 @@ async function generateAssiduidadeReport() {
                             type: 'pie',
                             data: {
                                 labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'],
-                                datasets: [{ data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}], backgroundColor: ['#10B981', '#F59E0B', '#EF4444'] }]
+                                datasets: [{
+                                    data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}],
+                                    backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
+                                }]
                             },
                             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } }
                         });
                     }
-                }, 200);`;
-            
+                }, 200);
+            `;
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             const scriptEl = newWindow.document.createElement('script');
             scriptEl.textContent = chartScriptContent;
             newWindow.document.body.appendChild(scriptEl);
-
         } else if (activeTab === 'assiduidade-turmas') {
-             dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
-             dataFim = document.getElementById('assiduidade-turma-data-fim').value;
-             const anoLetivo = document.getElementById('assiduidade-turma-ano').value;
-             const turmaId = document.getElementById('assiduidade-turma-turma').value;
-
-             let query = db.from('presencas').select('status, justificativa, turmas!inner(id, nome_turma, ano_letivo)');
-             if (dataInicio) query = query.gte('data', dataInicio);
-             if (dataFim) query = query.lte('data', dataFim);
-             if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
-             if (turmaId) query = query.eq('turma_id', turmaId);
-
-             const { data, error } = await safeQuery(query);
-             if (error) throw error;
-             if (data.length === 0) {
-                 newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dado encontrado para os filtros selecionados.</p>';
-                 return;
-             }
-
-             const stats = data.reduce((acc, record) => {
-                 const turma = record.turmas;
-                 if (!turma) return acc;
-                 if (!acc[turma.id]) {
-                     acc[turma.id] = { nome: turma.nome_turma, presencas: 0, faltas_j: 0, faltas_i: 0 };
-                 }
-                 if (record.status === 'presente') acc[turma.id].presencas++;
-                 else {
-                     if (record.justificativa === 'Falta justificada') acc[turma.id].faltas_j++;
-                     else acc[turma.id].faltas_i++;
-                 }
-                 return acc;
-             }, {});
-
-             const sortedStats = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome));
-
-             const tableRows = sortedStats.map(turma => {
-                 const total = turma.presencas + turma.faltas_j + turma.faltas_i;
-                 const percentual = total > 0 ? ((turma.presencas / total) * 100).toFixed(1) + '%' : 'N/A';
-                 return `
+            dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
+            dataFim = document.getElementById('assiduidade-turma-data-fim').value;
+            const anoLetivo = document.getElementById('assiduidade-turma-ano').value;
+            const turmaId = document.getElementById('assiduidade-turma-turma').value;
+            let query = db.from('presencas').select('status, justificativa, turmas!inner(id, nome_turma, ano_letivo)');
+            if (dataInicio) query = query.gte('data', dataInicio);
+            if (dataFim) query = query.lte('data', dataFim);
+            if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
+            if (turmaId) query = query.eq('turma_id', turmaId);
+            const { data, error } = await safeQuery(query);
+            if (error) throw error;
+            if (data.length === 0) {
+                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dado encontrado para os filtros selecionados.</p>';
+                return;
+            }
+            const stats = data.reduce((acc, record) => {
+                const turma = record.turmas;
+                if (!turma) return acc;
+                if (!acc[turma.id]) {
+                    acc[turma.id] = { nome: turma.nome_turma, presencas: 0, faltas_j: 0, faltas_i: 0 };
+                }
+                if (record.status === 'presente') acc[turma.id].presencas++;
+                else {
+                    if (record.justificativa === 'Falta justificada') acc[turma.id].faltas_j++;
+                    else acc[turma.id].faltas_i++;
+                }
+                return acc;
+            }, {});
+            const sortedStats = Object.values(stats).sort((a, b) => a.nome.localeCompare(b.nome));
+            const tableRows = sortedStats.map(turma => {
+                const total = turma.presencas + turma.faltas_j + turma.faltas_i;
+                const percentual = total > 0 ? ((turma.presencas / total) * 100).toFixed(1) + '%' : 'N/A';
+                return `
                     <tr class="border-b">
                         <td class="p-3">${turma.nome}</td>
                         <td class="p-3 text-center text-green-600 font-semibold">${turma.presencas}</td>
                         <td class="p-3 text-center text-yellow-600 font-semibold">${turma.faltas_j}</td>
                         <td class="p-3 text-center text-red-600 font-semibold">${turma.faltas_i}</td>
                         <td class="p-3 text-center font-bold">${percentual}</td>
-                    </tr>`;
-             }).join('');
-
-             const totalPresencas = sortedStats.reduce((sum, s) => sum + s.presencas, 0);
-             const totalFaltasJ = sortedStats.reduce((sum, s) => sum + s.faltas_j, 0);
-             const totalFaltasI = sortedStats.reduce((sum, s) => sum + s.faltas_i, 0);
-             
-             periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
-
-             const reportHTML = `
+                    </tr>
+                `;
+            }).join('');
+            const totalPresencas = sortedStats.reduce((sum, s) => sum + s.presencas, 0);
+            const totalFaltasJ = sortedStats.reduce((sum, s) => sum + s.faltas_j, 0);
+            const totalFaltasI = sortedStats.reduce((sum, s) => sum + s.faltas_i, 0);
+            if (dataInicio && dataFim) {
+                const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
+                const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
+                periodoTexto = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
+            } else {
+                periodoTexto = 'Período: Geral';
+            }
+            const reportHTML = `
                 <div class="printable-area">
                     <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>${periodoTexto}</p></div></div>
                     <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
@@ -1519,35 +1518,32 @@ async function generateAssiduidadeReport() {
                         </div>
                     </div>
                 </div>`;
-             
-             const chartScriptContent = `
-                 setTimeout(() => {
-                     const ctx = document.getElementById('assiduidadeTurmaChart');
-                     if(ctx) {
-                         new Chart(ctx, {
-                             type: 'pie',
-                             data: {
-                                 labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'],
-                                 datasets: [{
-                                     label: 'Frequência Geral',
-                                     data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}],
-                                     backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
-                                 }]
-                             },
-                             options: {
-                                 responsive: true,
-                                 maintainAspectRatio: false,
-                                 plugins: { legend: { position: 'top' }, title: { display: true, text: 'Composição da Frequência (Consolidado)' } }
-                             }
-                         });
-                     }
-                 }, 200);`;
-
-             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
-             const scriptEl = newWindow.document.createElement('script');
-             scriptEl.textContent = chartScriptContent;
-             newWindow.document.body.appendChild(scriptEl);
-
+            const chartScriptContent = `
+                setTimeout(() => {
+                    const ctx = document.getElementById('assiduidadeTurmaChart');
+                    if(ctx) {
+                        new Chart(ctx, {
+                            type: 'pie',
+                            data: {
+                                labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'],
+                                datasets: [{
+                                    label: 'Frequência Geral',
+                                    data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}],
+                                    backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { position: 'top' }, title: { display: true, text: 'Composição da Frequência (Consolidado)' } }
+                            }
+                        });
+                    }
+                }, 200);`;
+            newWindow.document.getElementById('report-content').innerHTML = reportHTML;
+            const scriptEl = newWindow.document.createElement('script');
+            scriptEl.textContent = chartScriptContent;
+            newWindow.document.body.appendChild(scriptEl);
         } else if (activeTab === 'assiduidade-professores') {
             dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
             dataFim = document.getElementById('assiduidade-prof-data-fim').value;
@@ -1555,8 +1551,8 @@ async function generateAssiduidadeReport() {
             const professorId = document.getElementById('assiduidade-prof-professor').value;
             
             if (!dataInicio || !dataFim) {
-                 newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione as datas de início e fim para gerar o relatório de professores.</p>';
-                 return;
+                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione as datas de início e fim para gerar o relatório de professores.</p>';
+                return;
             }
 
             const { data, error } = await db.rpc('get_professor_assiduidade', {
@@ -1585,13 +1581,15 @@ async function generateAssiduidadeReport() {
                     </div>
                 `).join('')
                 : '<p class="text-sm text-gray-500">Nenhum.</p>';
-
+            
             const totalDiasLetivos = data.length;
             const totalLancados = diasLancados.length;
             const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
             const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
             
-            periodoTexto = `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}`;
+            const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
+            const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
+            periodoTexto = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
 
             newWindow.document.getElementById('report-content').innerHTML = `
                 <div class="printable-area">
@@ -1615,14 +1613,15 @@ async function generateAssiduidadeReport() {
                             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${naoLancadosHtml}</div>
                         </div>
                     </div>
-                </div>`;
+                </div>
+            `;
         }
-
-    } catch(e) {
+    } catch (e) {
         console.error("Erro ao gerar relatório:", e);
         newWindow.document.getElementById('report-content').innerHTML = `<div class="text-red-500 font-bold text-center">Ocorreu um erro ao gerar o relatório: ${e.message}</div>`;
     }
 }
+
 
 // ===============================================================
 // =================== EVENT LISTENERS ===========================
@@ -1650,7 +1649,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginButton.innerHTML = `<div class="loader mx-auto"></div>`;
             loginError.textContent = '';
             try {
-                const { error } = await db.auth.signInWithPassword({ email: email.value, password: password.value });
+                const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value });
                 if (error) {
                     loginError.textContent = "Email ou senha inválidos.";
                     resetLoginFormState();
@@ -1891,8 +1890,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
     correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
-    
-    // Listeners da Promoção em Massa (Nova Versão)
+
+    // Listeners da Promoção de Turmas (NOVA VERSÃO)
     document.getElementById('promover-turmas-ano-origem').addEventListener('change', renderPromocaoTurmasLista);
     document.getElementById('promover-turmas-confirm-checkbox').addEventListener('change', (e) => {
         document.getElementById('confirm-promocao-turmas-btn').disabled = !e.target.checked;
@@ -1907,7 +1906,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleAllCheckbox.textContent = !isTudoMarcado ? 'Desmarcar Todas' : 'Marcar Todas';
         });
     }
-
+    
     // Listeners da Análise de Assiduidade
     document.getElementById('assiduidade-tabs').addEventListener('click', (e) => {
         e.preventDefault();
