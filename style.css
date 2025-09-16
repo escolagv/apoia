@@ -42,10 +42,10 @@ body { font-family: 'Inter', sans-serif; }
 .calendar-day-container.calendar-day-selected {
     box-shadow: 0 0 0 2px #16a34a; /* Aro verde forte */
     border-radius: 9999px;
-    transform: scale(1.15); /* Um pouco maior */
+    transform: scale(1.05); /* Um pouco maior */
 }
 .calendar-day-content {
-     display: flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     width: 2rem;
