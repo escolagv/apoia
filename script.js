@@ -1580,6 +1580,9 @@ function openAssiduidadeModal() {
     assiduidadeModal.classList.remove('hidden');
 }
 
+//
+// SUBSTITUA A FUNÇÃO INTEIRA NO SEU script.js POR ESTA:
+//
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
     newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>body { font-family: 'Inter', sans-serif; } .print-header { display: none; } @media print { .no-print { display: none !important; } .printable-area { position: absolute; left: 0; top: 0; width: 100%; } body * { visibility: hidden; } .printable-area, .printable-area * { visibility: visible; } .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; } .print-header img { max-height: 60px; width: auto; } .print-header-info h2 { font-size: 1.25rem; font-weight: bold; margin: 0; } .print-header-info p { font-size: 0.875rem; margin: 0; } }</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content"><div class="text-center"><div style="border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:48px;height:48px;animation:spin 1s linear infinite;margin:auto;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
@@ -1659,7 +1662,6 @@ async function generateAssiduidadeReport() {
                 </div>
             </div>
             <script>
-                // Atraso para garantir que o DOM esteja pronto
                 setTimeout(() => {
                     const ctx = document.getElementById('assiduidadeChart');
                     if (ctx) {
@@ -1672,7 +1674,14 @@ async function generateAssiduidadeReport() {
                                     backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
                                 }]
                             },
-                            options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } }
+                            options: { 
+                                responsive: true, 
+                                maintainAspectRatio: false, // FIX: Garante que o gráfico se ajuste ao container
+                                plugins: { 
+                                    legend: { position: 'top' }, 
+                                    title: { display: true, text: 'Visão Geral da Frequência' } 
+                                } 
+                            }
                         });
                     }
                 }, 100);
@@ -1723,62 +1732,66 @@ async function generateAssiduidadeReport() {
                     </tr>
                 `;
             }).join('');
+            
+            // FIX: Consolida dados para o gráfico de pizza
+            const totalPresencas = sortedStats.reduce((sum, t) => sum + t.presencas, 0);
+            const totalFaltas = sortedStats.reduce((sum, t) => sum + t.faltas, 0);
 
-            const chartLabels = JSON.stringify(sortedStats.map(t => t.nome));
-            const chartData = JSON.stringify(sortedStats.map(t => {
-                const total = t.presencas + t.faltas;
-                return total > 0 ? ((t.presencas / total) * 100).toFixed(1) : 0;
-            }));
-
-                newWindow.document.body.innerHTML = `
-                    <div class="printable-area">
-                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
-                        <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><canvas id="assiduidadeTurmaChart"></canvas></div>
-                            <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
-                                <h3 class="font-bold mb-4">Dados Consolidados</h3>
-                                <div class="max-h-96 overflow-y-auto">
-                                <table class="w-full text-sm">
-                                    <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th></tr></thead>
-                                    <tbody>${tableRows}</tbody>
-                                </table>
-                                </div>
+            newWindow.document.body.innerHTML = `
+                <div class="printable-area">
+                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
+                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><canvas id="assiduidadeTurmaChart"></canvas></div>
+                        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="font-bold mb-4">Dados Consolidados por Turma</h3>
+                            <div class="max-h-96 overflow-y-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th></tr></thead>
+                                <tbody>${tableRows}</tbody>
+                            </table>
                             </div>
                         </div>
                     </div>
-                    <script>
-                        setTimeout(() => {
-                            const ctx = document.getElementById('assiduidadeTurmaChart');
-                            if(ctx) {
-                                new Chart(ctx, {
-                                    type: 'bar',
-                                    data: {
-                                        labels: ${chartLabels},
-                                        datasets: [{
-                                            label: '% de Assiduidade',
-                                            data: ${chartData},
-                                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                                            borderColor: 'rgba(59, 130, 246, 1)',
-                                            borderWidth: 1
-                                        }]
-                                    },
-                                    options: {
-                                        indexAxis: 'y',
-                                        scales: { x: { beginAtZero: true, max: 100 } },
-                                        responsive: true,
-                                        plugins: { legend: { display: false }, title: { display: true, text: 'Percentual de Assiduidade por Turma' } }
+                </div>
+                <script>
+                    setTimeout(() => {
+                        const ctx = document.getElementById('assiduidadeTurmaChart');
+                        if(ctx) {
+                            new Chart(ctx, {
+                                type: 'pie', // FIX: Alterado para 'pie'
+                                data: {
+                                    labels: ['Total de Presenças', 'Total de Faltas'],
+                                    datasets: [{
+                                        label: 'Frequência Geral',
+                                        data: [${totalPresencas}, ${totalFaltas}],
+                                        backgroundColor: ['#10B981', '#EF4444'],
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false, // FIX: Garante que o gráfico se ajuste ao container
+                                    plugins: { 
+                                        legend: { position: 'top' }, 
+                                        title: { display: true, text: 'Frequência Geral das Turmas' } 
                                     }
-                                });
-                            }
-                        }, 100);
-                    <\/script>
+                                }
+                            });
+                        }
+                    }, 100);
+                <\/script>
                 `;
             // RELATÓRIO DE PROFESSORES
         } else if (activeTab === 'assiduidade-professores') {
             const dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
             const dataFim = document.getElementById('assiduidade-prof-data-fim').value;
             const professorId = document.getElementById('assiduidade-prof-professor').value;
+
+            // FIX 1: Validação de data para evitar o erro do banco de dados
+            if (!dataInicio || !dataFim) {
+                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione as datas de início e fim para gerar o relatório de professores.</p>';
+                return;
+            }
 
             // 1. Calcular dias letivos no período
             const { data: eventos } = await safeQuery(db.from('eventos').select('data, data_fim').or(`data.gte.${dataInicio},data_fim.gte.${dataInicio}`).or(`data.lte.${dataFim},data_fim.lte.${dataFim}`));
@@ -1840,21 +1853,22 @@ async function generateAssiduidadeReport() {
                 `;
             }).join('');
 
-            const sortedProfStats = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome));
-            const chartLabels = JSON.stringify(sortedProfStats.map(p => p.nome));
-            const chartData = JSON.stringify(sortedProfStats.map(p => {
-                const diasRegistrados = p.diasComChamada.size;
-                return diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) : 0;
-            }));
+            // FIX: Consolida dados para o gráfico de pizza
+            const diasComChamadaUnicos = new Set();
+            Object.values(stats).forEach(prof => {
+                prof.diasComChamada.forEach(dia => diasComChamadaUnicos.add(dia));
+            });
+            const totalDiasRegistrados = diasComChamadaUnicos.size;
+            const diasNaoRegistrados = diasLetivos - totalDiasRegistrados;
 
             newWindow.document.body.innerHTML = `
                     <div class="printable-area">
                         <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Chamadas</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
                         <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Chamadas</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><canvas id="lancamentoChart"></canvas></div>
-                            <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
-                                <h3 class="font-bold mb-4">Dados Consolidados</h3>
+                            <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><canvas id="lancamentoChart"></canvas></div>
+                            <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="font-bold mb-4">Dados Consolidados por Professor</h3>
                                 <div class="max-h-96 overflow-y-auto">
                                 <table class="w-full text-sm">
                                     <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Professor</th><th class="p-3 text-center">Dias com Chamada</th><th class="p-3 text-center">Total Dias Letivos</th><th class="p-3 text-center">Taxa de Lançamento</th></tr></thead>
@@ -1869,22 +1883,22 @@ async function generateAssiduidadeReport() {
                             const ctx = document.getElementById('lancamentoChart');
                             if (ctx) {
                                 new Chart(ctx, {
-                                    type: 'bar',
+                                    type: 'pie', // FIX: Alterado para 'pie'
                                     data: {
-                                        labels: ${chartLabels},
+                                        labels: ['Dias com Chamada Lançada', 'Dias Sem Lançamento'],
                                         datasets: [{
-                                            label: '% de Lançamento',
-                                            data: ${chartData},
-                                            backgroundColor: 'rgba(139, 92, 246, 0.5)',
-                                            borderColor: 'rgba(139, 92, 246, 1)',
-                                            borderWidth: 1
+                                            label: 'Lançamentos',
+                                            data: [${totalDiasRegistrados}, ${diasNaoRegistrados}],
+                                            backgroundColor: ['#3B82F6', '#E5E7EB'],
                                         }]
                                     },
                                     options: {
-                                        indexAxis: 'y',
-                                        scales: { x: { beginAtZero: true, max: 100 } },
                                         responsive: true,
-                                        plugins: { legend: { display: false }, title: { display: true, text: 'Taxa de Lançamento de Chamadas por Professor' } }
+                                        maintainAspectRatio: false, // FIX: Garante que o gráfico se ajuste ao container
+                                        plugins: { 
+                                            legend: { position: 'top' }, 
+                                            title: { display: true, text: 'Visão Geral de Lançamentos de Chamada' } 
+                                        }
                                     }
                                 });
                             }
@@ -1897,6 +1911,7 @@ async function generateAssiduidadeReport() {
         console.error("Erro ao gerar relatório:", e);
         newWindow.document.getElementById('report-content').innerHTML = `<div class="text-red-500 font-bold text-center">Ocorreu um erro ao gerar o relatório: ${e.message}</div>`;
     }
+}
 }
 
 // ===============================================================
