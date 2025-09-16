@@ -1,5 +1,5 @@
 const { createClient } = supabase;
-const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co'; 
+const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
 
 if (SUPABASE_URL === 'SUA_URL_DO_PROJETO') throw new Error("Credenciais da Supabase não configuradas.");
@@ -7,13 +7,13 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let turmasCache = [];
-let usuariosCache = []; // Cache para professores E admins
+let usuariosCache = [];
 let alunosCache = [];
 let dashboardCalendar = { month: new Date().getMonth(), year: new Date().getFullYear() };
 let apoiaCurrentPage = 1;
 const apoiaItemsPerPage = 10;
 let anosLetivosCache = [];
-let dashboardSelectedDate; // Será definido após a correção do fuso horário
+let dashboardSelectedDate;
 
 // --- Mapeamento dos Elementos da UI ---
 const loadingView = document.getElementById('loading-view');
@@ -27,13 +27,11 @@ const togglePasswordBtn = document.getElementById('toggle-password-btn');
 const eyeIcon = document.getElementById('eye-icon');
 const eyeOffIcon = document.getElementById('eye-off-icon');
 const toastContainer = document.getElementById('toast-container');
-// Professor UI
 const turmaSelect = document.getElementById('professor-turma-select');
 const dataSelect = document.getElementById('professor-data-select');
 const listaAlunosContainer = document.getElementById('chamada-lista-alunos');
 const chamadaHeader = document.getElementById('chamada-header');
 const salvarChamadaBtn = document.getElementById('salvar-chamada-btn');
-// Admin UI
 const alunosTableBody = document.getElementById('alunos-table-body');
 const apoiaTableBody = document.getElementById('apoia-table-body');
 const professoresTableBody = document.getElementById('professores-table-body');
@@ -42,7 +40,6 @@ const eventosTableBody = document.getElementById('eventos-table-body');
 const notificationBell = document.getElementById('notification-bell');
 const notificationPanel = document.getElementById('notification-panel');
 const notificationList = document.getElementById('notification-list');
-// Modals
 const allModals = document.querySelectorAll('.fixed.inset-0.z-50');
 const alunoModal = document.getElementById('aluno-modal');
 const professorModal = document.getElementById('professor-modal');
@@ -53,12 +50,9 @@ const correcaoChamadaModal = document.getElementById('correcao-chamada-modal');
 const resetPasswordModal = document.getElementById('reset-password-modal');
 const deleteConfirmModal = document.getElementById('delete-confirm-modal');
 const alunoHistoricoModal = document.getElementById('aluno-historico-modal');
-const promoverAlunosModal = document.getElementById('promover-alunos-modal');
-const promoverConfirmModal = document.getElementById('promover-confirm-modal');
-const promoverMassaModal = document.getElementById('promover-massa-modal');
-const promoverMassaConfirmModal = document.getElementById('promover-massa-confirm-modal');
+const promoverTurmasModal = document.getElementById('promover-turmas-modal');
+const promoverTurmasConfirmModal = document.getElementById('promover-turmas-confirm-modal');
 const assiduidadeModal = document.getElementById('assiduidade-modal');
-// Forms
 const alunoForm = document.getElementById('aluno-form');
 const professorForm = document.getElementById('professor-form');
 const turmaForm = document.getElementById('turma-form');
@@ -66,22 +60,17 @@ const eventoForm = document.getElementById('evento-form');
 const acompanhamentoForm = document.getElementById('acompanhamento-form');
 const correcaoChamadaForm = document.getElementById('correcao-chamada-form');
 const resetPasswordForm = document.getElementById('reset-password-form');
-// Correção Chamada (Bug Fix)
 const correcaoTurmaSel = document.getElementById('correcao-turma-select');
 const correcaoDataSel = document.getElementById('correcao-data-select');
 const correcaoListaAlunos = document.getElementById('correcao-chamada-lista-alunos');
-// Selects and Lists
 const alunoTurmaSelect = document.getElementById('aluno-turma');
 const turmaProfessoresList = document.getElementById('turma-professores-list');
 const acompanhamentoAlunoSelect = document.getElementById('acompanhamento-aluno-select');
-// Relatórios
 const relatorioResultados = document.getElementById('relatorio-resultados');
 const relatorioTableBody = document.getElementById('relatorio-table-body');
 const imprimirRelatorioBtn = document.getElementById('imprimir-relatorio-btn');
 const imprimirApoiaRelatorioBtn = document.getElementById('imprimir-apoia-relatorio-btn');
-// Configurações
 const configForm = document.getElementById('config-form');
-// Calendário Dashboard
 const calendarMonthYear = document.getElementById('calendar-month-year');
 const calendarGrid = document.getElementById('calendar-grid');
 
@@ -99,11 +88,9 @@ dashboardSelectedDate = getLocalDateString();
 function showView(viewId) {
     loadingView.classList.add('hidden');
     appContainer.classList.remove('hidden');
-
     loginView.classList.add('hidden');
     professorView.classList.add('hidden');
     adminView.classList.add('hidden');
-
     if (document.getElementById(viewId)) {
         document.getElementById(viewId).classList.remove('hidden');
     }
@@ -129,9 +116,9 @@ function resetLoginFormState() {
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         const loginButton = loginForm.querySelector('button[type="submit"]');
-        loginForm.reset(); 
-        loginError.textContent = ''; 
-        if(loginButton) {
+        loginForm.reset();
+        loginError.textContent = '';
+        if (loginButton) {
             loginButton.disabled = false;
             loginButton.innerHTML = 'Entrar';
         }
@@ -143,7 +130,6 @@ function showToast(message, isError = false) {
     toast.className = `toast p-4 rounded-lg shadow-lg text-white ${isError ? 'bg-red-500' : 'bg-green-500'}`;
     toast.textContent = message;
     toastContainer.appendChild(toast);
-    
     setTimeout(() => {
         toast.classList.add('hide');
         toast.addEventListener('transitionend', () => toast.remove());
@@ -195,21 +181,15 @@ async function handleAuthChange(session) {
         showView('login-view');
         return;
     }
-
     try {
         currentUser = session.user;
         const { data, error } = await safeQuery(db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single());
-
         if (error || !data || data.status !== 'ativo') {
-            const errorMessage = !data 
-                ? 'Seu usuário foi autenticado, mas não possui um perfil no sistema. Contate o suporte.'
-                : 'Seu perfil de usuário não está ativo. Contate o suporte.';
-            
+            const errorMessage = !data ? 'Seu usuário foi autenticado, mas não possui um perfil no sistema. Contate o suporte.' : 'Seu perfil de usuário não está ativo. Contate o suporte.';
             showToast(errorMessage, true);
             await db.auth.signOut();
             return;
         }
-
         const { papel, nome } = data;
         if (papel === 'admin') {
             document.getElementById('admin-info').textContent = nome || currentUser.email;
@@ -237,7 +217,6 @@ db.auth.onAuthStateChange(async (event, session) => {
     } else if (event === 'SIGNED_OUT') {
         handleAuthChange(null);
     }
-
     if (event === 'PASSWORD_RECOVERY') {
         showView('login-view');
         resetPasswordModal.classList.remove('hidden');
@@ -250,25 +229,21 @@ db.auth.onAuthStateChange(async (event, session) => {
 async function loadProfessorData(professorUid) {
     const { data: rels } = await safeQuery(db.from('professores_turmas').select('turma_id').eq('professor_id', professorUid));
     if (!rels || rels.length === 0) return;
-    
     const turmaIds = rels.map(r => r.turma_id);
     const { data } = await safeQuery(db.from('turmas').select('id, nome_turma').in('id', turmaIds));
-
     if (!data) return;
     turmaSelect.innerHTML = '<option value="">Selecione uma turma</option>';
-    data.sort((a,b) => a.nome_turma.localeCompare(b.nome_turma, undefined, {numeric: true})).forEach(t => turmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+    data.sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true })).forEach(t => turmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
 }
 
 async function loadChamada() {
     const turmaId = turmaSelect.value;
     const data = dataSelect.value;
     const isEditable = data === getLocalDateString();
-
     listaAlunosContainer.innerHTML = '';
     chamadaHeader.textContent = 'Selecione uma turma e data';
     salvarChamadaBtn.classList.add('hidden');
     if (!turmaId || !data) return;
-
     chamadaHeader.innerHTML = '<div class="loader mx-auto"></div>';
     const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo'));
     if (!alunos) return;
@@ -276,19 +251,15 @@ async function loadChamada() {
         chamadaHeader.textContent = 'Nenhum aluno ativo encontrado.';
         return;
     }
-
     const { data: presencas } = await safeQuery(db.from('presencas').select('aluno_id, status, justificativa').eq('turma_id', turmaId).eq('data', data));
     const presencasMap = new Map((presencas || []).map(p => [p.aluno_id, { status: p.status, justificativa: p.justificativa }]));
-
     alunos.forEach(aluno => {
         const presenca = presencasMap.get(aluno.id) || { status: 'presente', justificativa: null };
         const isJustificada = presenca.justificativa === 'Falta justificada';
         const isInjustificada = presenca.justificativa === 'Falta injustificada' || (!presenca.justificativa && presenca.status === 'falta');
-        
         const alunoDiv = document.createElement('div');
         alunoDiv.className = 'p-3 bg-gray-50 rounded-lg';
         alunoDiv.dataset.alunoId = aluno.id;
-
         alunoDiv.innerHTML = `
             <div class="flex items-center justify-between">
                 <span class="font-medium">${aluno.nome_completo}</span>
@@ -303,11 +274,9 @@ async function loadChamada() {
                     <label class="flex items-center cursor-pointer"><input type="radio" name="just-${aluno.id}" value="Falta justificada" class="form-radio h-4 w-4" ${isJustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Justificada</span></label>
                     <label class="flex items-center cursor-pointer"><input type="radio" name="just-${aluno.id}" value="Falta injustificada" class="form-radio h-4 w-4" ${isInjustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Injustificada</span></label>
                 </div>
-            </div>
-        `;
+            </div>`;
         listaAlunosContainer.appendChild(alunoDiv);
     });
-
     chamadaHeader.textContent = `Chamada para ${turmaSelect.options[turmaSelect.selectedIndex].text}`;
     if (isEditable) {
         salvarChamadaBtn.classList.remove('hidden');
@@ -319,7 +288,6 @@ async function loadChamada() {
 async function saveChamada() {
     salvarChamadaBtn.disabled = true;
     salvarChamadaBtn.innerHTML = '<div class="loader mx-auto"></div>';
-
     const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => {
         const status = row.querySelector('.status-radio:checked').value;
         let justificativa = null;
@@ -327,7 +295,6 @@ async function saveChamada() {
             const justRadio = row.querySelector(`input[name="just-${row.dataset.alunoId}"]:checked`);
             justificativa = justRadio ? justRadio.value : 'Falta injustificada';
         }
-        
         return {
             aluno_id: parseInt(row.dataset.alunoId),
             turma_id: parseInt(turmaSelect.value),
@@ -337,10 +304,8 @@ async function saveChamada() {
             registrado_por_uid: currentUser.id
         };
     });
-    
     const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
-    
-    if(error) {
+    if (error) {
         console.error("Erro detalhado ao salvar chamada:", error);
         let userMessage = 'Erro ao salvar chamada: ' + error.message;
         if (error.message.includes('security policy')) {
@@ -350,7 +315,6 @@ async function saveChamada() {
     } else {
         showToast('Chamada salva com sucesso!');
     }
-    
     salvarChamadaBtn.disabled = false;
     salvarChamadaBtn.textContent = 'Salvar Chamada';
 }
@@ -359,13 +323,11 @@ async function saveChamada() {
 async function loadCorrecaoChamada() {
     const turmaId = correcaoTurmaSel.value;
     const data = correcaoDataSel.value;
-
     correcaoListaAlunos.innerHTML = '';
     if (!turmaId || !data) {
         correcaoListaAlunos.innerHTML = '<p class="text-center text-gray-500">Selecione uma turma e uma data para carregar os alunos.</p>';
         return;
     }
-
     correcaoListaAlunos.innerHTML = '<div class="loader mx-auto"></div>';
     const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo'));
     if (!alunos) return;
@@ -373,20 +335,16 @@ async function loadCorrecaoChamada() {
         correcaoListaAlunos.innerHTML = '<p class="text-center text-gray-500">Nenhum aluno ativo encontrado para esta turma.</p>';
         return;
     }
-
     const { data: presencas } = await safeQuery(db.from('presencas').select('aluno_id, status, justificativa').eq('turma_id', turmaId).eq('data', data));
     const presencasMap = new Map((presencas || []).map(p => [p.aluno_id, { status: p.status, justificativa: p.justificativa }]));
-
     alunos.forEach(aluno => {
         const presenca = presencasMap.get(aluno.id) || { status: 'presente', justificativa: null };
         const isJustificada = presenca.justificativa === 'Falta justificada';
         const isInjustificada = presenca.justificativa === 'Falta injustificada' || (!presenca.justificativa && presenca.status === 'falta');
         const isOutros = !isJustificada && !isInjustificada && presenca.justificativa;
-        
         const alunoDiv = document.createElement('div');
         alunoDiv.className = 'p-3 bg-gray-50 rounded-lg';
         alunoDiv.dataset.alunoId = aluno.id;
-
         alunoDiv.innerHTML = `
             <div class="flex items-center justify-between">
                 <span class="font-medium">${aluno.nome_completo}</span>
@@ -403,12 +361,10 @@ async function loadCorrecaoChamada() {
                     <label class="flex items-center"><input type="radio" name="corr-just-${aluno.id}" value="outros" class="form-radio h-4 w-4" ${isOutros ? 'checked' : ''}><span class="ml-2 text-sm">Outros</span></label>
                     <input type="text" class="justificativa-outros-input p-1 border rounded-md text-sm flex-grow min-w-0" placeholder="Motivo..." value="${isOutros ? presenca.justificativa : ''}">
                 </div>
-            </div>
-        `;
+            </div>`;
         correcaoListaAlunos.appendChild(alunoDiv);
     });
 }
-
 
 // ===============================================================
 // ============= LÓGICA DO PAINEL DO ADMINISTRADOR ===============
@@ -416,14 +372,11 @@ async function loadCorrecaoChamada() {
 
 async function loadNotifications() {
     const { data, error, count } = await safeQuery(db.from('alertas').select('*', { count: 'exact' }).eq('lido', false).order('created_at', { ascending: false }));
-
     if (error) {
         console.error("Erro ao buscar notificações:", error);
         return;
     }
-    
     document.getElementById('clear-notifications-btn').classList.toggle('hidden', count === 0);
-
     if (count > 0) {
         notificationBell.classList.add('notification-badge');
         notificationBell.setAttribute('data-count', count);
@@ -431,7 +384,6 @@ async function loadNotifications() {
         notificationBell.classList.remove('notification-badge');
         notificationBell.setAttribute('data-count', 0);
     }
-
     if (data.length === 0) {
         notificationList.innerHTML = '<p class="text-sm text-gray-500 p-4 text-center">Nenhuma nova notificação.</p>';
     } else {
@@ -454,22 +406,18 @@ async function markAllNotificationsAsRead() {
 async function loadAdminData() {
     const { data: turmas } = await safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo'));
     turmasCache = (turmas || []).sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true }));
-
     const { data: users } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, papel, email_confirmado').in('papel', ['professor', 'admin']).eq('status', 'ativo'));
-    usuariosCache = (users || []).sort((a,b) => a.nome.localeCompare(b.nome));
-    
+    usuariosCache = (users || []).sort((a, b) => a.nome.localeCompare(b.nome));
     const { data: allAlunos } = await safeQuery(db.from('alunos').select('id, nome_completo, turma_id').eq('status', 'ativo'));
-    alunosCache = (allAlunos || []).sort((a,b) => a.nome_completo.localeCompare(b.nome_completo));
-
+    alunosCache = (allAlunos || []).sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
     const { data: anos } = await safeQuery(db.rpc('get_distinct_ano_letivo'));
-    anosLetivosCache = anos ? anos.sort((a,b) => b-a) : [];
+    anosLetivosCache = anos ? anos.sort((a, b) => b - a) : [];
 }
 
 // --- Dashboard ---
 async function renderDashboardPanel() {
     await loadDailySummary(dashboardSelectedDate);
     await renderDashboardCalendar();
-    
     const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento'));
     document.getElementById('dashboard-acompanhamento').textContent = count === null ? 'N/A' : count;
 }
@@ -478,23 +426,17 @@ async function loadDailySummary(selectedDate) {
     const presencasEl = document.getElementById('dashboard-presencas');
     const faltasEl = document.getElementById('dashboard-faltas');
     const ausentesListEl = document.getElementById('dashboard-ausentes-list');
-
     presencasEl.textContent = '...';
     faltasEl.textContent = '...';
     ausentesListEl.innerHTML = '<li>Carregando...</li>';
-
     const { data } = await safeQuery(db.from('presencas').select('justificativa, alunos ( id, nome_completo ), turmas ( nome_turma )').eq('data', selectedDate).eq('status', 'falta'));
-    
     if (!data) {
         ausentesListEl.innerHTML = `<li>Erro ao carregar dados.</li>`;
         return;
     }
-
     const { count: totalPresencas } = await safeQuery(db.from('presencas').select('*', { count: 'exact', head: true }).eq('data', selectedDate).eq('status', 'presente'));
-    
     presencasEl.textContent = totalPresencas || 0;
     faltasEl.textContent = data.length;
-
     if (data.length === 0) {
         ausentesListEl.innerHTML = '<li>Nenhum aluno ausente.</li>';
     } else {
@@ -509,22 +451,15 @@ async function renderDashboardCalendar() {
     const { month, year } = dashboardCalendar;
     calendarMonthYear.textContent = new Date(year, month).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
     calendarGrid.innerHTML = '';
-
     const firstDayOfMonth = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-
     const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
     const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
-    
-    const { data: eventos } = await safeQuery(db.from('eventos').select('*')
-        .or(`data.gte.${monthStart},data_fim.gte.${monthStart}`)
-        .or(`data.lte.${monthEnd},data_fim.lte.${monthEnd}`));
-    
+    const { data: eventos } = await safeQuery(db.from('eventos').select('*').or(`data.gte.${monthStart},data_fim.gte.${monthStart}`).or(`data.lte.${monthEnd},data_fim.lte.${monthEnd}`));
     let html = '';
     for (let i = 0; i < firstDayOfMonth; i++) {
         html += '<div></div>';
     }
-
     for (let day = 1; day <= daysInMonth; day++) {
         const currentDate = new Date(year, month, day);
         const dayOfWeek = currentDate.getDay();
@@ -537,11 +472,9 @@ async function renderDashboardCalendar() {
                 return currentDate >= startDate && currentDate <= endDate;
             });
         }
-        
         let dayContainerClass = 'calendar-day-container';
         let daySpanClass = 'calendar-day-content';
         let tooltipHtml = '';
-
         if (dayEvent) {
             daySpanClass += ' calendar-day-event';
             dayContainerClass += ' has-tooltip relative';
@@ -549,11 +482,9 @@ async function renderDashboardCalendar() {
         } else if (dayOfWeek === 0 || dayOfWeek === 6) {
             daySpanClass += ' calendar-day-weekend';
         }
-
-        if(dateString === dashboardSelectedDate) {
+        if (dateString === dashboardSelectedDate) {
             dayContainerClass += ' calendar-day-selected';
         }
-        
         html += `<div class="${dayContainerClass}" data-date="${dateString}">${tooltipHtml}<span class="${daySpanClass}">${day}</span></div>`;
     }
     calendarGrid.innerHTML = html;
@@ -565,21 +496,17 @@ async function renderAlunosPanel(options = {}) {
     const searchTerm = document.getElementById('aluno-search-input').value;
     const anoLetivoFilter = document.getElementById('aluno-ano-letivo-filter');
     const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
-    
     let currentAnoVal = anoLetivoFilter.value;
     anoLetivoFilter.innerHTML = '<option value="">Todos os Anos</option>';
     anosLetivosCache.filter(ano => ano != null).forEach(ano => {
         anoLetivoFilter.innerHTML += `<option value="${ano}">${ano}</option>`;
     });
-
     if (defaultToLatestYear && anosLetivosCache.length > 0) {
         anoLetivoFilter.value = anosLetivosCache[0];
     } else {
         anoLetivoFilter.value = currentAnoVal;
     }
-    
-    currentAnoVal = anoLetivoFilter.value; // Update after potentially setting default
-    
+    currentAnoVal = anoLetivoFilter.value;
     const currentTurmaVal = defaultToLatestYear ? '' : alunoTurmaFilter.value;
     alunoTurmaFilter.innerHTML = '<option value="">Todas as Turmas</option>';
     if (currentAnoVal) {
@@ -588,14 +515,8 @@ async function renderAlunosPanel(options = {}) {
         });
     }
     alunoTurmaFilter.value = currentTurmaVal;
-    
     alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Carregando...</td></tr>';
-    
-    let queryBuilder = db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`)
-        .order('turma_id', { nullsFirst: false })
-        .order('status', { ascending: true }) 
-        .order('nome_completo', { ascending: true });
-
+    let queryBuilder = db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`).order('turma_id', { nullsFirst: false }).order('status', { ascending: true }).order('nome_completo', { ascending: true });
     if (searchTerm) {
         queryBuilder = queryBuilder.or(`nome_completo.ilike.%${searchTerm}%,matricula.ilike.%${searchTerm}%,nome_responsavel.ilike.%${searchTerm}%`);
     }
@@ -605,9 +526,7 @@ async function renderAlunosPanel(options = {}) {
     if (alunoTurmaFilter.value) {
         queryBuilder = queryBuilder.eq('turma_id', alunoTurmaFilter.value);
     }
-
     const { data, error } = await safeQuery(queryBuilder);
-
     if (error) {
         alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
         return;
@@ -621,7 +540,6 @@ async function renderAlunosPanel(options = {}) {
         if (aluno.status === 'ativo') statusClass = 'bg-green-100 text-green-800';
         else if (aluno.status === 'inativo') statusClass = 'bg-red-100 text-red-800';
         else if (aluno.status === 'transferido') statusClass = 'bg-blue-100 text-blue-800';
-
         return `
         <tr class="border-b">
             <td class="p-3">${aluno.nome_completo}</td>
@@ -641,11 +559,8 @@ async function renderAlunosPanel(options = {}) {
 async function openAlunoModal(editId = null) {
     alunoForm.reset();
     alunoTurmaSelect.innerHTML = '<option value="">Selecione...</option>';
-    
     turmasCache.forEach(t => alunoTurmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma} (${t.ano_letivo})</option>`);
-    
     document.getElementById('aluno-delete-container').classList.add('hidden');
-
     if (editId) {
         const { data } = await safeQuery(db.from('alunos').select('*').eq('id', editId).single());
         document.getElementById('aluno-modal-title').textContent = 'Editar Aluno';
@@ -677,7 +592,6 @@ async function handleAlunoFormSubmit(e) {
         nome_responsavel: document.getElementById('aluno-responsavel').value,
         status: document.getElementById('aluno-status').value
     };
-
     const queryBuilder = id ? db.from('alunos').update(alunoData).eq('id', id) : db.from('alunos').insert(alunoData);
     const { error } = await safeQuery(queryBuilder);
     if (error) {
@@ -693,19 +607,11 @@ async function handleAlunoFormSubmit(e) {
 async function renderApoiaPanel(page = 1) {
     apoiaCurrentPage = page;
     apoiaTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
-
     const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }));
     const totalPages = Math.ceil(count / apoiaItemsPerPage);
     const from = (page - 1) * apoiaItemsPerPage;
     const to = from + apoiaItemsPerPage - 1;
-
-    const { data, error } = await safeQuery(db.from('apoia_encaminhamentos')
-        .select(`*, alunos(nome_completo)`)
-        .order('status', { ascending: true })
-        .order('data_encaminhamento', { ascending: false })
-        .range(from, to)
-    );
-
+    const { data, error } = await safeQuery(db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('status', { ascending: true }).order('data_encaminhamento', { ascending: false }).range(from, to));
     if (error) {
         apoiaTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
         return;
@@ -722,8 +628,7 @@ async function renderApoiaPanel(page = 1) {
             <td class="p-3">${item.motivo}</td>
             <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'Finalizado' ? 'bg-gray-200 text-gray-800' : 'bg-yellow-100 text-yellow-800'}">${item.status}</span></td>
             <td class="p-3"><button class="text-blue-600 hover:underline edit-acompanhamento-btn" data-id="${item.id}">Editar</button></td>
-        </tr>
-    `).join('');
+        </tr>`).join('');
     renderApoiaPagination(totalPages, page);
 }
 
@@ -731,16 +636,11 @@ function renderApoiaPagination(totalPages, currentPage) {
     const paginationContainer = document.getElementById('apoia-pagination');
     paginationContainer.innerHTML = '';
     if (totalPages <= 1) return;
-
     for (let i = 1; i <= totalPages; i++) {
         const pageButton = document.createElement('button');
         pageButton.textContent = i;
         pageButton.dataset.page = i;
-        pageButton.className = `px-3 py-1 rounded-md text-sm font-medium ${
-            i === currentPage 
-            ? 'bg-blue-600 text-white' 
-            : 'bg-white text-gray-700 hover:bg-gray-200'
-        }`;
+        pageButton.className = `px-3 py-1 rounded-md text-sm font-medium ${ i === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-200'}`;
         paginationContainer.appendChild(pageButton);
     }
 }
@@ -750,7 +650,6 @@ async function openAcompanhamentoModal(editId = null) {
     const alunoSelect = document.getElementById('acompanhamento-aluno-select');
     const deleteContainer = document.getElementById('acompanhamento-delete-container');
     deleteContainer.classList.add('hidden');
-    
     if (editId) {
         const { data } = await safeQuery(db.from('apoia_encaminhamentos').select('*, alunos(nome_completo)').eq('id', editId).single());
         document.getElementById('acompanhamento-modal-title').textContent = 'Editar Acompanhamento';
@@ -781,11 +680,9 @@ async function handleAcompanhamentoFormSubmit(e) {
         status: document.getElementById('acompanhamento-status').value,
         observacoes: document.getElementById('acompanhamento-observacoes').value
     };
-    
     const queryBuilder = id ? db.from('apoia_encaminhamentos').update(acompanhamentoData).eq('id', id) : db.from('apoia_encaminhamentos').insert(acompanhamentoData);
     const { error } = await safeQuery(queryBuilder);
-
-    if(error) {
+    if (error) {
         showToast('Erro ao salvar acompanhamento: ' + error.message, true);
     } else {
         showToast('Acompanhamento salvo com sucesso!');
@@ -798,46 +695,37 @@ async function handleGerarApoiaRelatorio() {
     const tableBody = document.getElementById('apoia-relatorio-table-body');
     tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Gerando relatório...</td></tr>';
     imprimirApoiaRelatorioBtn.classList.add('hidden');
-
     let queryBuilder = db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('data_encaminhamento');
-
     const dataInicio = document.getElementById('apoia-relatorio-data-inicio').value;
     const dataFim = document.getElementById('apoia-relatorio-data-fim').value;
     const statusFiltro = document.getElementById('apoia-relatorio-status').value;
-
     if (dataInicio) queryBuilder = queryBuilder.gte('data_encaminhamento', dataInicio);
     if (dataFim) queryBuilder = queryBuilder.lte('data_encaminhamento', dataFim);
     if (statusFiltro) queryBuilder = queryBuilder.eq('status', statusFiltro);
-
     const { data, error } = await safeQuery(queryBuilder);
-        if (error) {
-            tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
-            return;
-        }
-        if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
-            return;
-        }
-
-        tableBody.innerHTML = data.map(item => `
-            <tr class="border-b">
-                <td class="p-3">${item.alunos.nome_completo}</td>
-                <td class="p-3">${new Date(item.data_encaminhamento + 'T00:00:00').toLocaleDateString()}</td>
-                <td class="p-3">${item.motivo}</td>
-                <td class="p-3">${item.status}</td>
-                <td class="p-3">${item.observacoes || ''}</td>
-        </tr>
-        `).join('');
-        imprimirApoiaRelatorioBtn.classList.remove('hidden');
+    if (error) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
+        return;
+    }
+    if (data.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
+        return;
+    }
+    tableBody.innerHTML = data.map(item => `
+        <tr class="border-b">
+            <td class="p-3">${item.alunos.nome_completo}</td>
+            <td class="p-3">${new Date(item.data_encaminhamento + 'T00:00:00').toLocaleDateString()}</td>
+            <td class="p-3">${item.motivo}</td>
+            <td class="p-3">${item.status}</td>
+            <td class="p-3">${item.observacoes || ''}</td>
+        </tr>`).join('');
+    imprimirApoiaRelatorioBtn.classList.remove('hidden');
 }
 
 // --- Gerenciamento de Professores ---
 async function renderProfessoresPanel() {
     professoresTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
-    const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status, email_confirmado').eq('papel', 'professor')
-        .order('status', { ascending: true }) 
-        .order('nome', { ascending: true })
-    );
+    const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status, email_confirmado').eq('papel', 'professor').order('status', { ascending: true }).order('nome', { ascending: true }));
     if (error) {
         professoresTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
         return;
@@ -847,10 +735,7 @@ async function renderProfessoresPanel() {
         return;
     }
     professoresTableBody.innerHTML = data.map(p => {
-        const emailStatusIndicator = p.email_confirmado 
-            ? `<div class="has-tooltip relative"><div class="w-3 h-3 bg-green-500 rounded-full"></div><div class="tooltip">E-mail Confirmado</div></div>` 
-            : `<div class="has-tooltip relative"><div class="w-3 h-3 bg-red-500 rounded-full"></div><div class="tooltip">Confirmação Pendente</div></div>`;
-        
+        const emailStatusIndicator = p.email_confirmado ? `<div class="has-tooltip relative"><div class="w-3 h-3 bg-green-500 rounded-full"></div><div class="tooltip">E-mail Confirmado</div></div>` : `<div class="has-tooltip relative"><div class="w-3 h-3 bg-red-500 rounded-full"></div><div class="tooltip">Confirmação Pendente</div></div>`;
         return `
         <tr class="border-b">
             <td class="p-3">${p.nome}</td>
@@ -870,7 +755,6 @@ async function openProfessorModal(editId = null) {
     const passwordContainer = document.getElementById('password-field-container');
     const statusContainer = document.getElementById('status-field-container');
     document.getElementById('professor-delete-container').classList.add('hidden');
-    
     if (editId) {
         const { data } = await safeQuery(db.from('usuarios').select('*').eq('id', editId).single());
         document.getElementById('professor-modal-title').textContent = 'Editar Professor';
@@ -895,7 +779,6 @@ async function handleProfessorFormSubmit(e) {
     const id = document.getElementById('professor-id').value;
     const nome = document.getElementById('professor-nome').value;
     const email = document.getElementById('professor-email').value;
-
     if (id) {
         const status = document.getElementById('professor-status').value;
         const { error } = await safeQuery(db.from('usuarios').update({ nome, email, status }).eq('id', id));
@@ -904,27 +787,18 @@ async function handleProfessorFormSubmit(e) {
         } else {
             showToast('Professor atualizado com sucesso!');
         }
-    } else { 
+    } else {
         const password = document.getElementById('professor-password').value;
         if (password.length < 6) {
             showToast('A senha temporária deve ter no mínimo 6 caracteres.', true);
             return;
         }
-        
         const { data: authData, error: authError } = await db.auth.signUp({ email, password });
         if (authError) {
             showToast('Erro ao criar login do professor: ' + authError.message, true);
             return;
         }
-        
-        const { error: profileError } = await safeQuery(db.from('usuarios').insert({
-            user_uid: authData.user.id,
-            nome: nome,
-            email: email,
-            papel: 'professor',
-            status: 'ativo'
-        }));
-
+        const { error: profileError } = await safeQuery(db.from('usuarios').insert({ user_uid: authData.user.id, nome: nome, email: email, papel: 'professor', status: 'ativo' }));
         if (profileError) {
             showToast('Login criado, mas falha ao criar perfil.', true);
         } else {
@@ -958,28 +832,21 @@ async function renderTurmasPanel() {
     const anoLetivoFilter = document.getElementById('turma-ano-letivo-filter');
     anoLetivoFilter.innerHTML = '<option value="">Todos os Anos</option>';
     anosLetivosCache.forEach(ano => anoLetivoFilter.innerHTML += `<option value="${ano}">${ano}</option>`);
-
     turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
     let queryBuilder = db.from('turmas').select(`id, nome_turma, ano_letivo, professores_turmas(usuarios(nome))`);
-    
     if (anoLetivoFilter.value) {
         queryBuilder = queryBuilder.eq('ano_letivo', anoLetivoFilter.value);
     }
-
     const { data, error } = await safeQuery(queryBuilder);
-    
     if (error) {
         turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
         return;
     }
-
-    data.sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, {numeric: true}));
-
+    data.sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true }));
     if (data.length === 0) {
         turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhuma turma encontrada.</td></tr>';
         return;
     }
-
     turmasTableBody.innerHTML = data.map(t => {
         const profs = t.professores_turmas.map(pt => pt.usuarios ? pt.usuarios.nome : 'Professor Removido').join(', ');
         return `
@@ -1001,7 +868,6 @@ async function openTurmaModal(editId = null) {
         turmaProfessoresList.innerHTML += `<label class="flex items-center"><input type="checkbox" class="form-checkbox" value="${p.user_uid}"><span class="ml-2">${p.nome}</span></label>`;
     });
     document.getElementById('turma-delete-container').classList.add('hidden');
-
     if (editId) {
         const { data } = await safeQuery(db.from('turmas').select('*').eq('id', editId).single());
         document.getElementById('turma-modal-title').textContent = 'Editar Turma';
@@ -1009,7 +875,6 @@ async function openTurmaModal(editId = null) {
         document.getElementById('turma-nome').value = data.nome_turma;
         document.getElementById('turma-ano-letivo').value = data.ano_letivo;
         document.getElementById('turma-delete-container').classList.remove('hidden');
-
         const { data: profsAtuais } = await safeQuery(db.from('professores_turmas').select('professor_id').eq('turma_id', editId));
         if (profsAtuais) {
             const profIds = profsAtuais.map(p => p.professor_id);
@@ -1031,18 +896,15 @@ async function handleTurmaFormSubmit(e) {
     const nome = document.getElementById('turma-nome').value;
     const ano_letivo = document.getElementById('turma-ano-letivo').value;
     const selectedProfIds = Array.from(turmaProfessoresList.querySelectorAll('input:checked')).map(input => input.value);
-    
     if (id) {
         const { error: updateError } = await safeQuery(db.from('turmas').update({ nome_turma: nome, ano_letivo: ano_letivo }).eq('id', id));
         if (updateError) { showToast('Erro ao atualizar turma.', true); return; }
-        
         await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
         const rels = selectedProfIds.map(profId => ({ turma_id: id, professor_id: profId }));
         if (rels.length > 0) await safeQuery(db.from('professores_turmas').insert(rels));
     } else {
         const { data, error: insertError } = await safeQuery(db.from('turmas').insert({ nome_turma: nome, ano_letivo: ano_letivo }).select().single());
         if (insertError) { showToast('Erro ao criar turma.', true); return; }
-
         const newTurmaId = data.id;
         const rels = selectedProfIds.map(profId => ({ turma_id: newTurmaId, professor_id: profId }));
         if (rels.length > 0) await safeQuery(db.from('professores_turmas').insert(rels));
@@ -1058,13 +920,10 @@ async function renderRelatoriosPanel() {
     const turmaFilter = document.getElementById('relatorio-turma-select');
     const alunoFilter = document.getElementById('relatorio-aluno-select');
     const profFilter = document.getElementById('relatorio-professor-select');
-
     turmaFilter.innerHTML = '<option value="">Todas</option>';
     turmasCache.forEach(t => turmaFilter.innerHTML += `<option value="${t.id}">${t.nome_turma} (${t.ano_letivo})</option>`);
-
     alunoFilter.innerHTML = '<option value="">Todos</option>';
     alunosCache.forEach(a => alunoFilter.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
-
     profFilter.innerHTML = '<option value="">Todos</option>';
     usuariosCache.forEach(u => profFilter.innerHTML += `<option value="${u.user_uid}">${u.nome} (${u.papel})</option>`);
 }
@@ -1072,27 +931,21 @@ async function renderRelatoriosPanel() {
 async function handleGerarRelatorio() {
     relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Gerando relatório...</td></tr>';
     imprimirRelatorioBtn.classList.add('hidden');
-
     let queryBuilder = db.from('presencas').select(`data, status, justificativa, alunos ( nome_completo ), turmas ( nome_turma ), usuarios ( nome )`).order('data', { ascending: false });
-
     let dataInicio = document.getElementById('relatorio-data-inicio').value;
     let dataFim = document.getElementById('relatorio-data-fim').value;
     const turmaId = document.getElementById('relatorio-turma-select').value;
     const alunoId = document.getElementById('relatorio-aluno-select').value;
     const profId = document.getElementById('relatorio-professor-select').value;
     const statusFiltro = document.getElementById('relatorio-status-select').value;
-
     if (dataInicio && !dataFim) dataFim = dataInicio;
-
     if (dataInicio) queryBuilder = queryBuilder.gte('data', dataInicio);
     if (dataFim) queryBuilder = queryBuilder.lte('data', dataFim);
     if (turmaId) queryBuilder = queryBuilder.eq('turma_id', turmaId);
     if (alunoId) queryBuilder = queryBuilder.eq('aluno_id', alunoId);
     if (profId) queryBuilder = queryBuilder.eq('registrado_por_uid', profId);
     if (statusFiltro) queryBuilder = queryBuilder.eq('status', statusFiltro);
-
     const { data, error } = await safeQuery(queryBuilder);
-
     if (error) {
         relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
         return;
@@ -1101,7 +954,6 @@ async function handleGerarRelatorio() {
         relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
         return;
     }
-
     relatorioTableBody.innerHTML = data.map(r => `
         <tr class="border-b">
             <td class="p-3">${new Date(r.data + 'T00:00:00').toLocaleDateString()}</td>
@@ -1120,7 +972,6 @@ async function renderConfigPanel() {
     try {
         const { data, error } = await safeQuery(db.from('configuracoes').select('*').limit(1).single());
         if (error && error.code !== 'PGRST116') throw error;
-        
         if (data) {
             document.getElementById('config-faltas-consecutivas').value = data.faltas_consecutivas_limite || '';
             document.getElementById('config-faltas-intercaladas').value = data.faltas_intercaladas_limite || '';
@@ -1141,7 +992,7 @@ async function handleConfigFormSubmit(e) {
     e.preventDefault();
     try {
         const configData = {
-            id: 1, 
+            id: 1,
             faltas_consecutivas_limite: document.getElementById('config-faltas-consecutivas').value,
             faltas_intercaladas_limite: document.getElementById('config-faltas-intercaladas').value,
             faltas_intercaladas_dias: document.getElementById('config-faltas-dias').value,
@@ -1152,7 +1003,7 @@ async function handleConfigFormSubmit(e) {
         const { error } = await safeQuery(db.from('configuracoes').upsert(configData));
         if (error) throw error;
         showToast('Configurações salvas com sucesso!');
-    } catch(err) {
+    } catch (err) {
         showToast('Erro ao salvar configurações: ' + err.message, true);
     }
 }
@@ -1161,19 +1012,15 @@ async function handleConfigFormSubmit(e) {
 async function renderCalendarioPanel() {
     const dataInicioFilter = document.getElementById('evento-data-inicio-filter').value;
     const dataFimFilter = document.getElementById('evento-data-fim-filter').value;
-    
     eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
     let queryBuilder = db.from('eventos').select('*').order('data', { ascending: false });
-
     if (dataInicioFilter && !dataFimFilter) {
         queryBuilder = queryBuilder.gte('data', dataInicioFilter).lte('data', dataInicioFilter);
     } else {
         if (dataInicioFilter) queryBuilder = queryBuilder.gte('data', dataInicioFilter);
         if (dataFimFilter) queryBuilder = queryBuilder.lte('data', dataFimFilter);
     }
-
     const { data, error } = await safeQuery(queryBuilder);
-
     if (error) {
         eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
         return;
@@ -1221,12 +1068,10 @@ async function handleEventoFormSubmit(e) {
         data: document.getElementById('evento-data-inicio').value,
         data_fim: document.getElementById('evento-data-fim').value || null
     };
-    
     if (!eventoData.data) {
         showToast('A data de início é obrigatória.', true);
         return;
     }
-
     const queryBuilder = id ? db.from('eventos').update(eventoData).eq('id', id) : db.from('eventos').insert(eventoData);
     const { error } = await safeQuery(queryBuilder);
     if (error) {
@@ -1241,201 +1086,110 @@ async function handleEventoFormSubmit(e) {
 
 // --- Gestão de Ano Letivo ---
 function renderAnoLetivoPanel() {
-    // Apenas abre o painel. A lógica está nos botões.
+    // A lógica está nos botões
 }
 
-async function openPromoverAlunosModal() {
-    const anoOrigemSel = document.getElementById('promover-ano-origem');
-    const turmaOrigemSel = document.getElementById('promover-turma-origem');
-    const anoDestinoSel = document.getElementById('promover-ano-destino');
-    const turmaDestinoSel = document.getElementById('promover-turma-destino');
-
-    [anoOrigemSel, turmaOrigemSel, anoDestinoSel, turmaDestinoSel].forEach(sel => sel.innerHTML = '');
-    document.getElementById('promover-alunos-lista-container').classList.add('hidden');
-    document.getElementById('promover-alunos-btn').disabled = true;
-
-    anoOrigemSel.innerHTML = '<option value="">Selecione o ano</option>';
-    anoDestinoSel.innerHTML = '<option value="">Selecione o ano</option>';
-    anosLetivosCache.filter(ano => ano != null).forEach(ano => {
-        anoOrigemSel.innerHTML += `<option value="${ano}">${ano}</option>`;
-        anoDestinoSel.innerHTML += `<option value="${ano}">${ano}</option>`;
-    });
-
-    promoverAlunosModal.classList.remove('hidden');
-}
-
-async function handlePromoverAlunos() {
-    const turmaOrigemId = document.getElementById('promover-turma-origem').value;
-    const turmaDestinoId = document.getElementById('promover-turma-destino').value;
-    const turmaOrigemNome = document.getElementById('promover-turma-origem').options[document.getElementById('promover-turma-origem').selectedIndex].text;
-    const turmaDestinoNome = document.getElementById('promover-turma-destino').options[document.getElementById('promover-turma-destino').selectedIndex].text;
+async function openPromoverTurmasModal() {
+    const anoOrigemSel = document.getElementById('promover-turmas-ano-origem');
+    const anoDestinoEl = document.getElementById('promover-turmas-ano-destino');
+    const listaContainer = document.getElementById('promover-turmas-lista-container');
+    const listaEl = document.getElementById('promover-turmas-lista');
     
-    const selectedAlunoIds = Array.from(document.querySelectorAll('#promover-alunos-lista input:checked')).map(cb => cb.value);
+    listaContainer.classList.add('hidden');
+    listaEl.innerHTML = '';
+    document.getElementById('promover-turmas-btn').disabled = true;
 
-    if (selectedAlunoIds.length === 0) {
-        showToast("Nenhum aluno selecionado para promover.", true);
-        return;
-    }
-
-    document.getElementById('promover-confirm-message').textContent = `Você está prestes a mover ${selectedAlunoIds.length} aluno(s) da turma "${turmaOrigemNome}" para a turma "${turmaDestinoNome}".`;
-    document.getElementById('promover-confirm-warning').textContent = `Esta ação irá alterar permanentemente a turma destes alunos no sistema. Deseja continuar?`;
-    
-    const confirmBtn = document.getElementById('confirm-promocao-btn');
-    confirmBtn.dataset.turmaDestinoId = turmaDestinoId;
-    confirmBtn.dataset.alunoIds = JSON.stringify(selectedAlunoIds);
-
-    promoverConfirmModal.classList.remove('hidden');
-}
-
-async function handleConfirmPromocao() {
-    const btn = document.getElementById('confirm-promocao-btn');
-    const turmaDestinoId = btn.dataset.turmaDestinoId;
-    const alunoIds = JSON.parse(btn.dataset.alunoIds);
-
-    const { error } = await safeQuery(
-        db.from('alunos')
-        .update({ turma_id: turmaDestinoId })
-        .in('id', alunoIds)
-    );
-
-    if (error) {
-        showToast("Erro ao promover alunos: " + error.message, true);
-    } else {
-        showToast(`${alunoIds.length} aluno(s) promovido(s) com sucesso!`);
-        closeAllModals();
-        await renderAlunosPanel();
-    }
-}
-
-// --- Promoção em Massa ---
-async function openPromoverMassaModal() {
-    const anoOrigemSel = document.getElementById('promover-massa-ano-origem');
-    const anoDestinoSel = document.getElementById('promover-massa-ano-destino');
-    
     anoOrigemSel.innerHTML = '<option value="">Selecione...</option>';
-    anoDestinoSel.innerHTML = '<option value="">Selecione...</option>';
-    
     anosLetivosCache.forEach(ano => {
         anoOrigemSel.innerHTML += `<option value="${ano}">${ano}</option>`;
-        anoDestinoSel.innerHTML += `<option value="${ano}">${ano}</option>`;
     });
 
-    // Lógica inteligente de sugestão de ano
     if (anosLetivosCache.length > 0) {
         const ultimoAno = anosLetivosCache[0];
         anoOrigemSel.value = ultimoAno;
-        const proximoAno = parseInt(ultimoAno) + 1;
-        // Se o próximo ano não existe como opção, adiciona
-        if (![...anoDestinoSel.options].some(o => o.value == proximoAno)) {
-            anoDestinoSel.innerHTML += `<option value="${proximoAno}">${proximoAno}</option>`;
-        }
-        anoDestinoSel.value = proximoAno;
-    }
-
-    document.getElementById('promover-massa-mapeamento-container').classList.add('hidden');
-    document.getElementById('promover-massa-btn').disabled = true;
-    promoverMassaModal.classList.remove('hidden');
-    
-    // Trigger change para carregar o mapeamento se ambos os anos já estiverem definidos
-    if(anoOrigemSel.value && anoDestinoSel.value) {
         anoOrigemSel.dispatchEvent(new Event('change'));
     }
+    
+    promoverTurmasModal.classList.remove('hidden');
 }
 
-function findMatchingTurma(turmaOrigem, turmasDestino) {
-    const matchOrigem = turmaOrigem.nome_turma.match(/(\d+).+Ano ([A-Z])/i);
-    if (!matchOrigem) return null; // Não encontrou padrão "Xº Ano Y"
-
-    const serieOrigem = parseInt(matchOrigem[1]);
-    const letraOrigem = matchOrigem[2].toUpperCase();
-    const serieDestino = serieOrigem + 1;
-
-    return turmasDestino.find(t => {
-        const matchDestino = t.nome_turma.match(new RegExp(`^${serieDestino}.+Ano ${letraOrigem}$`, 'i'));
-        return !!matchDestino;
-    });
-}
-
-async function renderMapeamentoTurmas() {
-    const anoOrigem = document.getElementById('promover-massa-ano-origem').value;
-    const anoDestino = document.getElementById('promover-massa-ano-destino').value;
-    const container = document.getElementById('promover-massa-mapeamento-container');
-    const listEl = document.getElementById('promover-massa-mapeamento-list');
+async function renderPromocaoTurmasLista() {
+    const anoOrigem = document.getElementById('promover-turmas-ano-origem').value;
+    const anoDestinoEl = document.getElementById('promover-turmas-ano-destino');
+    const container = document.getElementById('promover-turmas-lista-container');
+    const listEl = document.getElementById('promover-turmas-lista');
+    const promoverBtn = document.getElementById('promover-turmas-btn');
+    
     listEl.innerHTML = '';
+    promoverBtn.disabled = true;
 
-    if(!anoOrigem || !anoDestino) {
+    if (!anoOrigem) {
         container.classList.add('hidden');
+        anoDestinoEl.value = '';
+        return;
+    }
+    
+    anoDestinoEl.value = parseInt(anoOrigem) + 1;
+    listEl.innerHTML = '<div class="loader mx-auto my-4"></div>';
+    container.classList.remove('hidden');
+
+    const { data: turmas } = await safeQuery(
+        db.from('turmas').select('id, nome_turma').eq('ano_letivo', anoOrigem).order('nome_turma')
+    );
+
+    if (!turmas || turmas.length === 0) {
+        listEl.innerHTML = `<p class="p-4 text-center text-gray-600">Nenhuma turma encontrada para o ano de origem.</p>`;
+        return;
+    }
+    
+    listEl.innerHTML = turmas.map(turma => `
+        <label class="flex items-center p-2 bg-white rounded-md border hover:bg-gray-50">
+            <input type="checkbox" class="form-checkbox h-5 w-5 promocao-turma-checkbox" value="${turma.id}" checked>
+            <span class="ml-3 text-sm">${turma.nome_turma}</span>
+        </label>
+    `).join('');
+    
+    promoverBtn.disabled = false;
+}
+
+async function handlePromoverTurmas() {
+    const turmasSelecionadasIds = Array.from(document.querySelectorAll('#promover-turmas-lista input:checked')).map(cb => cb.value);
+
+    if (turmasSelecionadasIds.length === 0) {
+        showToast("Nenhuma turma foi selecionada para a promoção.", true);
         return;
     }
 
-    const turmasOrigem = turmasCache.filter(t => t.ano_letivo == anoOrigem);
-    const turmasDestino = turmasCache.filter(t => t.ano_letivo == anoDestino);
-
-    if (turmasOrigem.length === 0) {
-        listEl.innerHTML = `<p class="text-center text-gray-600">Nenhuma turma encontrada para o ano de origem.</p>`;
-    } else {
-        turmasOrigem.forEach(tOrigem => {
-            let options = '<option value="">— Não Promover —</option>';
-            turmasDestino.forEach(tDestino => {
-                options += `<option value="${tDestino.id}">${tDestino.nome_turma}</option>`;
-            });
-
-            const matchedTurma = findMatchingTurma(tOrigem, turmasDestino);
-
-            listEl.innerHTML += `
-                <div class="grid grid-cols-2 gap-4 items-center">
-                    <span class="text-sm font-medium text-gray-800">${tOrigem.nome_turma}</span>
-                    <select data-origem-id="${tOrigem.id}" class="w-full p-2 border rounded-md mapeamento-select">
-                        ${options}
-                    </select>
-                </div>
-            `;
-            if(matchedTurma) {
-                const sel = listEl.querySelector(`select[data-origem-id="${tOrigem.id}"]`);
-                if(sel) sel.value = matchedTurma.id;
-            }
-        });
-    }
-    container.classList.remove('hidden');
-    document.getElementById('promover-massa-btn').disabled = false;
+    document.getElementById('promover-turmas-confirm-message').textContent = `Você está prestes a promover todos os alunos de ${turmasSelecionadasIds.length} turma(s).`;
+    document.getElementById('confirm-promocao-turmas-btn').dataset.turmas = JSON.stringify(turmasSelecionadasIds);
+    document.getElementById('promover-turmas-confirm-checkbox').checked = false;
+    document.getElementById('confirm-promocao-turmas-btn').disabled = true;
+    promoverTurmasConfirmModal.classList.remove('hidden');
 }
 
-async function handlePromoverMassa() {
-    const mapeamentos = [];
-    document.querySelectorAll('.mapeamento-select').forEach(sel => {
-        if (sel.value) { // Apenas se um destino foi selecionado
-            mapeamentos.push({
-                turma_origem_id: parseInt(sel.dataset.origemId),
-                turma_destino_id: parseInt(sel.value)
-            });
-        }
+async function handleConfirmPromocaoTurmas() {
+    const btn = document.getElementById('confirm-promocao-turmas-btn');
+    const turmaIds = JSON.parse(btn.dataset.turmas);
+    const anoDestino = document.getElementById('promover-turmas-ano-destino').value;
+
+    btn.innerHTML = '<div class="loader mx-auto"></div>';
+    btn.disabled = true;
+
+    const { error } = await db.rpc('promover_turmas_em_massa', {
+        origem_turma_ids: turmaIds,
+        ano_destino: parseInt(anoDestino)
     });
 
-    if (mapeamentos.length === 0) {
-        showToast("Nenhum mapeamento de turma foi selecionado para promoção.", true);
-        return;
+    if (error) {
+        showToast("Erro ao executar a promoção em massa: " + error.message, true);
+        console.error(error);
+    } else {
+        showToast("Turmas promovidas com sucesso! Os alunos foram movidos e novas turmas criadas conforme necessário.");
+        closeAllModals();
+        await loadAdminData();
+        await renderAlunosPanel({ defaultToLatestYear: true });
     }
-
-    document.getElementById('promover-massa-confirm-message').textContent = `Você está prestes a promover todos os alunos de ${mapeamentos.length} turma(s) conforme o mapeamento definido.`;
-    document.getElementById('confirm-promocao-massa-btn').dataset.mapeamento = JSON.stringify(mapeamentos);
-    document.getElementById('promover-massa-confirm-checkbox').checked = false;
-    document.getElementById('confirm-promocao-massa-btn').disabled = true;
-    promoverMassaConfirmModal.classList.remove('hidden');
-}
-
-async function handleConfirmPromocaoMassa() {
-        const btn = document.getElementById('confirm-promocao-massa-btn');
-        const mapeamento = JSON.parse(btn.dataset.mapeamento);
-
-        const { error } = await db.rpc('promover_alunos_em_massa', { mapeamento });
-
-        if (error) {
-            showToast("Erro ao executar promoção em massa: " + error.message, true);
-        } else {
-            showToast("Alunos promovidos em massa com sucesso!");
-            closeAllModals();
-            await renderAlunosPanel({ defaultToLatestYear: true });
-        }
+    btn.innerHTML = 'Executar Promoção';
 }
 
 // --- Lógica de Exclusão ---
@@ -1464,7 +1218,7 @@ async function handleConfirmDelete() {
     else if (type === 'evento') queryBuilder = db.from('eventos').delete().eq('id', id);
     else if (type === 'acompanhamento') queryBuilder = db.from('apoia_encaminhamentos').delete().eq('id', id);
     const { error } = await safeQuery(queryBuilder);
-    if(error) {
+    if (error) {
         showToast(`Não foi possível excluir o ${type}: ` + error.message, true);
     } else {
         showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} excluído com sucesso!`);
@@ -1547,7 +1301,6 @@ async function openAlunoHistoricoModal(alunoId) {
 
 // --- Análise de Assiduidade ---
 function openAssiduidadeModal() {
-    // Popula filtros de Alunos
     const anoSelAluno = document.getElementById('assiduidade-aluno-ano');
     const turmaSelAluno = document.getElementById('assiduidade-aluno-turma');
     const alunoSel = document.getElementById('assiduidade-aluno-aluno');
@@ -1555,47 +1308,65 @@ function openAssiduidadeModal() {
     anosLetivosCache.forEach(ano => anoSelAluno.innerHTML += `<option value="${ano}">${ano}</option>`);
     turmaSelAluno.innerHTML = '<option value="">Todas as Turmas</option>';
     alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
-
-    // Popula filtros de Turmas
     const anoSelTurma = document.getElementById('assiduidade-turma-ano');
     const turmaSelTurma = document.getElementById('assiduidade-turma-turma');
     anoSelTurma.innerHTML = '<option value="">Todos os Anos</option>';
     anosLetivosCache.forEach(ano => anoSelTurma.innerHTML += `<option value="${ano}">${ano}</option>`);
     turmaSelTurma.innerHTML = '<option value="">Todas as Turmas</option>';
-
-    // Define o ano atual como padrão em ambos os filtros
+    const anoSelProf = document.getElementById('assiduidade-prof-ano');
+    anoSelProf.innerHTML = '<option value="">Todos os Anos</option>';
+    anosLetivosCache.forEach(ano => anoSelProf.innerHTML += `<option value="${ano}">${ano}</option>`);
     const currentYear = new Date().getFullYear();
     if (anosLetivosCache.includes(currentYear)) {
         anoSelAluno.value = currentYear;
         anoSelTurma.value = currentYear;
+        anoSelProf.value = currentYear;
         anoSelAluno.dispatchEvent(new Event('change'));
         anoSelTurma.dispatchEvent(new Event('change'));
     }
-
-    // Popula filtros de Professores
+    document.getElementById('assiduidade-aluno-data-inicio').value = '';
+    document.getElementById('assiduidade-aluno-data-fim').value = '';
+    document.getElementById('assiduidade-turma-data-inicio').value = '';
+    document.getElementById('assiduidade-turma-data-fim').value = '';
+    document.getElementById('assiduidade-prof-data-inicio').value = '';
+    document.getElementById('assiduidade-prof-data-fim').value = '';
     const profSel = document.getElementById('assiduidade-prof-professor');
     profSel.innerHTML = '<option value="">Todos os Professores</option>';
     usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
-
     assiduidadeModal.classList.remove('hidden');
 }
 
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
-    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>body { font-family: 'Inter', sans-serif; } .print-header { display: none; } @media print { .no-print { display: none !important; } .printable-area { position: absolute; left: 0; top: 0; width: 100%; } body * { visibility: hidden; } .printable-area, .printable-area * { visibility: visible; } .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; } .print-header img { max-height: 60px; width: auto; } .print-header-info h2 { font-size: 1.25rem; font-weight: bold; margin: 0; } .print-header-info p { font-size: 0.875rem; margin: 0; } }</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content"><div class="text-center"><div style="border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:48px;height:48px;animation:spin 1s linear infinite;margin:auto;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
+    const printStyles = `
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .printable-area .grid { display: block !important; }
+            .printable-area .grid > div { page-break-inside: avoid; }
+            .chart-container {
+                width: 100% !important;
+                max-width: 450px !important;
+                margin: 2rem auto;
+                height: auto !important;
+            }
+        }
+    `;
+    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>${printStyles}</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content" class="space-y-8"><div class="text-center"><div class="loader mx-auto" style="width: 48px; height: 48px; border-top-color: #3498db;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
     closeModal(assiduidadeModal);
     
     try {
         const activeTab = document.querySelector('#assiduidade-tabs a[aria-current="page"]').dataset.target;
         
-        // RELATÓRIO DE ALUNOS
+        let dataInicio, dataFim, periodoTexto;
+
         if (activeTab === 'assiduidade-alunos') {
-            const dataInicio = document.getElementById('assiduidade-aluno-data-inicio').value;
-            const dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
+            dataInicio = document.getElementById('assiduidade-aluno-data-inicio').value;
+            dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
             const turmaId = document.getElementById('assiduidade-aluno-turma').value;
             const alunoId = document.getElementById('assiduidade-aluno-aluno').value;
 
-            let query = db.from('presencas').select('status, justificativa, alunos(nome_completo), turmas(nome_turma)');
+            let query = db.from('presencas').select('status, justificativa, alunos!inner(nome_completo), turmas!inner(nome_turma)');
             if (dataInicio) query = query.gte('data', dataInicio);
             if (dataFim) query = query.lte('data', dataFim);
             if (turmaId) query = query.eq('turma_id', turmaId);
@@ -1622,31 +1393,30 @@ async function generateAssiduidadeReport() {
                 return acc;
             }, {});
 
-            const tableRows = Object.entries(stats).map(([nome, { presencas, faltas_j, faltas_i, turma }]) => {
+            const tableRows = Object.entries(stats).sort((a,b) => a[0].localeCompare(b[0])).map(([nome, { presencas, faltas_j, faltas_i, turma }]) => {
                 const total = presencas + faltas_j + faltas_i;
                 const percentual = total > 0 ? ((presencas / total) * 100).toFixed(1) + '%' : 'N/A';
                 return `
                     <tr class="border-b">
-                        <td class="p-3">${nome}</td>
-                        <td class="p-3">${turma}</td>
+                        <td class="p-3">${nome}</td><td class="p-3">${turma}</td>
                         <td class="p-3 text-center text-green-600 font-semibold">${presencas}</td>
                         <td class="p-3 text-center text-yellow-600 font-semibold">${faltas_j}</td>
                         <td class="p-3 text-center text-red-600 font-semibold">${faltas_i}</td>
                         <td class="p-3 text-center font-bold">${percentual}</td>
-                    </tr>
-                `;
+                    </tr>`;
             }).join('');
             
             const totalPresencas = Object.values(stats).reduce((sum, s) => sum + s.presencas, 0);
             const totalFaltasJ = Object.values(stats).reduce((sum, s) => sum + s.faltas_j, 0);
             const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
+
+            periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
             
-            newWindow.document.body.innerHTML = `
-            <div class="printable-area">
-                <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
+            const reportHTML = `
+                <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><canvas id="assiduidadeChart"></canvas></div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 print:block">
+                    <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md print:w-full print:max-w-md print:mx-auto"><div class="chart-container relative h-64 md:h-80"><canvas id="assiduidadeChart"></canvas></div></div>
                     <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
                         <h3 class="font-bold mb-4">Detalhes da Frequência</h3>
                         <div class="max-h-96 overflow-y-auto">
@@ -1656,10 +1426,9 @@ async function generateAssiduidadeReport() {
                         </table>
                         </div>
                     </div>
-                </div>
-            </div>
-            <script>
-                // Atraso para garantir que o DOM esteja pronto
+                </div>`;
+            
+            const chartScriptContent = `
                 setTimeout(() => {
                     const ctx = document.getElementById('assiduidadeChart');
                     if (ctx) {
@@ -1667,230 +1436,186 @@ async function generateAssiduidadeReport() {
                             type: 'pie',
                             data: {
                                 labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'],
-                                datasets: [{
-                                    data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}],
-                                    backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
-                                }]
+                                datasets: [{ data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}], backgroundColor: ['#10B981', '#F59E0B', '#EF4444'] }]
                             },
-                            options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } }
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } }
                         });
                     }
-                }, 100);
-            <\/script>
-            `;
-        // RELATÓRIO DE TURMAS
+                }, 200);`;
+            
+            newWindow.document.getElementById('report-content').innerHTML = reportHTML;
+            const scriptEl = newWindow.document.createElement('script');
+            scriptEl.textContent = chartScriptContent;
+            newWindow.document.body.appendChild(scriptEl);
+
         } else if (activeTab === 'assiduidade-turmas') {
-            const dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
-            const dataFim = document.getElementById('assiduidade-turma-data-fim').value;
-            const anoLetivo = document.getElementById('assiduidade-turma-ano').value;
-            const turmaId = document.getElementById('assiduidade-turma-turma').value;
+             dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
+             dataFim = document.getElementById('assiduidade-turma-data-fim').value;
+             const anoLetivo = document.getElementById('assiduidade-turma-ano').value;
+             const turmaId = document.getElementById('assiduidade-turma-turma').value;
 
-            let query = db.from('presencas').select('status, turmas!inner(id, nome_turma, ano_letivo)');
-            if (dataInicio) query = query.gte('data', dataInicio);
-            if (dataFim) query = query.lte('data', dataFim);
-            if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
-            if (turmaId) query = query.eq('turma_id', turmaId);
+             let query = db.from('presencas').select('status, justificativa, turmas!inner(id, nome_turma, ano_letivo)');
+             if (dataInicio) query = query.gte('data', dataInicio);
+             if (dataFim) query = query.lte('data', dataFim);
+             if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
+             if (turmaId) query = query.eq('turma_id', turmaId);
 
-            const { data, error } = await safeQuery(query);
-            if (error) throw error;
-            if (data.length === 0) {
-                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dado encontrado para os filtros selecionados.</p>';
-                return;
-            }
+             const { data, error } = await safeQuery(query);
+             if (error) throw error;
+             if (data.length === 0) {
+                 newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dado encontrado para os filtros selecionados.</p>';
+                 return;
+             }
 
-            const stats = data.reduce((acc, record) => {
-                const turma = record.turmas;
-                if (!turma) return acc;
-                if (!acc[turma.id]) {
-                    acc[turma.id] = { nome: turma.nome_turma, presencas: 0, faltas: 0 };
-                }
-                if (record.status === 'presente') acc[turma.id].presencas++;
-                else acc[turma.id].faltas++;
-                return acc;
-            }, {});
+             const stats = data.reduce((acc, record) => {
+                 const turma = record.turmas;
+                 if (!turma) return acc;
+                 if (!acc[turma.id]) {
+                     acc[turma.id] = { nome: turma.nome_turma, presencas: 0, faltas_j: 0, faltas_i: 0 };
+                 }
+                 if (record.status === 'presente') acc[turma.id].presencas++;
+                 else {
+                     if (record.justificativa === 'Falta justificada') acc[turma.id].faltas_j++;
+                     else acc[turma.id].faltas_i++;
+                 }
+                 return acc;
+             }, {});
 
-            const sortedStats = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome));
+             const sortedStats = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome));
 
-            const tableRows = sortedStats.map(turma => {
-                const total = turma.presencas + turma.faltas;
-                const percentual = total > 0 ? ((turma.presencas / total) * 100).toFixed(1) + '%' : 'N/A';
-                return `
+             const tableRows = sortedStats.map(turma => {
+                 const total = turma.presencas + turma.faltas_j + turma.faltas_i;
+                 const percentual = total > 0 ? ((turma.presencas / total) * 100).toFixed(1) + '%' : 'N/A';
+                 return `
                     <tr class="border-b">
                         <td class="p-3">${turma.nome}</td>
                         <td class="p-3 text-center text-green-600 font-semibold">${turma.presencas}</td>
-                        <td class="p-3 text-center text-red-600 font-semibold">${turma.faltas}</td>
+                        <td class="p-3 text-center text-yellow-600 font-semibold">${turma.faltas_j}</td>
+                        <td class="p-3 text-center text-red-600 font-semibold">${turma.faltas_i}</td>
                         <td class="p-3 text-center font-bold">${percentual}</td>
-                    </tr>
-                `;
-            }).join('');
+                    </tr>`;
+             }).join('');
 
-            const chartLabels = JSON.stringify(sortedStats.map(t => t.nome));
-            const chartData = JSON.stringify(sortedStats.map(t => {
-                const total = t.presencas + t.faltas;
-                return total > 0 ? ((t.presencas / total) * 100).toFixed(1) : 0;
-            }));
+             const totalPresencas = sortedStats.reduce((sum, s) => sum + s.presencas, 0);
+             const totalFaltasJ = sortedStats.reduce((sum, s) => sum + s.faltas_j, 0);
+             const totalFaltasI = sortedStats.reduce((sum, s) => sum + s.faltas_i, 0);
+             
+             periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
 
-                newWindow.document.body.innerHTML = `
-                    <div class="printable-area">
-                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
-                        <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><canvas id="assiduidadeTurmaChart"></canvas></div>
-                            <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
-                                <h3 class="font-bold mb-4">Dados Consolidados</h3>
-                                <div class="max-h-96 overflow-y-auto">
-                                <table class="w-full text-sm">
-                                    <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th></tr></thead>
-                                    <tbody>${tableRows}</tbody>
-                                </table>
-                                </div>
+             const reportHTML = `
+                <div class="printable-area">
+                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>${periodoTexto}</p></div></div>
+                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 print:block">
+                        <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md print:w-full print:max-w-md print:mx-auto"><div class="chart-container relative h-64 md:h-80"><canvas id="assiduidadeTurmaChart"></canvas></div></div>
+                        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="font-bold mb-4">Dados Consolidados</h3>
+                            <div class="max-h-96 overflow-y-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas Just.</th><th class="p-3 text-center">Faltas Injust.</th><th class="p-3 text-center">Assiduidade</th></tr></thead>
+                                <tbody>${tableRows}</tbody>
+                            </table>
                             </div>
                         </div>
                     </div>
-                    <script>
-                        setTimeout(() => {
-                            const ctx = document.getElementById('assiduidadeTurmaChart');
-                            if(ctx) {
-                                new Chart(ctx, {
-                                    type: 'bar',
-                                    data: {
-                                        labels: ${chartLabels},
-                                        datasets: [{
-                                            label: '% de Assiduidade',
-                                            data: ${chartData},
-                                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                                            borderColor: 'rgba(59, 130, 246, 1)',
-                                            borderWidth: 1
-                                        }]
-                                    },
-                                    options: {
-                                        indexAxis: 'y',
-                                        scales: { x: { beginAtZero: true, max: 100 } },
-                                        responsive: true,
-                                        plugins: { legend: { display: false }, title: { display: true, text: 'Percentual de Assiduidade por Turma' } }
-                                    }
-                                });
-                            }
-                        }, 100);
-                    <\/script>
-                `;
-            // RELATÓRIO DE PROFESSORES
-        } else if (activeTab === 'assiduidade-professores') {
-            const dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
-            const dataFim = document.getElementById('assiduidade-prof-data-fim').value;
-            const professorId = document.getElementById('assiduidade-prof-professor').value;
+                </div>`;
+             
+             const chartScriptContent = `
+                 setTimeout(() => {
+                     const ctx = document.getElementById('assiduidadeTurmaChart');
+                     if(ctx) {
+                         new Chart(ctx, {
+                             type: 'pie',
+                             data: {
+                                 labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'],
+                                 datasets: [{
+                                     label: 'Frequência Geral',
+                                     data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}],
+                                     backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
+                                 }]
+                             },
+                             options: {
+                                 responsive: true,
+                                 maintainAspectRatio: false,
+                                 plugins: { legend: { position: 'top' }, title: { display: true, text: 'Composição da Frequência (Consolidado)' } }
+                             }
+                         });
+                     }
+                 }, 200);`;
 
-            // 1. Calcular dias letivos no período
-            const { data: eventos } = await safeQuery(db.from('eventos').select('data, data_fim').or(`data.gte.${dataInicio},data_fim.gte.${dataInicio}`).or(`data.lte.${dataFim},data_fim.lte.${dataFim}`));
-            const diasNaoLetivos = new Set();
-            eventos.forEach(e => {
-                let current = new Date(e.data + 'T00:00:00');
-                const end = e.data_fim ? new Date(e.data_fim + 'T00:00:00') : current;
-                while (current <= end) {
-                    diasNaoLetivos.add(current.toISOString().split('T')[0]);
-                    current.setDate(current.getDate() + 1);
-                }
+             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
+             const scriptEl = newWindow.document.createElement('script');
+             scriptEl.textContent = chartScriptContent;
+             newWindow.document.body.appendChild(scriptEl);
+
+        } else if (activeTab === 'assiduidade-professores') {
+            dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
+            dataFim = document.getElementById('assiduidade-prof-data-fim').value;
+            const anoLetivo = document.getElementById('assiduidade-prof-ano').value;
+            const professorId = document.getElementById('assiduidade-prof-professor').value;
+            
+            if (!dataInicio || !dataFim) {
+                 newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold text-red-600">Por favor, selecione as datas de início e fim para gerar o relatório de professores.</p>';
+                 return;
+            }
+
+            const { data, error } = await db.rpc('get_professor_assiduidade', {
+                data_inicio: dataInicio,
+                data_fim: dataFim,
+                ano_letivo_selecionado: anoLetivo || null,
+                professor_uid_selecionado: professorId || null
             });
 
-            let diasLetivos = 0;
-            let current = new Date(dataInicio + 'T00:00:00');
-            const end = new Date(dataFim + 'T00:00:00');
-            while (current <= end) {
-                const dayOfWeek = current.getDay();
-                const dateString = current.toISOString().split('T')[0];
-                if (dayOfWeek !== 0 && dayOfWeek !== 6 && !diasNaoLetivos.has(dateString)) {
-                    diasLetivos++;
-                }
-                current.setDate(current.getDate() + 1);
-            }
-
-            // 2. Buscar registros dos professores
-            let query = db.from('presencas').select('registrado_por_uid, data, usuarios(nome)');
-            if (dataInicio) query = query.gte('data', dataInicio);
-            if (dataFim) query = query.lte('data', dataFim);
-            if (professorId) query = query.eq('registrado_por_uid', professorId);
-
-            const { data, error } = await safeQuery(query);
             if (error) throw error;
             if (data.length === 0) {
-                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum registro de chamada encontrado para os filtros selecionados.</p>';
+                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dia letivo encontrado para o período e filtros selecionados.</p>';
                 return;
             }
+
+            const diasLancados = data.filter(d => d.status === 'Lançado');
+            const diasNaoLancados = data.filter(d => d.status !== 'Lançado');
             
-            const stats = data.reduce((acc, record) => {
-                if (!record.usuarios) return acc;
-                const profId = record.registrado_por_uid;
-                if (!acc[profId]) {
-                    acc[profId] = { nome: record.usuarios.nome, diasComChamada: new Set() };
-                }
-                acc[profId].diasComChamada.add(record.data);
-                return acc;
-            }, {});
+            const lancadosHtml = diasLancados.length > 0 ? diasLancados.map(d => `<span class="bg-green-100 text-green-800 text-xs font-medium mr-2 mb-2 px-2.5 py-0.5 rounded-full inline-block">${new Date(d.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
+            
+            const naoLancadosHtml = diasNaoLancados.length > 0
+                ? diasNaoLancados.map(d => `
+                    <div class="flex flex-col text-center bg-red-100 text-red-800 text-xs font-medium p-2 rounded-lg">
+                        <strong class="text-sm">${new Date(d.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</strong>
+                        <span class="mt-1">${d.nome_professor || 'Professor não identificado'} (${d.nome_turma || 'Turma?'})</span>
+                    </div>
+                `).join('')
+                : '<p class="text-sm text-gray-500">Nenhum.</p>';
 
-            const tableRows = Object.values(stats).sort((a, b) => a.nome.localeCompare(b.nome)).map(prof => {
-                const diasRegistrados = prof.diasComChamada.size;
-                const taxa = diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) + '%' : 'N/A';
-                return `
-                        <tr class="border-b">
-                            <td class="p-3">${prof.nome}</td>
-                            <td class="p-3 text-center font-semibold">${diasRegistrados}</td>
-                            <td class="p-3 text-center">${diasLetivos}</td>
-                            <td class="p-3 text-center font-bold">${taxa}</td>
-                        </tr>
-                `;
-            }).join('');
+            const totalDiasLetivos = data.length;
+            const totalLancados = diasLancados.length;
+            const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
+            const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
+            
+            periodoTexto = `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}`;
 
-            const sortedProfStats = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome));
-            const chartLabels = JSON.stringify(sortedProfStats.map(p => p.nome));
-            const chartData = JSON.stringify(sortedProfStats.map(p => {
-                const diasRegistrados = p.diasComChamada.size;
-                return diasLetivos > 0 ? ((diasRegistrados / diasLetivos) * 100).toFixed(1) : 0;
-            }));
-
-            newWindow.document.body.innerHTML = `
-                    <div class="printable-area">
-                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Chamadas</h2><p>Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}</p></div></div>
-                        <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Chamadas</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-md"><canvas id="lancamentoChart"></canvas></div>
-                            <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
-                                <h3 class="font-bold mb-4">Dados Consolidados</h3>
-                                <div class="max-h-96 overflow-y-auto">
-                                <table class="w-full text-sm">
-                                    <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Professor</th><th class="p-3 text-center">Dias com Chamada</th><th class="p-3 text-center">Total Dias Letivos</th><th class="p-3 text-center">Taxa de Lançamento</th></tr></thead>
-                                    <tbody>${tableRows}</tbody>
-                                </table>
-                                </div>
-                            </div>
+            newWindow.document.getElementById('report-content').innerHTML = `
+                <div class="printable-area">
+                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Professores</h2><p>Professor: ${nomeProfessor}</p><p>${periodoTexto}</p></div></div>
+                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Professores</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                        <h3 class="text-lg font-bold mb-4">Resumo do Período para: <span class="text-indigo-600">${nomeProfessor}</span></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                            <div><p class="text-sm text-gray-500">Total de Dias Letivos</p><p class="text-2xl font-bold">${totalDiasLetivos}</p></div>
+                            <div><p class="text-sm text-gray-500">Dias com Chamada Lançada</p><p class="text-2xl font-bold text-green-600">${totalLancados}</p></div>
+                            <div><p class="text-sm text-gray-500">Taxa de Lançamento</p><p class="text-2xl font-bold text-blue-600">${taxa}</p></div>
                         </div>
                     </div>
-                    <script>
-                        setTimeout(() => {
-                            const ctx = document.getElementById('lancamentoChart');
-                            if (ctx) {
-                                new Chart(ctx, {
-                                    type: 'bar',
-                                    data: {
-                                        labels: ${chartLabels},
-                                        datasets: [{
-                                            label: '% de Lançamento',
-                                            data: ${chartData},
-                                            backgroundColor: 'rgba(139, 92, 246, 0.5)',
-                                            borderColor: 'rgba(139, 92, 246, 1)',
-                                            borderWidth: 1
-                                        }]
-                                    },
-                                    options: {
-                                        indexAxis: 'y',
-                                        scales: { x: { beginAtZero: true, max: 100 } },
-                                        responsive: true,
-                                        plugins: { legend: { display: false }, title: { display: true, text: 'Taxa de Lançamento de Chamadas por Professor' } }
-                                    }
-                                });
-                            }
-                        }, 100);
-                    <\/script>
-                `;
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="font-bold mb-4">Dias com Chamada Lançada (${totalLancados})</h3>
+                            <div class="flex flex-wrap gap-2">${lancadosHtml}</div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="font-bold mb-4">Dias Letivos Sem Lançamento (${diasNaoLancados.length})</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${naoLancadosHtml}</div>
+                        </div>
+                    </div>
+                </div>`;
         }
 
     } catch(e) {
@@ -1914,11 +1639,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setupSupportLinks();
 
-    // Supervisão de Sessão
-    setInterval(async () => { if (currentUser) { const { error } = await db.auth.refreshSession(); if(error) console.error(error); }}, 10 * 60 * 1000);
+    setInterval(async () => { if (currentUser) { const { error } = await db.auth.refreshSession(); if (error) console.error(error); } }, 10 * 60 * 1000);
     document.addEventListener('visibilitychange', async () => { if (!document.hidden && currentUser) await db.auth.refreshSession(); });
-    
-    // Submissão de Formulários
+
     document.body.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (e.target.id === 'login-form') {
@@ -1973,7 +1696,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             });
             const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
-            if(error) showToast('Erro ao salvar correção: ' + error.message, true);
+            if (error) showToast('Erro ao salvar correção: ' + error.message, true);
             else {
                 showToast('Chamada corrigida com sucesso!');
                 closeModal(correcaoChamadaModal);
@@ -1997,7 +1720,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Listeners de Click
     document.body.addEventListener('click', (e) => {
         const target = e.target;
         const closest = (selector) => target.closest(selector);
@@ -2013,18 +1735,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
             navLink.classList.add('bg-gray-700');
             const targetPanelId = navLink.dataset.target;
-
-            if (targetPanelId === 'admin-relatorios-panel') {
-                document.getElementById('relatorio-data-inicio').value = '';
-                document.getElementById('relatorio-data-fim').value = '';
-                document.getElementById('relatorio-turma-select').value = '';
-                document.getElementById('relatorio-aluno-select').value = '';
-                document.getElementById('relatorio-professor-select').value = '';
-                document.getElementById('relatorio-status-select').value = '';
-                relatorioTableBody.innerHTML = '';
-                imprimirRelatorioBtn.classList.add('hidden');
-            }
-
             document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
             const panel = document.getElementById(targetPanelId);
             if (panel) {
@@ -2065,7 +1775,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (deleteBtn.dataset.type === 'turma') id = turmaModal.querySelector('#turma-id').value;
             else if (deleteBtn.dataset.type === 'evento') id = eventoModal.querySelector('#evento-id').value;
             else if (deleteBtn.dataset.type === 'acompanhamento') id = acompanhamentoModal.querySelector('#acompanhamento-id').value;
-            if(id) openDeleteConfirmModal(deleteBtn.dataset.type, id);
+            if (id) openDeleteConfirmModal(deleteBtn.dataset.type, id);
         }
         const resetPassBtn = closest('.reset-password-btn');
         if (resetPassBtn) handleResetPassword(resetPassBtn.dataset.email);
@@ -2081,84 +1791,76 @@ document.addEventListener('DOMContentLoaded', () => {
             correcaoTurmaSel.innerHTML = '<option value="">Selecione uma turma...</option>';
             turmasCache.forEach(t => correcaoTurmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
         }
-        if(closest('#prev-month-btn')) { dashboardCalendar.month--; if(dashboardCalendar.month < 0) { dashboardCalendar.month = 11; dashboardCalendar.year--; } renderDashboardCalendar(); }
-        if(closest('#next-month-btn')) { dashboardCalendar.month++; if(dashboardCalendar.month > 11) { dashboardCalendar.month = 0; dashboardCalendar.year++; } renderDashboardCalendar(); }
+        if (closest('#prev-month-btn')) { dashboardCalendar.month--; if (dashboardCalendar.month < 0) { dashboardCalendar.month = 11; dashboardCalendar.year--; } renderDashboardCalendar(); }
+        if (closest('#next-month-btn')) { dashboardCalendar.month++; if (dashboardCalendar.month > 11) { dashboardCalendar.month = 0; dashboardCalendar.year++; } renderDashboardCalendar(); }
         const card = closest('.clickable-card');
-        if(card) {
+        if (card) {
             const type = card.dataset.type;
-            if(type === 'presencas' || type === 'faltas') {
+            if (type === 'presencas' || type === 'faltas') {
                 const date = dashboardSelectedDate;
                 document.querySelector('.admin-nav-link[data-target="admin-relatorios-panel"]').click();
                 setTimeout(() => {
                     document.getElementById('relatorio-data-inicio').value = date;
                     document.getElementById('relatorio-data-fim').value = date;
-                    if(type === 'faltas') document.getElementById('relatorio-status-select').value = 'falta';
-                    if(type === 'presencas') document.getElementById('relatorio-status-select').value = 'presente';
+                    if (type === 'faltas') document.getElementById('relatorio-status-select').value = 'falta';
+                    if (type === 'presencas') document.getElementById('relatorio-status-select').value = 'presente';
                     handleGerarRelatorio();
                 }, 100);
-            } else if(type === 'assiduidade') {
+            } else if (type === 'assiduidade') {
                 openAssiduidadeModal();
             }
         }
         const alunoLink = closest('.dashboard-aluno-link');
-        if(alunoLink) {
+        if (alunoLink) {
             e.preventDefault();
             openAlunoHistoricoModal(alunoLink.dataset.alunoId);
         }
-        
         const calendarDayCell = closest('[data-date]');
-        if(calendarDayCell) {
+        if (calendarDayCell) {
             const newDate = calendarDayCell.dataset.date;
-            if(newDate) {
+            if (newDate) {
                 dashboardSelectedDate = newDate;
                 renderDashboardCalendar();
                 loadDailySummary(dashboardSelectedDate);
             }
         }
-        if(closest('#open-promover-alunos-modal-btn')) openPromoverAlunosModal();
-        if(closest('#open-promover-massa-modal-btn')) openPromoverMassaModal();
-        if(closest('#promover-alunos-btn')) handlePromoverAlunos();
-        if(closest('#confirm-promocao-btn')) handleConfirmPromocao();
-        if(closest('#promover-massa-btn')) handlePromoverMassa();
-        if(closest('#confirm-promocao-massa-btn')) handleConfirmPromocaoMassa();
+        if(closest('#open-promover-turmas-modal-btn')) openPromoverTurmasModal();
+        if(closest('#promover-turmas-btn')) handlePromoverTurmas();
+        if(closest('#confirm-promocao-turmas-btn')) handleConfirmPromocaoTurmas();
         if(closest('#gerar-assiduidade-btn')) generateAssiduidadeReport();
     });
 
-    // Listener específico para o sino de notificação
     notificationBell.addEventListener('click', (e) => {
         e.stopPropagation();
         notificationPanel.classList.toggle('hidden');
     });
-    // Listener para fechar o painel de notificação ao clicar fora
     document.addEventListener('click', (e) => {
         const closest = (selector) => e.target.closest(selector);
         if (!notificationPanel.classList.contains('hidden') && !closest('#notification-panel') && !closest('#notification-bell')) {
             notificationPanel.classList.add('hidden');
         }
     });
-    if(document.getElementById('clear-notifications-btn')) {
+    if (document.getElementById('clear-notifications-btn')) {
         document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
     }
-    if(document.getElementById('notification-list')) {
+    if (document.getElementById('notification-list')) {
         document.getElementById('notification-list').addEventListener('click', (e) => {
             const item = e.target.closest('.notification-item');
-            if(item) {
+            if (item) {
                 markNotificationAsRead(item.dataset.id);
             }
         });
     }
 
-
-    // Listeners de Change e Input
     ['#chamada-lista-alunos', '#correcao-chamada-lista-alunos'].forEach(selector => {
         const container = document.querySelector(selector);
-        if(container) {
+        if (container) {
             container.addEventListener('change', e => {
                 if (e.target.classList.contains('status-radio')) {
                     const row = e.target.closest('[data-aluno-id]');
                     const justDiv = row.querySelector('.justificativa-container');
                     const isFalta = e.target.value === 'falta';
-                    if (justDiv) { // Apenas executa se o container de justificativa existir
+                    if (justDiv) {
                         justDiv.classList.toggle('hidden', !isFalta);
                         if (isFalta) {
                             const injustificadaRadio = row.querySelector('input[value="Falta injustificada"]');
@@ -2171,16 +1873,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+    
     turmaSelect.addEventListener('change', loadChamada);
     dataSelect.addEventListener('change', loadChamada);
     salvarChamadaBtn.addEventListener('click', saveChamada);
     document.getElementById('delete-confirm-checkbox').addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
     document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
     document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
-    document.getElementById('aluno-search-input').addEventListener('input', (e) => renderAlunosPanel());
+    document.getElementById('aluno-search-input').addEventListener('input', () => renderAlunosPanel());
     document.getElementById('turma-ano-letivo-filter').addEventListener('change', renderTurmasPanel);
     document.getElementById('aluno-ano-letivo-filter').addEventListener('change', () => {
-        document.getElementById('aluno-turma-filter').value = ''; 
+        document.getElementById('aluno-turma-filter').value = '';
         renderAlunosPanel();
     });
     document.getElementById('aluno-turma-filter').addEventListener('change', () => {
@@ -2188,68 +1891,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
     correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
-
-    // Listeners da Promoção de Alunos (Manual)
-    const anoOrigemSel = document.getElementById('promover-ano-origem');
-    const turmaOrigemSel = document.getElementById('promover-turma-origem');
-    const anoDestinoSel = document.getElementById('promover-ano-destino');
-    const turmaDestinoSel = document.getElementById('promover-turma-destino');
     
-    const populateTurmas = (ano, selElement) => {
-        selElement.innerHTML = '<option value="">Selecione a turma</option>';
-        turmasCache.filter(t => t.ano_letivo == ano).forEach(t => {
-            selElement.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`;
+    // Listeners da Promoção em Massa (Nova Versão)
+    document.getElementById('promover-turmas-ano-origem').addEventListener('change', renderPromocaoTurmasLista);
+    document.getElementById('promover-turmas-confirm-checkbox').addEventListener('change', (e) => {
+        document.getElementById('confirm-promocao-turmas-btn').disabled = !e.target.checked;
+    });
+
+    const toggleAllCheckbox = document.getElementById('promover-turmas-toggle-all');
+    if(toggleAllCheckbox) {
+        toggleAllCheckbox.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.promocao-turma-checkbox');
+            const isTudoMarcado = [...checkboxes].every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !isTudoMarcado);
+            toggleAllCheckbox.textContent = !isTudoMarcado ? 'Desmarcar Todas' : 'Marcar Todas';
         });
-    };
+    }
 
-    anoOrigemSel.addEventListener('change', () => populateTurmas(anoOrigemSel.value, turmaOrigemSel));
-    anoDestinoSel.addEventListener('change', () => populateTurmas(anoDestinoSel.value, turmaDestinoSel));
-
-    turmaOrigemSel.addEventListener('change', async () => {
-        const turmaId = turmaOrigemSel.value;
-        const listaContainer = document.getElementById('promover-alunos-lista-container');
-        const listaEl = document.getElementById('promover-alunos-lista');
-        listaEl.innerHTML = '';
-        if (!turmaId) {
-            listaContainer.classList.add('hidden');
-            return;
-        }
-        const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo'));
-        if (alunos && alunos.length > 0) {
-            listaEl.innerHTML = alunos.map(a => `<label class="flex items-center"><input type="checkbox" class="form-checkbox" value="${a.id}"><span class="ml-2">${a.nome_completo}</span></label>`).join('');
-        } else {
-            listaEl.innerHTML = `<p class="text-sm text-gray-500">Nenhum aluno ativo nesta turma.</p>`;
-        }
-        listaContainer.classList.remove('hidden');
-    });
-    
-    [turmaOrigemSel, turmaDestinoSel, document.getElementById('promover-alunos-lista')].forEach(el => {
-        el.addEventListener('change', () => {
-            const allSet = turmaOrigemSel.value && turmaDestinoSel.value && document.querySelectorAll('#promover-alunos-lista input:checked').length > 0;
-            document.getElementById('promover-alunos-btn').disabled = !allSet;
-        });
-    });
-
-    document.getElementById('promover-select-all-alunos').addEventListener('change', (e) => {
-        document.querySelectorAll('#promover-alunos-lista input').forEach(cb => cb.checked = e.target.checked);
-        document.getElementById('promover-alunos-btn').disabled = !e.target.checked || !turmaOrigemSel.value || !turmaDestinoSel.value;
-    });
-
-    // Listeners da Promoção em Massa
-    const massaAnoOrigemSel = document.getElementById('promover-massa-ano-origem');
-    const massaAnoDestinoSel = document.getElementById('promover-massa-ano-destino');
-    massaAnoOrigemSel.addEventListener('change', renderMapeamentoTurmas);
-    massaAnoDestinoSel.addEventListener('change', renderMapeamentoTurmas);
-    document.getElementById('promover-massa-confirm-checkbox').addEventListener('change', (e) => {
-        document.getElementById('confirm-promocao-massa-btn').disabled = !e.target.checked;
-    });
-    
     // Listeners da Análise de Assiduidade
     document.getElementById('assiduidade-tabs').addEventListener('click', (e) => {
         e.preventDefault();
         const link = e.target.closest('a');
         if (!link || link.getAttribute('aria-current') === 'page') return;
-
         document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
             a.removeAttribute('aria-current');
             a.classList.remove('text-indigo-600', 'border-indigo-500');
@@ -2258,7 +1921,6 @@ document.addEventListener('DOMContentLoaded', () => {
         link.setAttribute('aria-current', 'page');
         link.classList.add('text-indigo-600', 'border-indigo-500');
         link.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
-
         document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
         document.getElementById(link.dataset.target).classList.remove('hidden');
     });
@@ -2267,7 +1929,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ano = e.target.value;
         const turmaSel = document.getElementById('assiduidade-aluno-turma');
         turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
-        if(ano) {
+        if (ano) {
             turmasCache.filter(t => t.ano_letivo == ano)
                 .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
         }
@@ -2278,7 +1940,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ano = e.target.value;
         const turmaSel = document.getElementById('assiduidade-turma-turma');
         turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
-        if(ano) {
+        if (ano) {
             turmasCache.filter(t => t.ano_letivo == ano)
                 .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
         }
@@ -2288,7 +1950,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const turmaId = e.target.value;
         const alunoSel = document.getElementById('assiduidade-aluno-aluno');
         alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
-        if(turmaId) {
+        if (turmaId) {
             alunosCache.filter(a => a.turma_id == turmaId)
                 .forEach(a => alunoSel.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
         }
