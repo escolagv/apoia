@@ -1305,12 +1305,10 @@ async function openAlunoHistoricoModal(alunoId) {
 function openAssiduidadeModal() {
     // Popula filtros de Alunos
     const anoSelAluno = document.getElementById('assiduidade-aluno-ano');
-    const turmaSelAluno = document.getElementById('assiduidade-aluno-turma');
     const alunoSel = document.getElementById('assiduidade-aluno-aluno');
     anoSelAluno.innerHTML = '<option value="">Todos os Anos</option>';
     anosLetivosCache.forEach(ano => anoSelAluno.innerHTML += `<option value="${ano}">${ano}</option>`);
-    turmaSelAluno.innerHTML = '<option value="">Todas as Turmas</option>';
-    alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
+    alunoSel.innerHTML = '<option value="">Todos os Alunos</option>'; // Limpa alunos
 
     // Popula filtros de Turmas
     const anoSelTurma = document.getElementById('assiduidade-turma-ano');
@@ -1323,18 +1321,15 @@ function openAssiduidadeModal() {
     const profSel = document.getElementById('assiduidade-prof-professor');
     profSel.innerHTML = '<option value="">Todos os Professores</option>';
     usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
-    
-    // Define o ano atual como padrão em alguns filtros
+
     const currentYear = new Date().getFullYear();
     if (anosLetivosCache.some(y => y == currentYear)) {
         anoSelAluno.value = currentYear;
         anoSelTurma.value = currentYear;
-        // Dispara a atualização dos selects dependentes
         anoSelAluno.dispatchEvent(new Event('change'));
         anoSelTurma.dispatchEvent(new Event('change'));
     }
-    
-    // Limpa as datas para não haver predefinição
+
     document.getElementById('assiduidade-aluno-data-inicio').value = '';
     document.getElementById('assiduidade-aluno-data-fim').value = '';
     document.getElementById('assiduidade-turma-data-inicio').value = '';
@@ -1350,24 +1345,22 @@ async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
     newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>body { font-family: 'Inter', sans-serif; } .print-header { display: none; } @media print { .no-print { display: none !important; } .printable-area { position: absolute; left: 0; top: 0; width: 100%; } body * { visibility: hidden; } .printable-area, .printable-area * { visibility: visible; } .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; } .print-header img { max-height: 60px; width: auto; } .print-header-info h2 { font-size: 1.25rem; font-weight: bold; margin: 0; } .print-header-info p { font-size: 0.875rem; margin: 0; } }</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content"><div class="text-center"><div class="loader" style="width: 48px; height: 48px; margin: auto;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
     closeModal(assiduidadeModal);
-    
+
     try {
         const activeTab = document.querySelector('#assiduidade-tabs a[aria-current="page"]').dataset.target;
-        
+
         let dataInicio, dataFim, periodoTexto;
 
         if (activeTab === 'assiduidade-alunos') {
             dataInicio = document.getElementById('assiduidade-aluno-data-inicio').value;
             dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
-            if (dataInicio && !dataFim) dataFim = dataInicio; // Lógica de data inteligente
+            if (dataInicio && !dataFim) dataFim = dataInicio;
 
-            const turmaId = document.getElementById('assiduidade-aluno-turma').value;
             const alunoId = document.getElementById('assiduidade-aluno-aluno').value;
 
             let query = db.from('presencas').select('status, justificativa, alunos!inner(nome_completo), turmas!inner(nome_turma)');
             if (dataInicio) query = query.gte('data', dataInicio);
             if (dataFim) query = query.lte('data', dataFim);
-            if (turmaId) query = query.eq('turma_id', turmaId);
             if (alunoId) query = query.eq('aluno_id', alunoId);
 
             const { data, error } = await safeQuery(query);
@@ -1391,7 +1384,7 @@ async function generateAssiduidadeReport() {
                 return acc;
             }, {});
 
-            const tableRows = Object.entries(stats).sort((a,b) => a[0].localeCompare(b[0])).map(([nome, { presencas, faltas_j, faltas_i, turma }]) => {
+            const tableRows = Object.entries(stats).sort((a, b) => a[0].localeCompare(b[0])).map(([nome, { presencas, faltas_j, faltas_i, turma }]) => {
                 const total = presencas + faltas_j + faltas_i;
                 const percentual = total > 0 ? ((presencas / total) * 100).toFixed(1) + '%' : 'N/A';
                 return `
@@ -1403,13 +1396,13 @@ async function generateAssiduidadeReport() {
                         <td class="p-3 text-center font-bold">${percentual}</td>
                     </tr>`;
             }).join('');
-            
+
             const totalPresencas = Object.values(stats).reduce((sum, s) => sum + s.presencas, 0);
             const totalFaltasJ = Object.values(stats).reduce((sum, s) => sum + s.faltas_j, 0);
             const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
-            
+
             periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
-            
+
             const reportHTML = `
                 <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
@@ -1425,7 +1418,7 @@ async function generateAssiduidadeReport() {
                         </div>
                     </div>
                 </div>`;
-            
+
             const chartScriptContent = `
                 setTimeout(() => {
                     const ctx = document.getElementById('assiduidadeChart');
@@ -1441,7 +1434,7 @@ async function generateAssiduidadeReport() {
                     }
                 }, 100);
             `;
-            
+
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             const scriptEl = newWindow.document.createElement('script');
             scriptEl.textContent = chartScriptContent;
@@ -1450,7 +1443,7 @@ async function generateAssiduidadeReport() {
         } else if (activeTab === 'assiduidade-turmas') {
             dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
             dataFim = document.getElementById('assiduidade-turma-data-fim').value;
-            if (dataInicio && !dataFim) dataFim = dataInicio; // Lógica de data inteligente
+            if (dataInicio && !dataFim) dataFim = dataInicio;
 
             const anoLetivo = document.getElementById('assiduidade-turma-ano').value;
             const turmaId = document.getElementById('assiduidade-turma-turma').value;
@@ -1479,7 +1472,7 @@ async function generateAssiduidadeReport() {
                 return acc;
             }, {});
 
-            const sortedStats = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome));
+            const sortedStats = Object.values(stats).sort((a, b) => a.nome.localeCompare(b.nome));
 
             const tableRows = sortedStats.map(turma => {
                 const total = turma.presencas + turma.faltas;
@@ -1540,17 +1533,17 @@ async function generateAssiduidadeReport() {
                     }, 100);
                 <\/script>
                 `;
-        // RELATÓRIO DE PROFESSORES
+        
         } else if (activeTab === 'assiduidade-professores') {
             dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
             dataFim = document.getElementById('assiduidade-prof-data-fim').value;
-            if (dataInicio && !dataFim) dataFim = dataInicio; // Lógica de data inteligente
-            
+            if (dataInicio && !dataFim) dataFim = dataInicio;
+
             const professorId = document.getElementById('assiduidade-prof-professor').value;
             const hasDateRange = dataInicio && dataFim;
 
             if (hasDateRange) {
-                // CORREÇÃO: Parâmetros da função do banco de dados restaurados para a versão original e funcional.
+                // *** CORREÇÃO DO ERRO: Removido o parâmetro 'ano_letivo_selecionado' que não existe na função SQL ***
                 const { data, error } = await db.rpc('get_professor_assiduidade', {
                     data_inicio: dataInicio,
                     data_fim: dataFim,
@@ -1562,10 +1555,10 @@ async function generateAssiduidadeReport() {
                     newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dia letivo encontrado para o período e filtros selecionados.</p>';
                     return;
                 }
-                
+
                 const diasLancados = data.filter(d => d.status === 'Lançado');
                 const diasNaoLancados = data.filter(d => d.status !== 'Lançado');
-                
+
                 const lancadosHtml = diasLancados.length > 0 ? diasLancados.map(d => `<span class="bg-green-100 text-green-800 text-xs font-medium mr-2 mb-2 px-2.5 py-0.5 rounded-full inline-block">${new Date(d.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
                 const naoLancadosHtml = diasNaoLancados.length > 0
                     ? diasNaoLancados.map(d => `
@@ -1575,12 +1568,12 @@ async function generateAssiduidadeReport() {
                         </div>
                     `).join('')
                     : '<p class="text-sm text-gray-500">Nenhum.</p>';
-                
+
                 const totalDiasLetivos = data.length;
                 const totalLancados = diasLancados.length;
                 const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
                 const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
-                
+
                 const periodoTexto = `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}`;
 
                 newWindow.document.getElementById('report-content').innerHTML = `
@@ -1633,52 +1626,8 @@ async function generateAssiduidadeReport() {
                     <\/script>
                 `;
             } else {
-                // Lógica para quando NÃO tem período de data (todo o período)
-                let query = db.from('presencas').select('registrado_por_uid, data, usuarios!inner(nome), turmas!inner(ano_letivo)');
-                if (professorId) query = query.eq('registrado_por_uid', professorId);
-
-                const { data, error } = await safeQuery(query);
-                if (error) throw error;
-                if (data.length === 0) {
-                    newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum registro de chamada encontrado para os filtros selecionados.</p>';
-                    return;
-                }
-                
-                const stats = data.reduce((acc, record) => {
-                    if (!record.usuarios) return acc;
-                    const profId = record.registrado_por_uid;
-                    if (!acc[profId]) {
-                        acc[profId] = { nome: record.usuarios.nome, diasComChamada: new Set() };
-                    }
-                    acc[profId].diasComChamada.add(record.data);
-                    return acc;
-                }, {});
-
-                const tableRows = Object.values(stats).sort((a,b) => a.nome.localeCompare(b.nome)).map(prof => {
-                    const diasRegistrados = prof.diasComChamada.size;
-                    return `
-                        <tr class="border-b">
-                            <td class="p-3">${prof.nome}</td>
-                            <td class="p-3 text-center font-semibold">${diasRegistrados}</td>
-                        </tr>
-                    `;
-                }).join('');
-                
-                newWindow.document.getElementById('report-content').innerHTML = `
-                    <div class="printable-area">
-                        <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório Geral de Lançamentos</h2><p>Período: Geral</p></div></div>
-                        <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório Geral de Lançamentos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <p class="text-sm text-gray-600 mb-4">Este relatório mostra o total de dias únicos em que cada professor realizou pelo menos um lançamento de chamada. Sem um período de datas definido, não é possível calcular a taxa de lançamento.</p>
-                            <div class="max-h-96 overflow-y-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Professor</th><th class="p-3 text-center">Total de Dias com Chamada Lançada</th></tr></thead>
-                                <tbody>${tableRows}</tbody>
-                            </table>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                 newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Por favor, selecione um período de data de início e fim para gerar o relatório de professores.</p>';
+                 return;
             }
         }
     } catch (e) {
@@ -1703,7 +1652,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setupSupportLinks();
 
-    // *** FIX 1: Botão de mostrar/ocultar senha ***
     togglePasswordBtn.addEventListener('click', () => {
         const isPassword = passwordInput.type === 'password';
         passwordInput.type = isPassword ? 'text' : 'password';
@@ -1873,8 +1821,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (closest('#prev-month-btn')) { dashboardCalendar.month--; if (dashboardCalendar.month < 0) { dashboardCalendar.month = 11; dashboardCalendar.year--; } renderDashboardCalendar(); }
         if (closest('#next-month-btn')) { dashboardCalendar.month++; if (dashboardCalendar.month > 11) { dashboardCalendar.month = 0; dashboardCalendar.year++; } renderDashboardCalendar(); }
-        
-        // *** FIX 3: Click nos cards do dashboard ***
         const card = closest('.clickable-card');
         if (card) {
             const type = card.dataset.type;
@@ -1890,11 +1836,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 100);
             } else if (type === 'assiduidade') {
                 openAssiduidadeModal();
-            } else if (type === 'acompanhamento') { 
+            } else if (type === 'acompanhamento') {
                 document.querySelector('.admin-nav-link[data-target="admin-apoia-panel"]').click();
             }
         }
-        
         const alunoLink = closest('.dashboard-aluno-link');
         if (alunoLink) {
             e.preventDefault();
@@ -1954,7 +1899,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
-    
+
     turmaSelect.addEventListener('change', loadChamada);
     dataSelect.addEventListener('change', loadChamada);
     salvarChamadaBtn.addEventListener('click', saveChamada);
@@ -1972,14 +1917,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
     correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
-    
+
     document.getElementById('promover-turmas-ano-origem').addEventListener('change', renderPromocaoTurmasLista);
     document.getElementById('promover-turmas-confirm-checkbox').addEventListener('change', (e) => {
         document.getElementById('confirm-promocao-turmas-btn').disabled = !e.target.checked;
     });
 
     const toggleAllCheckbox = document.getElementById('promover-turmas-toggle-all');
-    if(toggleAllCheckbox) {
+    if (toggleAllCheckbox) {
         toggleAllCheckbox.addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('.promocao-turma-checkbox');
             const isTudoMarcado = [...checkboxes].every(cb => cb.checked);
@@ -1987,7 +1932,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleAllCheckbox.textContent = !isTudoMarcado ? 'Desmarcar Todas' : 'Marcar Todas';
         });
     }
-    
+
     document.getElementById('assiduidade-tabs').addEventListener('click', (e) => {
         e.preventDefault();
         const link = e.target.closest('a');
@@ -2005,14 +1950,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('assiduidade-aluno-ano').addEventListener('change', e => {
-        const ano = e.target.value;
-        const turmaSel = document.getElementById('assiduidade-aluno-turma');
-        turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
-        if (ano) {
-            turmasCache.filter(t => t.ano_letivo == ano)
-                .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+        const anoLetivo = e.target.value;
+        const alunoSel = document.getElementById('assiduidade-aluno-aluno');
+        alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
+
+        const turmasDoAnoIds = turmasCache
+            .filter(t => t.ano_letivo == anoLetivo)
+            .map(t => t.id);
+
+        if (anoLetivo) {
+            alunosCache
+                .filter(a => turmasDoAnoIds.includes(a.turma_id))
+                .forEach(a => alunoSel.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
         }
-        turmaSel.dispatchEvent(new Event('change'));
     });
 
     document.getElementById('assiduidade-turma-ano').addEventListener('change', e => {
@@ -2024,16 +1974,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
         }
     });
-
-    document.getElementById('assiduidade-aluno-turma').addEventListener('change', e => {
-        const turmaId = e.target.value;
-        const alunoSel = document.getElementById('assiduidade-aluno-aluno');
-        alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
-        if (turmaId) {
-            alunosCache.filter(a => a.turma_id == turmaId)
-                .forEach(a => alunoSel.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
-        }
-    });
+    
+    // Lógica para o menu hamburger responsivo
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    const adminSidebar = document.getElementById('admin-sidebar');
+    if (sidebarToggleBtn && adminSidebar) {
+        sidebarToggleBtn.addEventListener('click', () => {
+            adminSidebar.classList.toggle('-translate-x-full');
+        });
+    }
 
     // Inicialização
     dataSelect.value = getLocalDateString();
