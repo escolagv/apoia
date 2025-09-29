@@ -1340,7 +1340,7 @@ function openAssiduidadeModal() {
     assiduidadeModal.classList.remove('hidden');
 }
 
-
+// *** FUNÇÃO ATUALIZADA - INÍCIO ***
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
     
@@ -1379,7 +1379,7 @@ async function generateAssiduidadeReport() {
             </body>
         </html>
     `);
-    newWindow.document.close(); // Importante para finalizar a escrita e sinalizar que o DOM base está pronto.
+    newWindow.document.close(); 
 
     // 2. Cria o elemento <script> para o Chart.js dinamicamente
     const chartJsScript = newWindow.document.createElement('script');
@@ -1389,7 +1389,6 @@ async function generateAssiduidadeReport() {
     chartJsScript.onload = async () => {
         closeModal(assiduidadeModal);
         
-        // Helper para injetar HTML e Script do Gráfico de forma segura
         const renderReport = (reportHTML, chartScriptContent) => {
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             const scriptEl = newWindow.document.createElement('script');
@@ -1500,7 +1499,7 @@ async function generateAssiduidadeReport() {
 
                 if (!dataInicio || !dataFim) {
                     const { data: range, error } = await db.rpc('get_min_max_presenca_data');
-                    if (error || !range) {
+                    if (error || !range || !range.min_data) {
                         newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Não foi possível determinar o período de datas automaticamente. Não há registros de chamada no sistema.</p>';
                         return;
                     }
@@ -1539,6 +1538,7 @@ async function generateAssiduidadeReport() {
             newWindow.document.getElementById('report-content').innerHTML = `<div class="text-red-500 font-bold text-center">Ocorreu um erro ao gerar o relatório: ${e.message}</div>`;
         }
     };
+}
 
 // ===============================================================
 // =================== EVENT LISTENERS ===========================
