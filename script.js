@@ -1320,16 +1320,16 @@ function openAssiduidadeModal() {
     turmaSelTurma.innerHTML = '<option value="">Todas as Turmas</option>';
 
     // Popula filtros de Professores
-    const anoSelProf = document.getElementById('assiduidade-prof-ano');
-    anoSelProf.innerHTML = '<option value="">Todos os Anos</option>';
-    anosLetivosCache.forEach(ano => anoSelProf.innerHTML += `<option value="${ano}">${ano}</option>`);
-
-    // Define o ano atual como padrão em todos os filtros
+    const profSel = document.getElementById('assiduidade-prof-professor');
+    profSel.innerHTML = '<option value="">Todos os Professores</option>';
+    usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
+    
+    // Define o ano atual como padrão em alguns filtros
     const currentYear = new Date().getFullYear();
     if (anosLetivosCache.some(y => y == currentYear)) {
         anoSelAluno.value = currentYear;
         anoSelTurma.value = currentYear;
-        anoSelProf.value = currentYear;
+        // Dispara a atualização dos selects dependentes
         anoSelAluno.dispatchEvent(new Event('change'));
         anoSelTurma.dispatchEvent(new Event('change'));
     }
@@ -1342,13 +1342,9 @@ function openAssiduidadeModal() {
     document.getElementById('assiduidade-prof-data-inicio').value = '';
     document.getElementById('assiduidade-prof-data-fim').value = '';
 
-    // Popula filtros de Professores
-    const profSel = document.getElementById('assiduidade-prof-professor');
-    profSel.innerHTML = '<option value="">Todos os Professores</option>';
-    usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
-
     assiduidadeModal.classList.remove('hidden');
 }
+
 
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
@@ -1549,8 +1545,7 @@ async function generateAssiduidadeReport() {
             dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
             dataFim = document.getElementById('assiduidade-prof-data-fim').value;
             if (dataInicio && !dataFim) dataFim = dataInicio; // Lógica de data inteligente
-
-            const anoLetivo = document.getElementById('assiduidade-prof-ano').value;
+            
             const professorId = document.getElementById('assiduidade-prof-professor').value;
             const hasDateRange = dataInicio && dataFim;
 
@@ -1559,7 +1554,6 @@ async function generateAssiduidadeReport() {
                 const { data, error } = await db.rpc('get_professor_assiduidade', {
                     data_inicio: dataInicio,
                     data_fim: dataFim,
-                    ano_letivo_selecionado: anoLetivo || null,
                     professor_uid_selecionado: professorId || null
                 });
 
@@ -1641,7 +1635,6 @@ async function generateAssiduidadeReport() {
             } else {
                 // Lógica para quando NÃO tem período de data (todo o período)
                 let query = db.from('presencas').select('registrado_por_uid, data, usuarios!inner(nome), turmas!inner(ano_letivo)');
-                if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
                 if (professorId) query = query.eq('registrado_por_uid', professorId);
 
                 const { data, error } = await safeQuery(query);
@@ -1709,6 +1702,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (linkAdmin) { linkAdmin.href = url; linkAdmin.target = "_blank"; }
     };
     setupSupportLinks();
+
+    // *** FIX 1: Botão de mostrar/ocultar senha ***
+    togglePasswordBtn.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        eyeIcon.classList.toggle('hidden', isPassword);
+        eyeOffIcon.classList.toggle('hidden', !isPassword);
+    });
 
     setInterval(async () => { if (currentUser) { const { error } = await db.auth.refreshSession(); if (error) console.error(error); } }, 10 * 60 * 1000);
     document.addEventListener('visibilitychange', async () => { if (!document.hidden && currentUser) await db.auth.refreshSession(); });
@@ -1872,6 +1873,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (closest('#prev-month-btn')) { dashboardCalendar.month--; if (dashboardCalendar.month < 0) { dashboardCalendar.month = 11; dashboardCalendar.year--; } renderDashboardCalendar(); }
         if (closest('#next-month-btn')) { dashboardCalendar.month++; if (dashboardCalendar.month > 11) { dashboardCalendar.month = 0; dashboardCalendar.year++; } renderDashboardCalendar(); }
+        
+        // *** FIX 3: Click nos cards do dashboard ***
         const card = closest('.clickable-card');
         if (card) {
             const type = card.dataset.type;
@@ -1887,8 +1890,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 100);
             } else if (type === 'assiduidade') {
                 openAssiduidadeModal();
+            } else if (type === 'acompanhamento') { 
+                document.querySelector('.admin-nav-link[data-target="admin-apoia-panel"]').click();
             }
         }
+        
         const alunoLink = closest('.dashboard-aluno-link');
         if (alunoLink) {
             e.preventDefault();
