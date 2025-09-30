@@ -1,6 +1,7 @@
+// PARTE 1
 const { createClient } = supabase;
 const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI体制NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
 
 if (SUPABASE_URL === 'SUA_URL_DO_PROJETO') throw new Error("Credenciais da Supabase não configuradas.");
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -15,7 +16,7 @@ const apoiaItemsPerPage = 10;
 let anosLetivosCache = [];
 let dashboardSelectedDate;
 
-// --- Mapeamento dos Elementos da UI ---
+// Mapeamento dos Elementos da UI
 const loadingView = document.getElementById('loading-view');
 const appContainer = document.getElementById('app-container');
 const loginView = document.getElementById('login-view');
@@ -74,7 +75,11 @@ const configForm = document.getElementById('config-form');
 const calendarMonthYear = document.getElementById('calendar-month-year');
 const calendarGrid = document.getElementById('calendar-grid');
 
-// --- Funções Auxiliares ---
+
+// ===============================================================
+// SEÇÃO 1.2: FUNÇÕES AUXILIARES (HELPERS)
+// ===============================================================
+
 function getLocalDateString() {
     const date = new Date();
     const year = date.getFullYear();
@@ -171,7 +176,7 @@ function resetInactivityTimer() {
 }
 
 // ===============================================================
-// ================= LÓGICA DE AUTENTICAÇÃO ======================
+// SEÇÃO 1.3: LÓGICA DE AUTENTICAÇÃO
 // ===============================================================
 
 async function handleAuthChange(session) {
@@ -223,9 +228,11 @@ db.auth.onAuthStateChange(async (event, session) => {
     }
 });
 
+
 // ===============================================================
-// ============= LÓGICA DO PAINEL DO PROFESSOR ===================
+// SEÇÃO 1.4: LÓGICA DO PAINEL DO PROFESSOR
 // ===============================================================
+
 async function loadProfessorData(professorUid) {
     const { data: rels } = await safeQuery(db.from('professores_turmas').select('turma_id').eq('professor_id', professorUid));
     if (!rels || rels.length === 0) return;
@@ -319,56 +326,10 @@ async function saveChamada() {
     salvarChamadaBtn.textContent = 'Salvar Chamada';
 }
 
-// --- CORREÇÃO DE CHAMADA (Admin) ---
-async function loadCorrecaoChamada() {
-    const turmaId = correcaoTurmaSel.value;
-    const data = correcaoDataSel.value;
-    correcaoListaAlunos.innerHTML = '';
-    if (!turmaId || !data) {
-        correcaoListaAlunos.innerHTML = '<p class="text-center text-gray-500">Selecione uma turma e uma data para carregar os alunos.</p>';
-        return;
-    }
-    correcaoListaAlunos.innerHTML = '<div class="loader mx-auto"></div>';
-    const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo'));
-    if (!alunos) return;
-    if (alunos.length === 0) {
-        correcaoListaAlunos.innerHTML = '<p class="text-center text-gray-500">Nenhum aluno ativo encontrado para esta turma.</p>';
-        return;
-    }
-    const { data: presencas } = await safeQuery(db.from('presencas').select('aluno_id, status, justificativa').eq('turma_id', turmaId).eq('data', data));
-    const presencasMap = new Map((presencas || []).map(p => [p.aluno_id, { status: p.status, justificativa: p.justificativa }]));
-    alunos.forEach(aluno => {
-        const presenca = presencasMap.get(aluno.id) || { status: 'presente', justificativa: null };
-        const isJustificada = presenca.justificativa === 'Falta justificada';
-        const isInjustificada = presenca.justificativa === 'Falta injustificada' || (!presenca.justificativa && presenca.status === 'falta');
-        const isOutros = !isJustificada && !isInjustificada && presenca.justificativa;
-        const alunoDiv = document.createElement('div');
-        alunoDiv.className = 'p-3 bg-gray-50 rounded-lg';
-        alunoDiv.dataset.alunoId = aluno.id;
-        alunoDiv.innerHTML = `
-            <div class="flex items-center justify-between">
-                <span class="font-medium">${aluno.nome_completo}</span>
-                <div class="flex items-center gap-4">
-                    <label class="flex items-center cursor-pointer"><input type="radio" name="corr-status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600 status-radio" ${presenca.status === 'presente' ? 'checked' : ''}><span class="ml-2 text-sm">Presente</span></label>
-                    <label class="flex items-center cursor-pointer"><input type="radio" name="corr-status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600 status-radio" ${presenca.status === 'falta' ? 'checked' : ''}><span class="ml-2 text-sm">Falta</span></label>
-                </div>
-            </div>
-            <div class="justificativa-container mt-3 pt-3 border-t border-gray-200 ${presenca.status === 'falta' ? '' : 'hidden'}">
-                <div class="text-sm font-medium mb-2">Justificativa:</div>
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 pl-2">
-                    <label class="flex items-center"><input type="radio" name="corr-just-${aluno.id}" value="Falta justificada" class="form-radio h-4 w-4" ${isJustificada ? 'checked' : ''}><span class="ml-2 text-sm">Justificada</span></label>
-                    <label class="flex items-center"><input type="radio" name="corr-just-${aluno.id}" value="Falta injustificada" class="form-radio h-4 w-4" ${isInjustificada ? 'checked' : ''}><span class="ml-2 text-sm">Injustificada</span></label>
-                    <label class="flex items-center"><input type="radio" name="corr-just-${aluno.id}" value="outros" class="form-radio h-4 w-4" ${isOutros ? 'checked' : ''}><span class="ml-2 text-sm">Outros</span></label>
-                    <input type="text" class="justificativa-outros-input p-1 border rounded-md text-sm flex-grow min-w-0" placeholder="Motivo..." value="${isOutros ? presenca.justificativa : ''}">
-                </div>
-            </div>`;
-        correcaoListaAlunos.appendChild(alunoDiv);
-    });
-}
-
+// Parte 2
 
 // ===============================================================
-// ============= LÓGICA DO PAINEL DO ADMINISTRADOR ===============
+// SEÇÃO 2.1: LÓGICA DO PAINEL DE ADMINISTRADOR - GERAL E DASHBOARD
 // ===============================================================
 
 async function loadNotifications() {
@@ -415,7 +376,6 @@ async function loadAdminData() {
     anosLetivosCache = anos ? anos.sort((a, b) => b - a) : [];
 }
 
-// --- Dashboard ---
 async function renderDashboardPanel() {
     await loadDailySummary(dashboardSelectedDate);
     await renderDashboardCalendar();
@@ -491,7 +451,11 @@ async function renderDashboardCalendar() {
     calendarGrid.innerHTML = html;
 }
 
-// --- Gerenciamento de Alunos ---
+
+// ===============================================================
+// SEÇÃO 2.2: LÓGICA DO PAINEL DE ADMINISTRADOR - GESTÃO DE ALUNOS
+// ===============================================================
+
 async function renderAlunosPanel(options = {}) {
     const { defaultToLatestYear = false } = options;
     const searchTerm = document.getElementById('aluno-search-input').value;
@@ -604,7 +568,11 @@ async function handleAlunoFormSubmit(e) {
     }
 }
 
-// --- Acompanhamento APOIA ---
+
+// ===============================================================
+// SEÇÃO 2.3: LÓGICA DO PAINEL DE ADMINISTRADOR - ACOMPANHAMENTO APOIA
+// ===============================================================
+
 async function renderApoiaPanel(page = 1) {
     apoiaCurrentPage = page;
     apoiaTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
@@ -692,38 +660,12 @@ async function handleAcompanhamentoFormSubmit(e) {
     }
 }
 
-async function handleGerarApoiaRelatorio() {
-    const tableBody = document.getElementById('apoia-relatorio-table-body');
-    tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Gerando relatório...</td></tr>';
-    imprimirApoiaRelatorioBtn.classList.add('hidden');
-    let queryBuilder = db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('data_encaminhamento');
-    const dataInicio = document.getElementById('apoia-relatorio-data-inicio').value;
-    const dataFim = document.getElementById('apoia-relatorio-data-fim').value;
-    const statusFiltro = document.getElementById('apoia-relatorio-status').value;
-    if (dataInicio) queryBuilder = queryBuilder.gte('data_encaminhamento', dataInicio);
-    if (dataFim) queryBuilder = queryBuilder.lte('data_encaminhamento', dataFim);
-    if (statusFiltro) queryBuilder = queryBuilder.eq('status', statusFiltro);
-    const { data, error } = await safeQuery(queryBuilder);
-    if (error) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
-        return;
-    }
-    if (data.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
-        return;
-    }
-    tableBody.innerHTML = data.map(item => `
-        <tr class="border-b">
-            <td class="p-3">${item.alunos.nome_completo}</td>
-            <td class="p-3">${new Date(item.data_encaminhamento + 'T00:00:00').toLocaleDateString()}</td>
-            <td class="p-3">${item.motivo}</td>
-            <td class="p-3">${item.status}</td>
-            <td class="p-3">${item.observacoes || ''}</td>
-        </tr>`).join('');
-    imprimirApoiaRelatorioBtn.classList.remove('hidden');
-}
+// Parte 3
 
-// --- Gerenciamento de Professores ---
+// ===============================================================
+// SEÇÃO 3.1: LÓGICA DO PAINEL DE ADMINISTRADOR - GESTÃO DE PROFESSORES E TURMAS
+// ===============================================================
+
 async function renderProfessoresPanel() {
     professoresTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
     const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status, email_confirmado').eq('papel', 'professor').order('status', { ascending: true }).order('nome', { ascending: true }));
@@ -828,7 +770,6 @@ async function handleResetPassword(email) {
     }
 }
 
-// --- Gerenciamento de Turmas ---
 async function renderTurmasPanel() {
     const anoLetivoFilter = document.getElementById('turma-ano-letivo-filter');
     anoLetivoFilter.innerHTML = '<option value="">Todos os Anos</option>';
@@ -916,178 +857,13 @@ async function handleTurmaFormSubmit(e) {
     await renderTurmasPanel();
 }
 
-// --- Gerenciamento de Relatórios ---
-async function renderRelatoriosPanel() {
-    const turmaFilter = document.getElementById('relatorio-turma-select');
-    const alunoFilter = document.getElementById('relatorio-aluno-select');
-    const profFilter = document.getElementById('relatorio-professor-select');
-    turmaFilter.innerHTML = '<option value="">Todas</option>';
-    turmasCache.forEach(t => turmaFilter.innerHTML += `<option value="${t.id}">${t.nome_turma} (${t.ano_letivo})</option>`);
-    alunoFilter.innerHTML = '<option value="">Todos</option>';
-    alunosCache.forEach(a => alunoFilter.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
-    profFilter.innerHTML = '<option value="">Todos</option>';
-    usuariosCache.forEach(u => profFilter.innerHTML += `<option value="${u.user_uid}">${u.nome} (${u.papel})</option>`);
-}
 
-async function handleGerarRelatorio() {
-    relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Gerando relatório...</td></tr>';
-    imprimirRelatorioBtn.classList.add('hidden');
-    let queryBuilder = db.from('presencas').select(`data, status, justificativa, alunos ( nome_completo ), turmas ( nome_turma ), usuarios ( nome )`).order('data', { ascending: false });
-    let dataInicio = document.getElementById('relatorio-data-inicio').value;
-    let dataFim = document.getElementById('relatorio-data-fim').value;
-    const turmaId = document.getElementById('relatorio-turma-select').value;
-    const alunoId = document.getElementById('relatorio-aluno-select').value;
-    const profId = document.getElementById('relatorio-professor-select').value;
-    const statusFiltro = document.getElementById('relatorio-status-select').value;
-    if (dataInicio && !dataFim) dataFim = dataInicio;
-    if (dataInicio) queryBuilder = queryBuilder.gte('data', dataInicio);
-    if (dataFim) queryBuilder = queryBuilder.lte('data', dataFim);
-    if (turmaId) queryBuilder = queryBuilder.eq('turma_id', turmaId);
-    if (alunoId) queryBuilder = queryBuilder.eq('aluno_id', alunoId);
-    if (profId) queryBuilder = queryBuilder.eq('registrado_por_uid', profId);
-    if (statusFiltro) queryBuilder = queryBuilder.eq('status', statusFiltro);
-    const { data, error } = await safeQuery(queryBuilder);
-    if (error) {
-        relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
-        return;
-    }
-    if (data.length === 0) {
-        relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
-        return;
-    }
-    relatorioTableBody.innerHTML = data.map(r => `
-        <tr class="border-b">
-            <td class="p-3">${new Date(r.data + 'T00:00:00').toLocaleDateString()}</td>
-            <td class="p-3">${r.alunos ? r.alunos.nome_completo : 'Aluno Removido'}</td>
-            <td class="p-3">${r.turmas ? r.turmas.nome_turma : 'Turma Removida'}</td>
-            <td class="p-3"><span class="font-semibold ${r.status === 'falta' ? 'text-red-600' : 'text-green-600'}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span></td>
-            <td class="p-3 text-xs">${r.justificativa || ''}</td>
-            <td class="p-3">${r.usuarios ? r.usuarios.nome : 'Usuário Removido'}</td>
-        </tr>
-    `).join('');
-    imprimirRelatorioBtn.classList.remove('hidden');
-}
+// ===============================================================
+// SEÇÃO 3.2: LÓGICA DO PAINEL DE ADMINISTRADOR - GESTÃO DE ANO LETIVO
+// ===============================================================
 
-// --- Gerenciamento de Configurações ---
-async function renderConfigPanel() {
-    try {
-        const { data, error } = await safeQuery(db.from('configuracoes').select('*').limit(1).single());
-        if (error && error.code !== 'PGRST116') throw error;
-        if (data) {
-            document.getElementById('config-faltas-consecutivas').value = data.faltas_consecutivas_limite || '';
-            document.getElementById('config-faltas-intercaladas').value = data.faltas_intercaladas_limite || '';
-            document.getElementById('config-faltas-dias').value = data.faltas_intercaladas_dias || '';
-            if (data.alerta_horario) {
-                document.getElementById('config-alerta-horario').value = data.alerta_horario.substring(0, 5);
-            }
-            document.getElementById('config-alerta-faltas-ativo').checked = data.alerta_faltas_ativo;
-            document.getElementById('config-alerta-chamada-ativo').checked = data.alerta_chamada_nao_feita_ativo;
-        }
-    } catch (err) {
-        console.error("Erro ao carregar configurações:", err);
-        showToast("Não foi possível carregar as configurações.", true);
-    }
-}
-
-async function handleConfigFormSubmit(e) {
-    e.preventDefault();
-    try {
-        const configData = {
-            id: 1,
-            faltas_consecutivas_limite: document.getElementById('config-faltas-consecutivas').value,
-            faltas_intercaladas_limite: document.getElementById('config-faltas-intercaladas').value,
-            faltas_intercaladas_dias: document.getElementById('config-faltas-dias').value,
-            alerta_horario: document.getElementById('config-alerta-horario').value || null,
-            alerta_faltas_ativo: document.getElementById('config-alerta-faltas-ativo').checked,
-            alerta_chamada_nao_feita_ativo: document.getElementById('config-alerta-chamada-ativo').checked
-        };
-        const { error } = await safeQuery(db.from('configuracoes').upsert(configData));
-        if (error) throw error;
-        showToast('Configurações salvas com sucesso!');
-    } catch (err) {
-        showToast('Erro ao salvar configurações: ' + err.message, true);
-    }
-}
-
-// --- Gerenciamento de Calendário ---
-async function renderCalendarioPanel() {
-    const dataInicioFilter = document.getElementById('evento-data-inicio-filter').value;
-    const dataFimFilter = document.getElementById('evento-data-fim-filter').value;
-    eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
-    let queryBuilder = db.from('eventos').select('*').order('data', { ascending: false });
-    if (dataInicioFilter && !dataFimFilter) {
-        queryBuilder = queryBuilder.gte('data', dataInicioFilter).lte('data', dataInicioFilter);
-    } else {
-        if (dataInicioFilter) queryBuilder = queryBuilder.gte('data', dataInicioFilter);
-        if (dataFimFilter) queryBuilder = queryBuilder.lte('data', dataFimFilter);
-    }
-    const { data, error } = await safeQuery(queryBuilder);
-    if (error) {
-        eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
-        return;
-    }
-    if (data.length === 0) {
-        eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhum evento encontrado.</td></tr>';
-        return;
-    }
-    eventosTableBody.innerHTML = data.map(evento => {
-        const dataInicio = new Date(evento.data + 'T00:00:00').toLocaleDateString();
-        const dataFim = evento.data_fim ? new Date(evento.data_fim + 'T00:00:00').toLocaleDateString() : dataInicio;
-        const periodo = dataInicio === dataFim ? dataInicio : `${dataInicio} - ${dataFim}`;
-        return `
-        <tr class="border-b">
-            <td class="p-3">${periodo}</td>
-            <td class="p-3">${evento.descricao}</td>
-            <td class="p-3"><button class="text-blue-600 hover:underline edit-evento-btn" data-id="${evento.id}">Editar</button></td>
-        </tr>
-        `}).join('');
-}
-
-async function openEventoModal(editId = null) {
-    eventoForm.reset();
-    document.getElementById('evento-delete-container').classList.add('hidden');
-    if (editId) {
-        const { data } = await safeQuery(db.from('eventos').select('*').eq('id', editId).single());
-        document.getElementById('evento-modal-title').textContent = 'Editar Evento';
-        document.getElementById('evento-id').value = data.id;
-        document.getElementById('evento-descricao').value = data.descricao;
-        document.getElementById('evento-data-inicio').value = data.data;
-        document.getElementById('evento-data-fim').value = data.data_fim;
-        document.getElementById('evento-delete-container').classList.remove('hidden');
-    } else {
-        document.getElementById('evento-modal-title').textContent = 'Adicionar Evento';
-        document.getElementById('evento-id').value = '';
-    }
-    eventoModal.classList.remove('hidden');
-}
-
-async function handleEventoFormSubmit(e) {
-    e.preventDefault();
-    const id = document.getElementById('evento-id').value;
-    const eventoData = {
-        descricao: document.getElementById('evento-descricao').value,
-        data: document.getElementById('evento-data-inicio').value,
-        data_fim: document.getElementById('evento-data-fim').value || null
-    };
-    if (!eventoData.data) {
-        showToast('A data de início é obrigatória.', true);
-        return;
-    }
-    const queryBuilder = id ? db.from('eventos').update(eventoData).eq('id', id) : db.from('eventos').insert(eventoData);
-    const { error } = await safeQuery(queryBuilder);
-    if (error) {
-        showToast('Erro ao salvar o evento: ' + error.message, true);
-    } else {
-        showToast('Evento salvo com sucesso!');
-        closeModal(eventoModal);
-        await renderCalendarioPanel();
-        await renderDashboardCalendar();
-    }
-}
-
-// --- Gestão de Ano Letivo ---
 function renderAnoLetivoPanel() {
-    // A lógica está nos botões
+    // A lógica está nos botões que abrem os modais
 }
 
 async function openPromoverTurmasModal() {
@@ -1194,114 +970,63 @@ async function handleConfirmPromocaoTurmas() {
     btn.innerHTML = 'Executar Promoção';
 }
 
-// --- Lógica de Exclusão ---
-function openDeleteConfirmModal(type, id) {
-    const messageEl = document.getElementById('delete-confirm-message');
-    const confirmBtn = document.getElementById('confirm-delete-btn');
-    const checkbox = document.getElementById('delete-confirm-checkbox');
-    messageEl.textContent = `Você tem certeza que deseja excluir este ${type}? Esta ação é irreversível.`;
-    checkbox.checked = false;
-    confirmBtn.disabled = true;
-    confirmBtn.dataset.type = type;
-    confirmBtn.dataset.id = id;
-    deleteConfirmModal.classList.remove('hidden');
+// Parte 4
+
+// ===============================================================
+// SEÇÃO 4.1: LÓGICA DO PAINEL DE ADMINISTRADOR - RELATÓRIOS E ASSIDUIDADE
+// ===============================================================
+
+async function renderRelatoriosPanel() {
+    const turmaFilter = document.getElementById('relatorio-turma-select');
+    const alunoFilter = document.getElementById('relatorio-aluno-select');
+    const profFilter = document.getElementById('relatorio-professor-select');
+    turmaFilter.innerHTML = '<option value="">Todas</option>';
+    turmasCache.forEach(t => turmaFilter.innerHTML += `<option value="${t.id}">${t.nome_turma} (${t.ano_letivo})</option>`);
+    alunoFilter.innerHTML = '<option value="">Todos</option>';
+    alunosCache.forEach(a => alunoFilter.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
+    profFilter.innerHTML = '<option value="">Todos</option>';
+    usuariosCache.forEach(u => profFilter.innerHTML += `<option value="${u.user_uid}">${u.nome} (${u.papel})</option>`);
 }
 
-async function handleConfirmDelete() {
-    const confirmBtn = document.getElementById('confirm-delete-btn');
-    const type = confirmBtn.dataset.type;
-    const id = confirmBtn.dataset.id;
-    let queryBuilder;
-    if (type === 'aluno') queryBuilder = db.from('alunos').delete().eq('id', id);
-    else if (type === 'turma') {
-        await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
-        queryBuilder = db.from('turmas').delete().eq('id', id);
-    } else if (type === 'professor') queryBuilder = db.from('usuarios').delete().eq('id', id);
-    else if (type === 'evento') queryBuilder = db.from('eventos').delete().eq('id', id);
-    else if (type === 'acompanhamento') queryBuilder = db.from('apoia_encaminhamentos').delete().eq('id', id);
-    const { error } = await safeQuery(queryBuilder);
+async function handleGerarRelatorio() {
+    relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Gerando relatório...</td></tr>';
+    imprimirRelatorioBtn.classList.add('hidden');
+    let queryBuilder = db.from('presencas').select(`data, status, justificativa, alunos ( nome_completo ), turmas ( nome_turma ), usuarios ( nome )`).order('data', { ascending: false });
+    let dataInicio = document.getElementById('relatorio-data-inicio').value;
+    let dataFim = document.getElementById('relatorio-data-fim').value;
+    const turmaId = document.getElementById('relatorio-turma-select').value;
+    const alunoId = document.getElementById('relatorio-aluno-select').value;
+    const profId = document.getElementById('relatorio-professor-select').value;
+    const statusFiltro = document.getElementById('relatorio-status-select').value;
+    if (dataInicio && !dataFim) dataFim = dataInicio;
+    if (dataInicio) queryBuilder = queryBuilder.gte('data', dataInicio);
+    if (dataFim) queryBuilder = queryBuilder.lte('data', dataFim);
+    if (turmaId) queryBuilder = queryBuilder.eq('turma_id', turmaId);
+    if (alunoId) queryBuilder = queryBuilder.eq('aluno_id', alunoId);
+    if (profId) queryBuilder = queryBuilder.eq('registrado_por_uid', profId);
+    if (statusFiltro) queryBuilder = queryBuilder.eq('status', statusFiltro);
+    const { data, error } = await safeQuery(queryBuilder);
     if (error) {
-        showToast(`Não foi possível excluir o ${type}: ` + error.message, true);
-    } else {
-        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} excluído com sucesso!`);
-        if (type === 'aluno') await renderAlunosPanel();
-        if (type === 'turma') { await loadAdminData(); await renderTurmasPanel(); }
-        if (type === 'professor') {
-            showToast('Perfil do professor excluído. Lembre-se de remover o login correspondente no painel de Autenticação da Supabase, se houver.');
-            await loadAdminData(); await renderProfessoresPanel();
-        }
-        if (type === 'evento') { await renderCalendarioPanel(); await renderDashboardCalendar(); }
-        if (type === 'acompanhamento') { await renderApoiaPanel(); }
-    }
-    closeModal(deleteConfirmModal);
-}
-
-// --- Impressão ---
-function handleImprimirRelatorio(reportType) {
-    let dataInicioId, dataFimId, periodoElId;
-    if (reportType === 'faltas') {
-        dataInicioId = 'relatorio-data-inicio';
-        dataFimId = 'relatorio-data-fim';
-        periodoElId = 'relatorio-periodo-impressao';
-    } else if (reportType === 'apoia') {
-        dataInicioId = 'apoia-relatorio-data-inicio';
-        dataFimId = 'apoia-relatorio-data-fim';
-        periodoElId = 'apoia-relatorio-periodo-impressao';
-    } else if (reportType === 'historico') {
-        window.print();
-        return;
-    } else return;
-    const periodoEl = document.getElementById(periodoElId);
-    const dataInicio = document.getElementById(dataInicioId).value;
-    const dataFim = document.getElementById(dataFimId).value;
-    if (periodoEl) {
-        if (dataInicio && dataFim && dataInicio === dataFim) {
-            periodoEl.textContent = `Data: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')}`;
-        } else if (dataInicio && dataFim) {
-            const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
-            const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
-            periodoEl.textContent = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
-        } else {
-            periodoEl.textContent = 'Período: Todas as datas';
-        }
-    }
-    window.print();
-}
-
-// --- Histórico Individual do Aluno ---
-async function openAlunoHistoricoModal(alunoId) {
-    const tableBody = document.getElementById('aluno-historico-table-body');
-    tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando histórico...</td></tr>';
-    alunoHistoricoModal.classList.remove('hidden');
-    const { data: aluno } = await safeQuery(db.from('alunos').select('nome_completo').eq('id', alunoId).single());
-    const { data: presencas } = await safeQuery(db.from('presencas').select('data, status, justificativa').eq('aluno_id', alunoId).order('data', { ascending: false }));
-    if (!aluno || !presencas) {
-        showToast("Erro ao carregar dados do aluno.", true);
-        closeModal(alunoHistoricoModal);
+        relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
         return;
     }
-    document.getElementById('historico-aluno-nome-impressao').textContent = aluno.nome_completo;
-    const total = presencas.length;
-    const totalPresencas = presencas.filter(p => p.status === 'presente').length;
-    const totalFaltas = total - totalPresencas;
-    const assiduidade = total > 0 ? ((totalPresencas / total) * 100).toFixed(1) + '%' : 'N/A';
-    document.getElementById('historico-presencas').textContent = totalPresencas;
-    document.getElementById('historico-faltas').textContent = totalFaltas;
-    document.getElementById('historico-assiduidade').textContent = assiduidade;
-    if (total === 0) {
-        tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhum registro de frequência encontrado.</td></tr>';
-    } else {
-        tableBody.innerHTML = presencas.map(p => `
-            <tr class="border-b">
-                <td class="p-2">${new Date(p.data + 'T00:00:00').toLocaleDateString()}</td>
-                <td class="p-2"><span class="font-semibold ${p.status === 'falta' ? 'text-red-600' : 'text-green-600'}">${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span></td>
-                <td class="p-2 text-xs">${p.justificativa || ''}</td>
-            </tr>
-        `).join('');
+    if (data.length === 0) {
+        relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
+        return;
     }
+    relatorioTableBody.innerHTML = data.map(r => `
+        <tr class="border-b">
+            <td class="p-3">${new Date(r.data + 'T00:00:00').toLocaleDateString()}</td>
+            <td class="p-3">${r.alunos ? r.alunos.nome_completo : 'Aluno Removido'}</td>
+            <td class="p-3">${r.turmas ? r.turmas.nome_turma : 'Turma Removida'}</td>
+            <td class="p-3"><span class="font-semibold ${r.status === 'falta' ? 'text-red-600' : 'text-green-600'}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span></td>
+            <td class="p-3 text-xs">${r.justificativa || ''}</td>
+            <td class="p-3">${r.usuarios ? r.usuarios.nome : 'Usuário Removido'}</td>
+        </tr>
+    `).join('');
+    imprimirRelatorioBtn.classList.remove('hidden');
 }
 
-// --- Análise de Assiduidade ---
 function openAssiduidadeModal() {
     // Popula filtros de Alunos
     const anoSelAluno = document.getElementById('assiduidade-aluno-ano');
@@ -1342,7 +1067,7 @@ function openAssiduidadeModal() {
 
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
-
+    
     // 1. Escreve a estrutura BÁSICA da página, sem o script do Chart.js
     newWindow.document.write(`
         <html>
@@ -1382,11 +1107,11 @@ async function generateAssiduidadeReport() {
 
     // 2. Cria o elemento <script> para o Chart.js dinamicamente
     const chartJsScript = newWindow.document.createElement('script');
-
+    
     // 3. Executa o resto da nossa lógica APENAS QUANDO o script do Chart.js terminar de carregar
     chartJsScript.onload = async () => {
         closeModal(assiduidadeModal);
-
+        
         const renderReport = (reportHTML, chartScriptContent) => {
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             const scriptEl = newWindow.document.createElement('script');
@@ -1536,11 +1261,246 @@ async function generateAssiduidadeReport() {
             newWindow.document.getElementById('report-content').innerHTML = `<div class="text-red-500 font-bold text-center">Ocorreu um erro ao gerar o relatório: ${e.message}</div>`;
         }
     };
+
+    // 4. CORREÇÃO: Define o 'src' DEPOIS de definir o 'onload' para garantir que o evento seja capturado.
+    chartJsScript.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+    newWindow.document.head.appendChild(chartJsScript);
 }
 
+
 // ===============================================================
-// =================== EVENT LISTENERS ===========================
+// SEÇÃO 4.2: LÓGICA DO PAINEL DE ADMINISTRADOR - CONFIGS E CALENDÁRIO
 // ===============================================================
+
+async function renderConfigPanel() {
+    try {
+        const { data, error } = await safeQuery(db.from('configuracoes').select('*').limit(1).single());
+        if (error && error.code !== 'PGRST116') throw error;
+        if (data) {
+            document.getElementById('config-faltas-consecutivas').value = data.faltas_consecutivas_limite || '';
+            document.getElementById('config-faltas-intercaladas').value = data.faltas_intercaladas_limite || '';
+            document.getElementById('config-faltas-dias').value = data.faltas_intercaladas_dias || '';
+            if (data.alerta_horario) {
+                document.getElementById('config-alerta-horario').value = data.alerta_horario.substring(0, 5);
+            }
+            document.getElementById('config-alerta-faltas-ativo').checked = data.alerta_faltas_ativo;
+            document.getElementById('config-alerta-chamada-ativo').checked = data.alerta_chamada_nao_feita_ativo;
+        }
+    } catch (err) {
+        console.error("Erro ao carregar configurações:", err);
+        showToast("Não foi possível carregar as configurações.", true);
+    }
+}
+
+async function handleConfigFormSubmit(e) {
+    e.preventDefault();
+    try {
+        const configData = {
+            id: 1,
+            faltas_consecutivas_limite: document.getElementById('config-faltas-consecutivas').value,
+            faltas_intercaladas_limite: document.getElementById('config-faltas-intercaladas').value,
+            faltas_intercaladas_dias: document.getElementById('config-faltas-dias').value,
+            alerta_horario: document.getElementById('config-alerta-horario').value || null,
+            alerta_faltas_ativo: document.getElementById('config-alerta-faltas-ativo').checked,
+            alerta_chamada_nao_feita_ativo: document.getElementById('config-alerta-chamada-ativo').checked
+        };
+        const { error } = await safeQuery(db.from('configuracoes').upsert(configData));
+        if (error) throw error;
+        showToast('Configurações salvas com sucesso!');
+    } catch (err) {
+        showToast('Erro ao salvar configurações: ' + err.message, true);
+    }
+}
+
+async function renderCalendarioPanel() {
+    const dataInicioFilter = document.getElementById('evento-data-inicio-filter').value;
+    const dataFimFilter = document.getElementById('evento-data-fim-filter').value;
+    eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
+    let queryBuilder = db.from('eventos').select('*').order('data', { ascending: false });
+    if (dataInicioFilter && !dataFimFilter) {
+        queryBuilder = queryBuilder.gte('data', dataInicioFilter).lte('data', dataInicioFilter);
+    } else {
+        if (dataInicioFilter) queryBuilder = queryBuilder.gte('data', dataInicioFilter);
+        if (dataFimFilter) queryBuilder = queryBuilder.lte('data', dataFimFilter);
+    }
+    const { data, error } = await safeQuery(queryBuilder);
+    if (error) {
+        eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+        return;
+    }
+    if (data.length === 0) {
+        eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhum evento encontrado.</td></tr>';
+        return;
+    }
+    eventosTableBody.innerHTML = data.map(evento => {
+        const dataInicio = new Date(evento.data + 'T00:00:00').toLocaleDateString();
+        const dataFim = evento.data_fim ? new Date(evento.data_fim + 'T00:00:00').toLocaleDateString() : dataInicio;
+        const periodo = dataInicio === dataFim ? dataInicio : `${dataInicio} - ${dataFim}`;
+        return `
+        <tr class="border-b">
+            <td class="p-3">${periodo}</td>
+            <td class="p-3">${evento.descricao}</td>
+            <td class="p-3"><button class="text-blue-600 hover:underline edit-evento-btn" data-id="${evento.id}">Editar</button></td>
+        </tr>
+        `}).join('');
+}
+
+async function openEventoModal(editId = null) {
+    eventoForm.reset();
+    document.getElementById('evento-delete-container').classList.add('hidden');
+    if (editId) {
+        const { data } = await safeQuery(db.from('eventos').select('*').eq('id', editId).single());
+        document.getElementById('evento-modal-title').textContent = 'Editar Evento';
+        document.getElementById('evento-id').value = data.id;
+        document.getElementById('evento-descricao').value = data.descricao;
+        document.getElementById('evento-data-inicio').value = data.data;
+        document.getElementById('evento-data-fim').value = data.data_fim;
+        document.getElementById('evento-delete-container').classList.remove('hidden');
+    } else {
+        document.getElementById('evento-modal-title').textContent = 'Adicionar Evento';
+        document.getElementById('evento-id').value = '';
+    }
+    eventoModal.classList.remove('hidden');
+}
+
+async function handleEventoFormSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('evento-id').value;
+    const eventoData = {
+        descricao: document.getElementById('evento-descricao').value,
+        data: document.getElementById('evento-data-inicio').value,
+        data_fim: document.getElementById('evento-data-fim').value || null
+    };
+    if (!eventoData.data) {
+        showToast('A data de início é obrigatória.', true);
+        return;
+    }
+    const queryBuilder = id ? db.from('eventos').update(eventoData).eq('id', id) : db.from('eventos').insert(eventoData);
+    const { error } = await safeQuery(queryBuilder);
+    if (error) {
+        showToast('Erro ao salvar o evento: ' + error.message, true);
+    } else {
+        showToast('Evento salvo com sucesso!');
+        closeModal(eventoModal);
+        await renderCalendarioPanel();
+        await renderDashboardCalendar();
+    }
+}
+
+
+// ===============================================================
+// SEÇÃO 4.3: MODAIS, EXCLUSÃO E IMPRESSÃO
+// ===============================================================
+
+function openDeleteConfirmModal(type, id) {
+    const messageEl = document.getElementById('delete-confirm-message');
+    const confirmBtn = document.getElementById('confirm-delete-btn');
+    const checkbox = document.getElementById('delete-confirm-checkbox');
+    messageEl.textContent = `Você tem certeza que deseja excluir este ${type}? Esta ação é irreversível.`;
+    checkbox.checked = false;
+    confirmBtn.disabled = true;
+    confirmBtn.dataset.type = type;
+    confirmBtn.dataset.id = id;
+    deleteConfirmModal.classList.remove('hidden');
+}
+
+async function handleConfirmDelete() {
+    const confirmBtn = document.getElementById('confirm-delete-btn');
+    const type = confirmBtn.dataset.type;
+    const id = confirmBtn.dataset.id;
+    let queryBuilder;
+    if (type === 'aluno') queryBuilder = db.from('alunos').delete().eq('id', id);
+    else if (type === 'turma') {
+        await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
+        queryBuilder = db.from('turmas').delete().eq('id', id);
+    } else if (type === 'professor') queryBuilder = db.from('usuarios').delete().eq('id', id);
+    else if (type === 'evento') queryBuilder = db.from('eventos').delete().eq('id', id);
+    else if (type === 'acompanhamento') queryBuilder = db.from('apoia_encaminhamentos').delete().eq('id', id);
+    const { error } = await safeQuery(queryBuilder);
+    if (error) {
+        showToast(`Não foi possível excluir o ${type}: ` + error.message, true);
+    } else {
+        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} excluído com sucesso!`);
+        if (type === 'aluno') await renderAlunosPanel();
+        if (type === 'turma') { await loadAdminData(); await renderTurmasPanel(); }
+        if (type === 'professor') {
+            showToast('Perfil do professor excluído. Lembre-se de remover o login correspondente no painel de Autenticação da Supabase, se houver.');
+            await loadAdminData(); await renderProfessoresPanel();
+        }
+        if (type === 'evento') { await renderCalendarioPanel(); await renderDashboardCalendar(); }
+        if (type === 'acompanhamento') { await renderApoiaPanel(); }
+    }
+    closeModal(deleteConfirmModal);
+}
+
+function handleImprimirRelatorio(reportType) {
+    let dataInicioId, dataFimId, periodoElId;
+    if (reportType === 'faltas') {
+        dataInicioId = 'relatorio-data-inicio';
+        dataFimId = 'relatorio-data-fim';
+        periodoElId = 'relatorio-periodo-impressao';
+    } else if (reportType === 'apoia') {
+        dataInicioId = 'apoia-relatorio-data-inicio';
+        dataFimId = 'apoia-relatorio-data-fim';
+        periodoElId = 'apoia-relatorio-periodo-impressao';
+    } else if (reportType === 'historico') {
+        window.print();
+        return;
+    } else return;
+    const periodoEl = document.getElementById(periodoElId);
+    const dataInicio = document.getElementById(dataInicioId).value;
+    const dataFim = document.getElementById(dataFimId).value;
+    if (periodoEl) {
+        if (dataInicio && dataFim && dataInicio === dataFim) {
+            periodoEl.textContent = `Data: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')}`;
+        } else if (dataInicio && dataFim) {
+            const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
+            const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
+            periodoEl.textContent = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
+        } else {
+            periodoEl.textContent = 'Período: Todas as datas';
+        }
+    }
+    window.print();
+}
+
+async function openAlunoHistoricoModal(alunoId) {
+    const tableBody = document.getElementById('aluno-historico-table-body');
+    tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando histórico...</td></tr>';
+    alunoHistoricoModal.classList.remove('hidden');
+    const { data: aluno } = await safeQuery(db.from('alunos').select('nome_completo').eq('id', alunoId).single());
+    const { data: presencas } = await safeQuery(db.from('presencas').select('data, status, justificativa').eq('aluno_id', alunoId).order('data', { ascending: false }));
+    if (!aluno || !presencas) {
+        showToast("Erro ao carregar dados do aluno.", true);
+        closeModal(alunoHistoricoModal);
+        return;
+    }
+    document.getElementById('historico-aluno-nome-impressao').textContent = aluno.nome_completo;
+    const total = presencas.length;
+    const totalPresencas = presencas.filter(p => p.status === 'presente').length;
+    const totalFaltas = total - totalPresencas;
+    const assiduidade = total > 0 ? ((totalPresencas / total) * 100).toFixed(1) + '%' : 'N/A';
+    document.getElementById('historico-presencas').textContent = totalPresencas;
+    document.getElementById('historico-faltas').textContent = totalFaltas;
+    document.getElementById('historico-assiduidade').textContent = assiduidade;
+    if (total === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhum registro de frequência encontrado.</td></tr>';
+    } else {
+        tableBody.innerHTML = presencas.map(p => `
+            <tr class="border-b">
+                <td class="p-2">${new Date(p.data + 'T00:00:00').toLocaleDateString()}</td>
+                <td class="p-2"><span class="font-semibold ${p.status === 'falta' ? 'text-red-600' : 'text-green-600'}">${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span></td>
+                <td class="p-2 text-xs">${p.justificativa || ''}</td>
+            </tr>
+        `).join('');
+    }
+}
+
+
+// ===============================================================
+// SEÇÃO 4.4: INICIALIZAÇÃO E EVENT LISTENERS GERAIS
+// ===============================================================
+
 document.addEventListener('DOMContentLoaded', () => {
     const setupSupportLinks = () => {
         const numero = "5548991004780";
@@ -1652,6 +1612,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('click', (e) => {
         const target = e.target;
         const closest = (selector) => target.closest(selector);
+        
+        const sidebarToggleBtn = closest('#sidebar-toggle-btn');
+        const adminSidebar = document.getElementById('admin-sidebar');
+        if (sidebarToggleBtn && adminSidebar) {
+            adminSidebar.classList.toggle('-translate-x-full');
+        }
 
         if (closest('.date-clear-btn')) {
             const targetId = closest('.date-clear-btn').dataset.target;
@@ -1677,6 +1643,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
                 if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
                 if (targetPanelId === 'admin-config-panel') renderConfigPanel();
+            }
+             if (window.innerWidth < 768 && adminSidebar) { // Fecha o sidebar no mobile ao clicar num link
+                adminSidebar.classList.add('-translate-x-full');
             }
         }
         if (closest('#add-aluno-btn')) openAlunoModal();
@@ -1712,7 +1681,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closest('#admin-logout-btn') || closest('#professor-logout-btn')) signOutUser();
         if (closest('#gerar-relatorio-btn')) handleGerarRelatorio();
         if (closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('faltas');
-        if (closest('#gerar-apoia-relatorio-btn')) handleGerarApoiaRelatorio();
+        if (closest('#gerar-apoia-relatorio-btn')) handleApoiaRelatorio();
         if (closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('apoia');
         if (closest('#imprimir-historico-btn')) handleImprimirRelatorio('historico');
         if (closest('#correcao-chamada-btn')) {
@@ -1869,15 +1838,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
         }
     });
-
-    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
-    const adminSidebar = document.getElementById('admin-sidebar');
-    if (sidebarToggleBtn && adminSidebar) {
-        sidebarToggleBtn.addEventListener('click', () => {
-            adminSidebar.classList.toggle('-translate-x-full');
-        });
-    }
-
+    
     // Inicialização
     dataSelect.value = getLocalDateString();
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
