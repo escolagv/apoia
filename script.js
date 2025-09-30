@@ -1343,7 +1343,9 @@ function openAssiduidadeModal() {
     assiduidadeModal.classList.remove('hidden');
 }
 
-
+// ===============================================================
+// ATENÇÃO: A FUNÇÃO ABAIXO FOI COMPLETAMENTE ATUALIZADA
+// ===============================================================
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
     newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>body { font-family: 'Inter', sans-serif; } .print-header { display: none; } @media print { .no-print { display: none !important; } .printable-area { position: absolute; left: 0; top: 0; width: 100%; } body * { visibility: hidden; } .printable-area, .printable-area * { visibility: visible; } .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; } .print-header img { max-height: 60px; width: auto; } .print-header-info h2 { font-size: 1.25rem; font-weight: bold; margin: 0; } .print-header-info p { font-size: 0.875rem; margin: 0; } }</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content"><div class="text-center"><div class="loader" style="width: 48px; height: 48px; margin: auto;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
@@ -1486,34 +1488,33 @@ async function generateAssiduidadeReport() {
             }
 
             // =========================================================================
-            // INÍCIO DAS CORREÇÕES E MELHORIAS NO RELATÓRIO DE PROFESSORES
+            // INÍCIO DAS CORREÇÕES E MELHORIAS DESTA VERSÃO
             // =========================================================================
-
             const diasLancados = data.filter(d => d.status === 'Lançado');
             const diasNaoLancados = data.filter(d => d.status !== 'Lançado');
 
-            // MELHORIA: Cria o HTML detalhado para os dias lançados
+            // MELHORIA 1: Padroniza o HTML para os dias lançados, mostrando os detalhes
             const lancadosHtml = diasLancados.length > 0 ? diasLancados.map(d => 
                 `<div class="flex flex-col text-center bg-green-100 text-green-800 text-xs font-medium p-2 rounded-lg">
                     <strong class="text-sm">${new Date(d.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</strong>
                     <span class="mt-1">${d.nome_professor || 'N/A'} (${d.nome_turma || 'N/A'})</span>
                 </div>`
-            ).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
+            ).join('') : '<p class="text-sm text-gray-500">Nenhuma chamada lançada.</p>';
 
             const naoLancadosHtml = diasNaoLancados.length > 0 ? diasNaoLancados.map(d => 
                 `<div class="flex flex-col text-center bg-red-100 text-red-800 text-xs font-medium p-2 rounded-lg">
                     <strong class="text-sm">${new Date(d.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</strong>
                     <span class="mt-1">${d.nome_professor || 'N/A'} (${d.nome_turma || 'N/A'})</span>
                 </div>`
-            ).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
+            ).join('') : '<p class="text-sm text-gray-500">Nenhuma chamada pendente.</p>';
             
-            // CORREÇÃO 1: Contagem correta dos dias letivos únicos
+            // CORREÇÃO 1: Contagem correta dos dias letivos únicos no período
             const totalDiasLetivos = new Set(data.map(d => d.dia)).size;
             
             const totalLancados = diasLancados.length;
 
             // CORREÇÃO 2: Cálculo correto da taxa de lançamento
-            const totalEsperado = data.length; // O total de linhas é o total de chamadas esperadas
+            const totalEsperado = data.length; // O total de linhas é o total de chamadas esperadas (dias x profs x turmas)
             const taxa = totalEsperado > 0 ? ((totalLancados / totalEsperado) * 100).toFixed(1) + '%' : 'N/A';
             
             const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
@@ -1552,7 +1553,7 @@ async function generateAssiduidadeReport() {
                             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${lancadosHtml}</div>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="font-bold mb-4">Dias Letivos Sem Lançamento (${diasNaoLancados.length})</h3>
+                            <h3 class="font-bold mb-4">Chamadas Não Lançadas (${diasNaoLancados.length})</h3>
                             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${naoLancadosHtml}</div>
                         </div>
                     </div>
@@ -1560,7 +1561,7 @@ async function generateAssiduidadeReport() {
             const chartScriptContent = `setTimeout(() => { const ctx = document.getElementById('lancamentoChart'); if (ctx) { new Chart(ctx, { type: 'pie', data: { labels: ['Chamadas Lançadas', 'Chamadas Não Lançadas'], datasets: [{ data: [${totalLancados}, ${diasNaoLancados.length}], backgroundColor: ['#10B981', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral de Lançamentos' } } } }); } }, 100);`;
             renderReport(reportHTML, chartScriptContent);
             // =========================================================================
-            // FIM DAS CORREÇÕES E MELHORIAS
+            // FIM DAS CORREÇÕES
             // =========================================================================
         }
     } catch (e) {
@@ -1789,28 +1790,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Listeners de notificação
     notificationBell.addEventListener('click', (e) => {
         e.stopPropagation();
         notificationPanel.classList.toggle('hidden');
     });
     document.addEventListener('click', (e) => {
-        const closest = (selector) => e.target.closest(selector);
-        if (!notificationPanel.classList.contains('hidden') && !closest('#notification-panel') && !closest('#notification-bell')) {
+        if (!notificationPanel.classList.contains('hidden') && !e.target.closest('#notification-panel') && !e.target.closest('#notification-bell')) {
             notificationPanel.classList.add('hidden');
         }
     });
-    if (document.getElementById('clear-notifications-btn')) {
-        document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
-    }
-    if (document.getElementById('notification-list')) {
-        document.getElementById('notification-list').addEventListener('click', (e) => {
-            const item = e.target.closest('.notification-item');
-            if (item) {
-                markNotificationAsRead(item.dataset.id);
-            }
-        });
-    }
+    document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
+    document.getElementById('notification-list').addEventListener('click', (e) => {
+        const item = e.target.closest('.notification-item');
+        if (item) {
+            markNotificationAsRead(item.dataset.id);
+        }
+    });
 
+    // Listeners de mudança em formulários de chamada
     ['#chamada-lista-alunos', '#correcao-chamada-lista-alunos'].forEach(selector => {
         const container = document.querySelector(selector);
         if (container) {
@@ -1822,9 +1820,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (justDiv) {
                         justDiv.classList.toggle('hidden', !isFalta);
                         if (isFalta) {
-                            const injustificadaRadio = row.querySelector('input[value="Falta injustificada"]');
-                            if (injustificadaRadio && !row.querySelector('input[name^="just-"]:checked')) {
-                                injustificadaRadio.checked = true;
+                            const radiosJust = Array.from(row.querySelectorAll('input[name^="just-"], input[name^="corr-just-"]'));
+                            const hasChecked = radiosJust.some(r => r.checked);
+                            if (!hasChecked) {
+                                const injustificadaRadio = radiosJust.find(r => r.value === 'Falta injustificada');
+                                if (injustificadaRadio) injustificadaRadio.checked = true;
                             }
                         }
                     }
@@ -1833,6 +1833,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Outros listeners diretos
     turmaSelect.addEventListener('change', loadChamada);
     dataSelect.addEventListener('change', loadChamada);
     salvarChamadaBtn.addEventListener('click', saveChamada);
