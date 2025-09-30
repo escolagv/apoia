@@ -194,7 +194,7 @@ async function handleAuthChange(session) {
 
         if (papel === 'admin') {
             const adminInfoEl = document.getElementById('admin-info');
-            if (adminInfoEl) { // VERIFICAÇÃO DE SEGURANÇA para não travar o app
+            if (adminInfoEl) { 
                 adminInfoEl.textContent = nome || currentUser.email;
             }
             await loadAdminData();
@@ -203,7 +203,7 @@ async function handleAuthChange(session) {
             showView('admin-view');
         } else if (papel === 'professor') {
             const professorInfoEl = document.getElementById('professor-info');
-            if (professorInfoEl) { // VERIFICAÇÃO DE SEGURANÇA para não travar o app
+            if (professorInfoEl) { 
                 professorInfoEl.textContent = nome || currentUser.email;
             }
             await loadProfessorData(currentUser.id);
@@ -1789,9 +1789,14 @@ document.addEventListener('DOMContentLoaded', () => {
     correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
 
     document.getElementById('promover-turmas-ano-origem').addEventListener('change', renderPromocaoTurmasLista);
-    document.getElementById('promover-turmas-confirm-checkbox').addEventListener('change', (e) => {
-        document.getElementById('confirm-promocao-turmas-btn').disabled = !e.target.checked;
-    });
+    
+    const promoverConfirmCheckbox = document.getElementById('promover-turmas-confirm-checkbox');
+    if(promoverConfirmCheckbox) {
+        promoverConfirmCheckbox.addEventListener('change', (e) => {
+            const confirmBtn = document.getElementById('confirm-promocao-turmas-btn');
+            if(confirmBtn) confirmBtn.disabled = !e.target.checked;
+        });
+    }
 
     const toggleAllCheckbox = document.getElementById('promover-turmas-toggle-all');
     if (toggleAllCheckbox) {
