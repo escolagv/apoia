@@ -1,5 +1,3 @@
-
-// INÍCIO DO CÓDIGO JAVASCRIPT COMPLETO
 const { createClient } = supabase;
 const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
@@ -173,7 +171,7 @@ function resetInactivityTimer() {
 }
 
 // ===============================================================
-// LÓGICA DE AUTENTICAÇÃO
+// ================= LÓGICA DE AUTENTICAÇÃO ======================
 // ===============================================================
 
 async function handleAuthChange(session) {
@@ -226,9 +224,8 @@ db.auth.onAuthStateChange(async (event, session) => {
 });
 
 // ===============================================================
-// LÓGICA DO PAINEL DO PROFESSOR
+// ============= LÓGICA DO PAINEL DO PROFESSOR ===================
 // ===============================================================
-
 async function loadProfessorData(professorUid) {
     const { data: rels } = await safeQuery(db.from('professores_turmas').select('turma_id').eq('professor_id', professorUid));
     if (!rels || rels.length === 0) return;
@@ -322,12 +319,58 @@ async function saveChamada() {
     salvarChamadaBtn.textContent = 'Salvar Chamada';
 }
 
+// --- CORREÇÃO DE CHAMADA (Admin) ---
+async function loadCorrecaoChamada() {
+    const turmaId = correcaoTurmaSel.value;
+    const data = correcaoDataSel.value;
+    correcaoListaAlunos.innerHTML = '';
+    if (!turmaId || !data) {
+        correcaoListaAlunos.innerHTML = '<p class="text-center text-gray-500">Selecione uma turma e uma data para carregar os alunos.</p>';
+        return;
+    }
+    correcaoListaAlunos.innerHTML = '<div class="loader mx-auto"></div>';
+    const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo'));
+    if (!alunos) return;
+    if (alunos.length === 0) {
+        correcaoListaAlunos.innerHTML = '<p class="text-center text-gray-500">Nenhum aluno ativo encontrado para esta turma.</p>';
+        return;
+    }
+    const { data: presencas } = await safeQuery(db.from('presencas').select('aluno_id, status, justificativa').eq('turma_id', turmaId).eq('data', data));
+    const presencasMap = new Map((presencas || []).map(p => [p.aluno_id, { status: p.status, justificativa: p.justificativa }]));
+    alunos.forEach(aluno => {
+        const presenca = presencasMap.get(aluno.id) || { status: 'presente', justificativa: null };
+        const isJustificada = presenca.justificativa === 'Falta justificada';
+        const isInjustificada = presenca.justificativa === 'Falta injustificada' || (!presenca.justificativa && presenca.status === 'falta');
+        const isOutros = !isJustificada && !isInjustificada && presenca.justificativa;
+        const alunoDiv = document.createElement('div');
+        alunoDiv.className = 'p-3 bg-gray-50 rounded-lg';
+        alunoDiv.dataset.alunoId = aluno.id;
+        alunoDiv.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="font-medium">${aluno.nome_completo}</span>
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="corr-status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600 status-radio" ${presenca.status === 'presente' ? 'checked' : ''}><span class="ml-2 text-sm">Presente</span></label>
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="corr-status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600 status-radio" ${presenca.status === 'falta' ? 'checked' : ''}><span class="ml-2 text-sm">Falta</span></label>
+                </div>
+            </div>
+            <div class="justificativa-container mt-3 pt-3 border-t border-gray-200 ${presenca.status === 'falta' ? '' : 'hidden'}">
+                <div class="text-sm font-medium mb-2">Justificativa:</div>
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 pl-2">
+                    <label class="flex items-center"><input type="radio" name="corr-just-${aluno.id}" value="Falta justificada" class="form-radio h-4 w-4" ${isJustificada ? 'checked' : ''}><span class="ml-2 text-sm">Justificada</span></label>
+                    <label class="flex items-center"><input type="radio" name="corr-just-${aluno.id}" value="Falta injustificada" class="form-radio h-4 w-4" ${isInjustificada ? 'checked' : ''}><span class="ml-2 text-sm">Injustificada</span></label>
+                    <label class="flex items-center"><input type="radio" name="corr-just-${aluno.id}" value="outros" class="form-radio h-4 w-4" ${isOutros ? 'checked' : ''}><span class="ml-2 text-sm">Outros</span></label>
+                    <input type="text" class="justificativa-outros-input p-1 border rounded-md text-sm flex-grow min-w-0" placeholder="Motivo..." value="${isOutros ? presenca.justificativa : ''}">
+                </div>
+            </div>`;
+        correcaoListaAlunos.appendChild(alunoDiv);
+    });
+}
+
 
 // ===============================================================
-// LÓGICA DO PAINEL DE ADMINISTRADOR
+// ============= LÓGICA DO PAINEL DO ADMINISTRADOR ===============
 // ===============================================================
 
-// --- Lógica Geral e Dashboard ---
 async function loadNotifications() {
     const { data, error, count } = await safeQuery(db.from('alertas').select('*', { count: 'exact' }).eq('lido', false).order('created_at', { ascending: false }));
     if (error) {
@@ -372,6 +415,7 @@ async function loadAdminData() {
     anosLetivosCache = anos ? anos.sort((a, b) => b - a) : [];
 }
 
+// --- Dashboard ---
 async function renderDashboardPanel() {
     await loadDailySummary(dashboardSelectedDate);
     await renderDashboardCalendar();
@@ -447,8 +491,7 @@ async function renderDashboardCalendar() {
     calendarGrid.innerHTML = html;
 }
 
-
-// --- Gestão de Alunos ---
+// --- Gerenciamento de Alunos ---
 async function renderAlunosPanel(options = {}) {
     const { defaultToLatestYear = false } = options;
     const searchTerm = document.getElementById('aluno-search-input').value;
@@ -561,7 +604,6 @@ async function handleAlunoFormSubmit(e) {
     }
 }
 
-
 // --- Acompanhamento APOIA ---
 async function renderApoiaPanel(page = 1) {
     apoiaCurrentPage = page;
@@ -650,8 +692,38 @@ async function handleAcompanhamentoFormSubmit(e) {
     }
 }
 
+async function handleGerarApoiaRelatorio() {
+    const tableBody = document.getElementById('apoia-relatorio-table-body');
+    tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Gerando relatório...</td></tr>';
+    imprimirApoiaRelatorioBtn.classList.add('hidden');
+    let queryBuilder = db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('data_encaminhamento');
+    const dataInicio = document.getElementById('apoia-relatorio-data-inicio').value;
+    const dataFim = document.getElementById('apoia-relatorio-data-fim').value;
+    const statusFiltro = document.getElementById('apoia-relatorio-status').value;
+    if (dataInicio) queryBuilder = queryBuilder.gte('data_encaminhamento', dataInicio);
+    if (dataFim) queryBuilder = queryBuilder.lte('data_encaminhamento', dataFim);
+    if (statusFiltro) queryBuilder = queryBuilder.eq('status', statusFiltro);
+    const { data, error } = await safeQuery(queryBuilder);
+    if (error) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
+        return;
+    }
+    if (data.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
+        return;
+    }
+    tableBody.innerHTML = data.map(item => `
+        <tr class="border-b">
+            <td class="p-3">${item.alunos.nome_completo}</td>
+            <td class="p-3">${new Date(item.data_encaminhamento + 'T00:00:00').toLocaleDateString()}</td>
+            <td class="p-3">${item.motivo}</td>
+            <td class="p-3">${item.status}</td>
+            <td class="p-3">${item.observacoes || ''}</td>
+        </tr>`).join('');
+    imprimirApoiaRelatorioBtn.classList.remove('hidden');
+}
 
-// --- Gestão de Professores e Turmas ---
+// --- Gerenciamento de Professores ---
 async function renderProfessoresPanel() {
     professoresTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
     const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status, email_confirmado').eq('papel', 'professor').order('status', { ascending: true }).order('nome', { ascending: true }));
@@ -756,6 +828,7 @@ async function handleResetPassword(email) {
     }
 }
 
+// --- Gerenciamento de Turmas ---
 async function renderTurmasPanel() {
     const anoLetivoFilter = document.getElementById('turma-ano-letivo-filter');
     anoLetivoFilter.innerHTML = '<option value="">Todos os Anos</option>';
@@ -843,10 +916,178 @@ async function handleTurmaFormSubmit(e) {
     await renderTurmasPanel();
 }
 
+// --- Gerenciamento de Relatórios ---
+async function renderRelatoriosPanel() {
+    const turmaFilter = document.getElementById('relatorio-turma-select');
+    const alunoFilter = document.getElementById('relatorio-aluno-select');
+    const profFilter = document.getElementById('relatorio-professor-select');
+    turmaFilter.innerHTML = '<option value="">Todas</option>';
+    turmasCache.forEach(t => turmaFilter.innerHTML += `<option value="${t.id}">${t.nome_turma} (${t.ano_letivo})</option>`);
+    alunoFilter.innerHTML = '<option value="">Todos</option>';
+    alunosCache.forEach(a => alunoFilter.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
+    profFilter.innerHTML = '<option value="">Todos</option>';
+    usuariosCache.forEach(u => profFilter.innerHTML += `<option value="${u.user_uid}">${u.nome} (${u.papel})</option>`);
+}
+
+async function handleGerarRelatorio() {
+    relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Gerando relatório...</td></tr>';
+    imprimirRelatorioBtn.classList.add('hidden');
+    let queryBuilder = db.from('presencas').select(`data, status, justificativa, alunos ( nome_completo ), turmas ( nome_turma ), usuarios ( nome )`).order('data', { ascending: false });
+    let dataInicio = document.getElementById('relatorio-data-inicio').value;
+    let dataFim = document.getElementById('relatorio-data-fim').value;
+    const turmaId = document.getElementById('relatorio-turma-select').value;
+    const alunoId = document.getElementById('relatorio-aluno-select').value;
+    const profId = document.getElementById('relatorio-professor-select').value;
+    const statusFiltro = document.getElementById('relatorio-status-select').value;
+    if (dataInicio && !dataFim) dataFim = dataInicio;
+    if (dataInicio) queryBuilder = queryBuilder.gte('data', dataInicio);
+    if (dataFim) queryBuilder = queryBuilder.lte('data', dataFim);
+    if (turmaId) queryBuilder = queryBuilder.eq('turma_id', turmaId);
+    if (alunoId) queryBuilder = queryBuilder.eq('aluno_id', alunoId);
+    if (profId) queryBuilder = queryBuilder.eq('registrado_por_uid', profId);
+    if (statusFiltro) queryBuilder = queryBuilder.eq('status', statusFiltro);
+    const { data, error } = await safeQuery(queryBuilder);
+    if (error) {
+        relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
+        return;
+    }
+    if (data.length === 0) {
+        relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
+        return;
+    }
+    relatorioTableBody.innerHTML = data.map(r => `
+        <tr class="border-b">
+            <td class="p-3">${new Date(r.data + 'T00:00:00').toLocaleDateString()}</td>
+            <td class="p-3">${r.alunos ? r.alunos.nome_completo : 'Aluno Removido'}</td>
+            <td class="p-3">${r.turmas ? r.turmas.nome_turma : 'Turma Removida'}</td>
+            <td class="p-3"><span class="font-semibold ${r.status === 'falta' ? 'text-red-600' : 'text-green-600'}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span></td>
+            <td class="p-3 text-xs">${r.justificativa || ''}</td>
+            <td class="p-3">${r.usuarios ? r.usuarios.nome : 'Usuário Removido'}</td>
+        </tr>
+    `).join('');
+    imprimirRelatorioBtn.classList.remove('hidden');
+}
+
+// --- Gerenciamento de Configurações ---
+async function renderConfigPanel() {
+    try {
+        const { data, error } = await safeQuery(db.from('configuracoes').select('*').limit(1).single());
+        if (error && error.code !== 'PGRST116') throw error;
+        if (data) {
+            document.getElementById('config-faltas-consecutivas').value = data.faltas_consecutivas_limite || '';
+            document.getElementById('config-faltas-intercaladas').value = data.faltas_intercaladas_limite || '';
+            document.getElementById('config-faltas-dias').value = data.faltas_intercaladas_dias || '';
+            if (data.alerta_horario) {
+                document.getElementById('config-alerta-horario').value = data.alerta_horario.substring(0, 5);
+            }
+            document.getElementById('config-alerta-faltas-ativo').checked = data.alerta_faltas_ativo;
+            document.getElementById('config-alerta-chamada-ativo').checked = data.alerta_chamada_nao_feita_ativo;
+        }
+    } catch (err) {
+        console.error("Erro ao carregar configurações:", err);
+        showToast("Não foi possível carregar as configurações.", true);
+    }
+}
+
+async function handleConfigFormSubmit(e) {
+    e.preventDefault();
+    try {
+        const configData = {
+            id: 1,
+            faltas_consecutivas_limite: document.getElementById('config-faltas-consecutivas').value,
+            faltas_intercaladas_limite: document.getElementById('config-faltas-intercaladas').value,
+            faltas_intercaladas_dias: document.getElementById('config-faltas-dias').value,
+            alerta_horario: document.getElementById('config-alerta-horario').value || null,
+            alerta_faltas_ativo: document.getElementById('config-alerta-faltas-ativo').checked,
+            alerta_chamada_nao_feita_ativo: document.getElementById('config-alerta-chamada-ativo').checked
+        };
+        const { error } = await safeQuery(db.from('configuracoes').upsert(configData));
+        if (error) throw error;
+        showToast('Configurações salvas com sucesso!');
+    } catch (err) {
+        showToast('Erro ao salvar configurações: ' + err.message, true);
+    }
+}
+
+// --- Gerenciamento de Calendário ---
+async function renderCalendarioPanel() {
+    const dataInicioFilter = document.getElementById('evento-data-inicio-filter').value;
+    const dataFimFilter = document.getElementById('evento-data-fim-filter').value;
+    eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
+    let queryBuilder = db.from('eventos').select('*').order('data', { ascending: false });
+    if (dataInicioFilter && !dataFimFilter) {
+        queryBuilder = queryBuilder.gte('data', dataInicioFilter).lte('data', dataInicioFilter);
+    } else {
+        if (dataInicioFilter) queryBuilder = queryBuilder.gte('data', dataInicioFilter);
+        if (dataFimFilter) queryBuilder = queryBuilder.lte('data', dataFimFilter);
+    }
+    const { data, error } = await safeQuery(queryBuilder);
+    if (error) {
+        eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+        return;
+    }
+    if (data.length === 0) {
+        eventosTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhum evento encontrado.</td></tr>';
+        return;
+    }
+    eventosTableBody.innerHTML = data.map(evento => {
+        const dataInicio = new Date(evento.data + 'T00:00:00').toLocaleDateString();
+        const dataFim = evento.data_fim ? new Date(evento.data_fim + 'T00:00:00').toLocaleDateString() : dataInicio;
+        const periodo = dataInicio === dataFim ? dataInicio : `${dataInicio} - ${dataFim}`;
+        return `
+        <tr class="border-b">
+            <td class="p-3">${periodo}</td>
+            <td class="p-3">${evento.descricao}</td>
+            <td class="p-3"><button class="text-blue-600 hover:underline edit-evento-btn" data-id="${evento.id}">Editar</button></td>
+        </tr>
+        `}).join('');
+}
+
+async function openEventoModal(editId = null) {
+    eventoForm.reset();
+    document.getElementById('evento-delete-container').classList.add('hidden');
+    if (editId) {
+        const { data } = await safeQuery(db.from('eventos').select('*').eq('id', editId).single());
+        document.getElementById('evento-modal-title').textContent = 'Editar Evento';
+        document.getElementById('evento-id').value = data.id;
+        document.getElementById('evento-descricao').value = data.descricao;
+        document.getElementById('evento-data-inicio').value = data.data;
+        document.getElementById('evento-data-fim').value = data.data_fim;
+        document.getElementById('evento-delete-container').classList.remove('hidden');
+    } else {
+        document.getElementById('evento-modal-title').textContent = 'Adicionar Evento';
+        document.getElementById('evento-id').value = '';
+    }
+    eventoModal.classList.remove('hidden');
+}
+
+async function handleEventoFormSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('evento-id').value;
+    const eventoData = {
+        descricao: document.getElementById('evento-descricao').value,
+        data: document.getElementById('evento-data-inicio').value,
+        data_fim: document.getElementById('evento-data-fim').value || null
+    };
+    if (!eventoData.data) {
+        showToast('A data de início é obrigatória.', true);
+        return;
+    }
+    const queryBuilder = id ? db.from('eventos').update(eventoData).eq('id', id) : db.from('eventos').insert(eventoData);
+    const { error } = await safeQuery(queryBuilder);
+    if (error) {
+        showToast('Erro ao salvar o evento: ' + error.message, true);
+    } else {
+        showToast('Evento salvo com sucesso!');
+        closeModal(eventoModal);
+        await renderCalendarioPanel();
+        await renderDashboardCalendar();
+    }
+}
 
 // --- Gestão de Ano Letivo ---
 function renderAnoLetivoPanel() {
-    // A lógica está nos botões que abrem os modais
+    // A lógica está nos botões
 }
 
 async function openPromoverTurmasModal() {
@@ -873,13 +1114,11 @@ async function openPromoverTurmasModal() {
 }
 
 async function renderPromocaoTurmasLista() {
-    const anoOrigemEl = document.getElementById('promover-turmas-ano-origem');
+    const anoOrigem = document.getElementById('promover-turmas-ano-origem').value;
     const anoDestinoEl = document.getElementById('promover-turmas-ano-destino');
     const container = document.getElementById('promover-turmas-lista-container');
     const listEl = document.getElementById('promover-turmas-lista');
     const promoverBtn = document.getElementById('promover-turmas-btn');
-    
-    const anoOrigem = anoOrigemEl.value;
 
     listEl.innerHTML = '';
     promoverBtn.disabled = true;
@@ -889,8 +1128,7 @@ async function renderPromocaoTurmasLista() {
         anoDestinoEl.value = '';
         return;
     }
-    
-    // Preenche o ano de destino automaticamente
+
     anoDestinoEl.value = parseInt(anoOrigem) + 1;
     listEl.innerHTML = '<div class="loader mx-auto my-4"></div>';
     container.classList.remove('hidden');
@@ -956,62 +1194,114 @@ async function handleConfirmPromocaoTurmas() {
     btn.innerHTML = 'Executar Promoção';
 }
 
-
-// ===============================================================
-// SEÇÃO 4.1: LÓGICA DO PAINEL DE ADMINISTRADOR - RELATÓRIOS E ASSIDUIDADE
-// ===============================================================
-
-async function renderRelatoriosPanel() {
-    const turmaFilter = document.getElementById('relatorio-turma-select');
-    const alunoFilter = document.getElementById('relatorio-aluno-select');
-    const profFilter = document.getElementById('relatorio-professor-select');
-    turmaFilter.innerHTML = '<option value="">Todas</option>';
-    turmasCache.forEach(t => turmaFilter.innerHTML += `<option value="${t.id}">${t.nome_turma} (${t.ano_letivo})</option>`);
-    alunoFilter.innerHTML = '<option value="">Todos</option>';
-    alunosCache.forEach(a => alunoFilter.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
-    profFilter.innerHTML = '<option value="">Todos</option>';
-    usuariosCache.forEach(u => profFilter.innerHTML += `<option value="${u.user_uid}">${u.nome} (${u.papel})</option>`);
+// --- Lógica de Exclusão ---
+function openDeleteConfirmModal(type, id) {
+    const messageEl = document.getElementById('delete-confirm-message');
+    const confirmBtn = document.getElementById('confirm-delete-btn');
+    const checkbox = document.getElementById('delete-confirm-checkbox');
+    messageEl.textContent = `Você tem certeza que deseja excluir este ${type}? Esta ação é irreversível.`;
+    checkbox.checked = false;
+    confirmBtn.disabled = true;
+    confirmBtn.dataset.type = type;
+    confirmBtn.dataset.id = id;
+    deleteConfirmModal.classList.remove('hidden');
 }
 
-async function handleGerarRelatorio() {
-    relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Gerando relatório...</td></tr>';
-    imprimirRelatorioBtn.classList.add('hidden');
-    let queryBuilder = db.from('presencas').select(`data, status, justificativa, alunos ( nome_completo ), turmas ( nome_turma ), usuarios ( nome )`).order('data', { ascending: false });
-    let dataInicio = document.getElementById('relatorio-data-inicio').value;
-    let dataFim = document.getElementById('relatorio-data-fim').value;
-    const turmaId = document.getElementById('relatorio-turma-select').value;
-    const alunoId = document.getElementById('relatorio-aluno-select').value;
-    const profId = document.getElementById('relatorio-professor-select').value;
-    const statusFiltro = document.getElementById('relatorio-status-select').value;
-    if (dataInicio && !dataFim) dataFim = dataInicio;
-    if (dataInicio) queryBuilder = queryBuilder.gte('data', dataInicio);
-    if (dataFim) queryBuilder = queryBuilder.lte('data', dataFim);
-    if (turmaId) queryBuilder = queryBuilder.eq('turma_id', turmaId);
-    if (alunoId) queryBuilder = queryBuilder.eq('aluno_id', alunoId);
-    if (profId) queryBuilder = queryBuilder.eq('registrado_por_uid', profId);
-    if (statusFiltro) queryBuilder = queryBuilder.eq('status', statusFiltro);
-    const { data, error } = await safeQuery(queryBuilder);
+async function handleConfirmDelete() {
+    const confirmBtn = document.getElementById('confirm-delete-btn');
+    const type = confirmBtn.dataset.type;
+    const id = confirmBtn.dataset.id;
+    let queryBuilder;
+    if (type === 'aluno') queryBuilder = db.from('alunos').delete().eq('id', id);
+    else if (type === 'turma') {
+        await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
+        queryBuilder = db.from('turmas').delete().eq('id', id);
+    } else if (type === 'professor') queryBuilder = db.from('usuarios').delete().eq('id', id);
+    else if (type === 'evento') queryBuilder = db.from('eventos').delete().eq('id', id);
+    else if (type === 'acompanhamento') queryBuilder = db.from('apoia_encaminhamentos').delete().eq('id', id);
+    const { error } = await safeQuery(queryBuilder);
     if (error) {
-        relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao gerar relatório.</td></tr>';
-        return;
+        showToast(`Não foi possível excluir o ${type}: ` + error.message, true);
+    } else {
+        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} excluído com sucesso!`);
+        if (type === 'aluno') await renderAlunosPanel();
+        if (type === 'turma') { await loadAdminData(); await renderTurmasPanel(); }
+        if (type === 'professor') {
+            showToast('Perfil do professor excluído. Lembre-se de remover o login correspondente no painel de Autenticação da Supabase, se houver.');
+            await loadAdminData(); await renderProfessoresPanel();
+        }
+        if (type === 'evento') { await renderCalendarioPanel(); await renderDashboardCalendar(); }
+        if (type === 'acompanhamento') { await renderApoiaPanel(); }
     }
-    if (data.length === 0) {
-        relatorioTableBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Nenhum registro encontrado.</td></tr>';
-        return;
-    }
-    relatorioTableBody.innerHTML = data.map(r => `
-        <tr class="border-b">
-            <td class="p-3">${new Date(r.data + 'T00:00:00').toLocaleDateString()}</td>
-            <td class="p-3">${r.alunos ? r.alunos.nome_completo : 'Aluno Removido'}</td>
-            <td class="p-3">${r.turmas ? r.turmas.nome_turma : 'Turma Removida'}</td>
-            <td class="p-3"><span class="font-semibold ${r.status === 'falta' ? 'text-red-600' : 'text-green-600'}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span></td>
-            <td class="p-3 text-xs">${r.justificativa || ''}</td>
-            <td class="p-3">${r.usuarios ? r.usuarios.nome : 'Usuário Removido'}</td>
-        </tr>
-    `).join('');
-    imprimirRelatorioBtn.classList.remove('hidden');
+    closeModal(deleteConfirmModal);
 }
 
+// --- Impressão ---
+function handleImprimirRelatorio(reportType) {
+    let dataInicioId, dataFimId, periodoElId;
+    if (reportType === 'faltas') {
+        dataInicioId = 'relatorio-data-inicio';
+        dataFimId = 'relatorio-data-fim';
+        periodoElId = 'relatorio-periodo-impressao';
+    } else if (reportType === 'apoia') {
+        dataInicioId = 'apoia-relatorio-data-inicio';
+        dataFimId = 'apoia-relatorio-data-fim';
+        periodoElId = 'apoia-relatorio-periodo-impressao';
+    } else if (reportType === 'historico') {
+        window.print();
+        return;
+    } else return;
+    const periodoEl = document.getElementById(periodoElId);
+    const dataInicio = document.getElementById(dataInicioId).value;
+    const dataFim = document.getElementById(dataFimId).value;
+    if (periodoEl) {
+        if (dataInicio && dataFim && dataInicio === dataFim) {
+            periodoEl.textContent = `Data: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')}`;
+        } else if (dataInicio && dataFim) {
+            const dataInicioFmt = new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR');
+            const dataFimFmt = new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR');
+            periodoEl.textContent = `Período: ${dataInicioFmt} a ${dataFimFmt}`;
+        } else {
+            periodoEl.textContent = 'Período: Todas as datas';
+        }
+    }
+    window.print();
+}
+
+// --- Histórico Individual do Aluno ---
+async function openAlunoHistoricoModal(alunoId) {
+    const tableBody = document.getElementById('aluno-historico-table-body');
+    tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando histórico...</td></tr>';
+    alunoHistoricoModal.classList.remove('hidden');
+    const { data: aluno } = await safeQuery(db.from('alunos').select('nome_completo').eq('id', alunoId).single());
+    const { data: presencas } = await safeQuery(db.from('presencas').select('data, status, justificativa').eq('aluno_id', alunoId).order('data', { ascending: false }));
+    if (!aluno || !presencas) {
+        showToast("Erro ao carregar dados do aluno.", true);
+        closeModal(alunoHistoricoModal);
+        return;
+    }
+    document.getElementById('historico-aluno-nome-impressao').textContent = aluno.nome_completo;
+    const total = presencas.length;
+    const totalPresencas = presencas.filter(p => p.status === 'presente').length;
+    const totalFaltas = total - totalPresencas;
+    const assiduidade = total > 0 ? ((totalPresencas / total) * 100).toFixed(1) + '%' : 'N/A';
+    document.getElementById('historico-presencas').textContent = totalPresencas;
+    document.getElementById('historico-faltas').textContent = totalFaltas;
+    document.getElementById('historico-assiduidade').textContent = assiduidade;
+    if (total === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhum registro de frequência encontrado.</td></tr>';
+    } else {
+        tableBody.innerHTML = presencas.map(p => `
+            <tr class="border-b">
+                <td class="p-2">${new Date(p.data + 'T00:00:00').toLocaleDateString()}</td>
+                <td class="p-2"><span class="font-semibold ${p.status === 'falta' ? 'text-red-600' : 'text-green-600'}">${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span></td>
+                <td class="p-2 text-xs">${p.justificativa || ''}</td>
+            </tr>
+        `).join('');
+    }
+}
+
+// --- Análise de Assiduidade ---
 function openAssiduidadeModal() {
     // Popula filtros de Alunos
     const anoSelAluno = document.getElementById('assiduidade-aluno-ano');
@@ -1050,210 +1340,167 @@ function openAssiduidadeModal() {
     assiduidadeModal.classList.remove('hidden');
 }
 
+
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
+    newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>body { font-family: 'Inter', sans-serif; } .print-header { display: none; } @media print { .no-print { display: none !important; } .printable-area { position: absolute; left: 0; top: 0; width: 100%; } body * { visibility: hidden; } .printable-area, .printable-area * { visibility: visible; } .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; } .print-header img { max-height: 60px; width: auto; } .print-header-info h2 { font-size: 1.25rem; font-weight: bold; margin: 0; } .print-header-info p { font-size: 0.875rem; margin: 0; } }</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content"><div class="text-center"><div class="loader" style="width: 48px; height: 48px; margin: auto;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
+    closeModal(assiduidadeModal);
 
-    newWindow.document.write(`
-        <html>
-            <head>
-                <title>Relatório de Assiduidade</title>
-                <script src="https://cdn.tailwindcss.com"><\/script>
-                <style>
-                    body { font-family: 'Inter', sans-serif; } 
-                    .print-header { display: none; } 
-                    @media print { 
-                        .no-print { display: none !important; } 
-                        .printable-area { position: absolute; left: 0; top: 0; width: 100%; } 
-                        body * { visibility: hidden; } 
-                        .printable-area, .printable-area * { visibility: visible; } 
-                        .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; } 
-                        .print-header img { max-height: 60px; width: auto; } 
-                        .print-header-info h2 { font-size: 1.25rem; font-weight: bold; margin: 0; } 
-                        .print-header-info p { font-size: 0.875rem; margin: 0; } 
-                    }
-                    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
-                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-                </style>
-            </head>
-            <body class="bg-gray-100 p-8">
-                <div class="printable-area">
-                    <div id="report-content">
-                        <div class="text-center">
-                            <div class="loader" style="width: 48px; height: 48px; margin: auto;"></div>
-                            <p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p>
-                        </div>
-                    </div>
-                </div>
-            </body>
-        </html>
-    `);
-    newWindow.document.close();
+    try {
+        const activeTab = document.querySelector('#assiduidade-tabs a[aria-current="page"]').dataset.target;
 
-    const chartJsScript = newWindow.document.createElement('script');
-
-    chartJsScript.onload = async () => {
-        closeModal(assiduidadeModal);
-
+        // Helper para injetar HTML e Script de forma segura
         const renderReport = (reportHTML, chartScriptContent) => {
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             const scriptEl = newWindow.document.createElement('script');
             scriptEl.textContent = chartScriptContent;
             newWindow.document.body.appendChild(scriptEl);
         };
+        
+        if (activeTab === 'assiduidade-alunos') {
+            let dataInicio = document.getElementById('assiduidade-aluno-data-inicio').value;
+            let dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
+            if (dataInicio && !dataFim) dataFim = dataInicio;
+            const alunoId = document.getElementById('assiduidade-aluno-aluno').value;
 
-        try {
-            const activeTab = document.querySelector('#assiduidade-tabs a[aria-current="page"]').dataset.target;
+            let query = db.from('presencas').select('status, justificativa, alunos!inner(nome_completo), turmas!inner(nome_turma)');
+            if (dataInicio) query = query.gte('data', dataInicio);
+            if (dataFim) query = query.lte('data', dataFim);
+            if (alunoId) query = query.eq('aluno_id', alunoId);
 
-            if (activeTab === 'assiduidade-alunos') {
-                let dataInicio = document.getElementById('assiduidade-aluno-data-inicio').value;
-                let dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
-                if (dataInicio && !dataFim) dataFim = dataInicio;
-                const alunoId = document.getElementById('assiduidade-aluno-aluno').value;
-
-                let query = db.from('presencas').select('status, justificativa, alunos!inner(nome_completo), turmas!inner(nome_turma)');
-                if (dataInicio) query = query.gte('data', dataInicio);
-                if (dataFim) query = query.lte('data', dataFim);
-                if (alunoId) query = query.eq('aluno_id', alunoId);
-
-                const { data, error } = await safeQuery(query);
-                if (error) throw error;
-                if (data.length === 0) {
-                    newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dado encontrado para os filtros selecionados.</p>';
-                    return;
-                }
-
-                const stats = data.reduce((acc, record) => {
-                    if (!record.alunos) return acc;
-                    const nome = record.alunos.nome_completo;
-                    if (!acc[nome]) {
-                        acc[nome] = { presencas: 0, faltas_j: 0, faltas_i: 0, turma: record.turmas.nome_turma };
-                    }
-                    if (record.status === 'presente') acc[nome].presencas++;
-                    else {
-                        if (record.justificativa === 'Falta justificada') acc[nome].faltas_j++;
-                        else acc[nome].faltas_i++;
-                    }
-                    return acc;
-                }, {});
-
-                const tableRows = Object.entries(stats).sort((a, b) => a[0].localeCompare(b[0])).map(([nome, { presencas, faltas_j, faltas_i, turma }]) => {
-                    const total = presencas + faltas_j + faltas_i;
-                    const percentual = total > 0 ? ((presencas / total) * 100).toFixed(1) + '%' : 'N/A';
-                    return `<tr class="border-b"><td class="p-3">${nome}</td><td class="p-3">${turma}</td><td class="p-3 text-center text-green-600 font-semibold">${presencas}</td><td class="p-3 text-center text-yellow-600 font-semibold">${faltas_j}</td><td class="p-3 text-center text-red-600 font-semibold">${faltas_i}</td><td class="p-3 text-center font-bold">${percentual}</td></tr>`;
-                }).join('');
-
-                const totalPresencas = Object.values(stats).reduce((sum, s) => sum + s.presencas, 0);
-                const totalFaltasJ = Object.values(stats).reduce((sum, s) => sum + s.faltas_j, 0);
-                const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
-                const periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
-
-                const reportHTML = `<div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="assiduidadeChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Detalhes da Frequência</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Aluno</th><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas Just.</th><th class="p-3 text-center">Faltas Injust.</th><th class="p-3 text-center">Assiduidade</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
-                const chartScriptContent = `setTimeout(() => { const ctx = document.getElementById('assiduidadeChart'); if (ctx) { new Chart(ctx, { type: 'pie', data: { labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'], datasets: [{ data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}], backgroundColor: ['#10B981', '#F59E0B', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } } }); } }, 100);`;
-                renderReport(reportHTML, chartScriptContent);
-
-            } else if (activeTab === 'assiduidade-turmas') {
-                let dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
-                let dataFim = document.getElementById('assiduidade-turma-data-fim').value;
-                if (dataInicio && !dataFim) dataFim = dataInicio;
-                const anoLetivo = document.getElementById('assiduidade-turma-ano').value;
-                const turmaId = document.getElementById('assiduidade-turma-turma').value;
-
-                let query = db.from('presencas').select('status, justificativa, turmas!inner(id, nome_turma, ano_letivo)');
-                if (dataInicio) query = query.gte('data', dataInicio);
-                if (dataFim) query = query.lte('data', dataFim);
-                if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
-                if (turmaId) query = query.eq('turma_id', turmaId);
-
-                const { data, error } = await safeQuery(query);
-                if (error) throw error;
-                if (data.length === 0) {
-                    newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dado encontrado para os filtros selecionados.</p>';
-                    return;
-                }
-
-                const stats = data.reduce((acc, record) => {
-                    const turma = record.turmas;
-                    if (!turma) return acc;
-                    if (!acc[turma.id]) {
-                        acc[turma.id] = { nome: turma.nome_turma, presencas: 0, faltas: 0 };
-                    }
-                    if (record.status === 'presente') acc[turma.id].presencas++;
-                    else acc[turma.id].faltas++;
-                    return acc;
-                }, {});
-
-                const sortedStats = Object.values(stats).sort((a, b) => a.nome.localeCompare(b.nome));
-                const tableRows = sortedStats.map(turma => {
-                    const total = turma.presencas + turma.faltas;
-                    const percentual = total > 0 ? ((turma.presencas / total) * 100).toFixed(1) + '%' : 'N/A';
-                    return `<tr class="border-b"><td class="p-3">${turma.nome}</td><td class="p-3 text-center text-green-600 font-semibold">${turma.presencas}</td><td class="p-3 text-center text-red-600 font-semibold">${turma.faltas}</td><td class="p-3 text-center font-bold">${percentual}</td></tr>`;
-                }).join('');
-
-                const totalPresencas = sortedStats.reduce((sum, t) => sum + t.presencas, 0);
-                const totalFaltas = sortedStats.reduce((sum, t) => sum + t.faltas, 0);
-                const periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
-
-                const reportHTML = `<div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="assiduidadeTurmaChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dados Consolidados</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
-                const chartScriptContent = `setTimeout(() => { const ctx = document.getElementById('assiduidadeTurmaChart'); if(ctx) { new Chart(ctx, { type: 'pie', data: { labels: ['Total de Presenças', 'Total de Faltas'], datasets: [{ label: 'Frequência Geral', data: [${totalPresencas}, ${totalFaltas}], backgroundColor: ['#10B981', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Frequência Geral das Turmas' } } } }); } }, 100);`;
-                renderReport(reportHTML, chartScriptContent);
-
-            } else if (activeTab === 'assiduidade-professores') {
-                let dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
-                let dataFim = document.getElementById('assiduidade-prof-data-fim').value;
-                const professorId = document.getElementById('assiduidade-prof-professor').value;
-
-                if (!dataInicio || !dataFim) {
-                    const { data: range, error } = await db.rpc('get_min_max_presenca_data');
-                    if (error || !range || range.length === 0 || !range[0].min_data) {
-                        newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Não foi possível determinar o período de datas. Não há registros de chamada no sistema.</p>';
-                        return;
-                    }
-                    dataInicio = range[0].min_data;
-                    dataFim = range[0].max_data;
-                }
-
-                const { data, error } = await db.rpc('get_professor_assiduidade', {
-                    data_inicio: dataInicio,
-                    data_fim: dataFim,
-                    professor_uid_selecionado: professorId || null
-                });
-
-                if (error) throw error;
-                if (data.length === 0) {
-                    newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dia letivo encontrado para o período e filtros selecionados.</p>';
-                    return;
-                }
-
-                const diasLancados = data.filter(d => d.status === 'Lançado');
-                const diasNaoLancados = data.filter(d => d.status !== 'Lançado');
-                const lancadosHtml = diasLancados.length > 0 ? diasLancados.map(d => `<span class="bg-green-100 text-green-800 text-xs font-medium mr-2 mb-2 px-2.5 py-0.5 rounded-full inline-block">${new Date(d.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
-                const naoLancadosHtml = diasNaoLancados.length > 0 ? diasNaoLancados.map(d => `<div class="flex flex-col text-center bg-red-100 text-red-800 text-xs font-medium p-2 rounded-lg"><strong class="text-sm">${new Date(d.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</strong><span class="mt-1">${d.nome_professor || 'Professor não identificado'} (${d.nome_turma || 'Turma?'})</span></div>`).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
-                const totalDiasLetivos = data.length;
-                const totalLancados = diasLancados.length;
-                const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
-                const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
-                const periodoTexto = `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}`;
-
-                const reportHTML = `<div class="printable-area"><div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Professores</h2><p>Professor: ${nomeProfessor}</p><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Professores</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="lancamentoChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="text-lg font-bold mb-4">Resumo do Período para: <span class="text-indigo-600">${nomeProfessor}</span></h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center"><div><p class="text-sm text-gray-500">Total de Dias Letivos</p><p class="text-2xl font-bold">${totalDiasLetivos}</p></div><div><p class="text-sm text-gray-500">Dias com Chamada Lançada</p><p class="text-2xl font-bold text-green-600">${totalLancados}</p></div><div><p class="text-sm text-gray-500">Taxa de Lançamento</p><p class="text-2xl font-bold text-blue-600">${taxa}</p></div></div></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6"><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dias com Chamada Lançada (${totalLancados})</h3><div class="flex flex-wrap gap-2">${lancadosHtml}</div></div><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dias Letivos Sem Lançamento (${diasNaoLancados.length})</h3><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${naoLancadosHtml}</div></div></div></div>`;
-                const chartScriptContent = `setTimeout(() => { const ctx = document.getElementById('lancamentoChart'); if (ctx) { new Chart(ctx, { type: 'pie', data: { labels: ['Dias com Chamada Lançada', 'Dias Sem Lançamento'], datasets: [{ data: [${totalLancados}, ${diasNaoLancados.length}], backgroundColor: ['#10B981', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral de Lançamentos' } } } }); } }, 100);`;
-                renderReport(reportHTML, chartScriptContent);
+            const { data, error } = await safeQuery(query);
+            if (error) throw error;
+            if (data.length === 0) {
+                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dado encontrado para os filtros selecionados.</p>';
+                return;
             }
-        } catch (e) {
-            console.error("Erro ao gerar relatório:", e);
-            newWindow.document.getElementById('report-content').innerHTML = `<div class="text-red-500 font-bold text-center">Ocorreu um erro ao gerar o relatório: ${e.message}</div>`;
+
+            const stats = data.reduce((acc, record) => {
+                if (!record.alunos) return acc;
+                const nome = record.alunos.nome_completo;
+                if (!acc[nome]) {
+                    acc[nome] = { presencas: 0, faltas_j: 0, faltas_i: 0, turma: record.turmas.nome_turma };
+                }
+                if (record.status === 'presente') acc[nome].presencas++;
+                else {
+                    if (record.justificativa === 'Falta justificada') acc[nome].faltas_j++;
+                    else acc[nome].faltas_i++;
+                }
+                return acc;
+            }, {});
+
+            const tableRows = Object.entries(stats).sort((a, b) => a[0].localeCompare(b[0])).map(([nome, { presencas, faltas_j, faltas_i, turma }]) => {
+                const total = presencas + faltas_j + faltas_i;
+                const percentual = total > 0 ? ((presencas / total) * 100).toFixed(1) + '%' : 'N/A';
+                return `<tr class="border-b"><td class="p-3">${nome}</td><td class="p-3">${turma}</td><td class="p-3 text-center text-green-600 font-semibold">${presencas}</td><td class="p-3 text-center text-yellow-600 font-semibold">${faltas_j}</td><td class="p-3 text-center text-red-600 font-semibold">${faltas_i}</td><td class="p-3 text-center font-bold">${percentual}</td></tr>`;
+            }).join('');
+
+            const totalPresencas = Object.values(stats).reduce((sum, s) => sum + s.presencas, 0);
+            const totalFaltasJ = Object.values(stats).reduce((sum, s) => sum + s.faltas_j, 0);
+            const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
+            const periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
+
+            const reportHTML = `<div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="assiduidadeChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Detalhes da Frequência</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Aluno</th><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas Just.</th><th class="p-3 text-center">Faltas Injust.</th><th class="p-3 text-center">Assiduidade</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
+            const chartScriptContent = `setTimeout(() => { const ctx = document.getElementById('assiduidadeChart'); if (ctx) { new Chart(ctx, { type: 'pie', data: { labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'], datasets: [{ data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}], backgroundColor: ['#10B981', '#F59E0B', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } } }); } }, 100);`;
+            renderReport(reportHTML, chartScriptContent);
+
+        } else if (activeTab === 'assiduidade-turmas') {
+            let dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
+            let dataFim = document.getElementById('assiduidade-turma-data-fim').value;
+            if (dataInicio && !dataFim) dataFim = dataInicio;
+            const anoLetivo = document.getElementById('assiduidade-turma-ano').value;
+            const turmaId = document.getElementById('assiduidade-turma-turma').value;
+
+            let query = db.from('presencas').select('status, justificativa, turmas!inner(id, nome_turma, ano_letivo)');
+            if (dataInicio) query = query.gte('data', dataInicio);
+            if (dataFim) query = query.lte('data', dataFim);
+            if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
+            if (turmaId) query = query.eq('turma_id', turmaId);
+
+            const { data, error } = await safeQuery(query);
+            if (error) throw error;
+            if (data.length === 0) {
+                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dado encontrado para os filtros selecionados.</p>';
+                return;
+            }
+
+            const stats = data.reduce((acc, record) => {
+                const turma = record.turmas;
+                if (!turma) return acc;
+                if (!acc[turma.id]) {
+                    acc[turma.id] = { nome: turma.nome_turma, presencas: 0, faltas: 0 };
+                }
+                if (record.status === 'presente') acc[turma.id].presencas++;
+                else acc[turma.id].faltas++;
+                return acc;
+            }, {});
+
+            const sortedStats = Object.values(stats).sort((a, b) => a.nome.localeCompare(b.nome));
+            const tableRows = sortedStats.map(turma => {
+                const total = turma.presencas + turma.faltas;
+                const percentual = total > 0 ? ((turma.presencas / total) * 100).toFixed(1) + '%' : 'N/A';
+                return `<tr class="border-b"><td class="p-3">${turma.nome}</td><td class="p-3 text-center text-green-600 font-semibold">${turma.presencas}</td><td class="p-3 text-center text-red-600 font-semibold">${turma.faltas}</td><td class="p-3 text-center font-bold">${percentual}</td></tr>`;
+            }).join('');
+
+            const totalPresencas = sortedStats.reduce((sum, t) => sum + t.presencas, 0);
+            const totalFaltas = sortedStats.reduce((sum, t) => sum + t.faltas, 0);
+            const periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
+
+            const reportHTML = `<div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="assiduidadeTurmaChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dados Consolidados</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
+            const chartScriptContent = `setTimeout(() => { const ctx = document.getElementById('assiduidadeTurmaChart'); if(ctx) { new Chart(ctx, { type: 'pie', data: { labels: ['Total de Presenças', 'Total de Faltas'], datasets: [{ label: 'Frequência Geral', data: [${totalPresencas}, ${totalFaltas}], backgroundColor: ['#10B981', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Frequência Geral das Turmas' } } } }); } }, 100);`;
+            renderReport(reportHTML, chartScriptContent);
+
+        } else if (activeTab === 'assiduidade-professores') {
+            let dataInicio = document.getElementById('assiduidade-prof-data-inicio').value;
+            let dataFim = document.getElementById('assiduidade-prof-data-fim').value;
+            const professorId = document.getElementById('assiduidade-prof-professor').value;
+
+            if (!dataInicio || !dataFim) {
+                const { data: range, error } = await db.rpc('get_min_max_presenca_data');
+                if (error || !range) {
+                    newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Não foi possível determinar o período de datas automaticamente. Não há registros de chamada no sistema.</p>';
+                    return;
+                }
+                dataInicio = range.min_data;
+                dataFim = range.max_data;
+            }
+
+            const { data, error } = await db.rpc('get_professor_assiduidade', {
+                data_inicio: dataInicio,
+                data_fim: dataFim,
+                professor_uid_selecionado: professorId || null
+            });
+
+            if (error) throw error;
+            if (data.length === 0) {
+                newWindow.document.getElementById('report-content').innerHTML = '<p class="text-center font-bold">Nenhum dia letivo encontrado para o período e filtros selecionados.</p>';
+                return;
+            }
+
+            const diasLancados = data.filter(d => d.status === 'Lançado');
+            const diasNaoLancados = data.filter(d => d.status !== 'Lançado');
+            const lancadosHtml = diasLancados.length > 0 ? diasLancados.map(d => `<span class="bg-green-100 text-green-800 text-xs font-medium mr-2 mb-2 px-2.5 py-0.5 rounded-full inline-block">${new Date(d.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</span>`).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
+            const naoLancadosHtml = diasNaoLancados.length > 0 ? diasNaoLancados.map(d => `<div class="flex flex-col text-center bg-red-100 text-red-800 text-xs font-medium p-2 rounded-lg"><strong class="text-sm">${new Date(d.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</strong><span class="mt-1">${d.nome_professor || 'Professor não identificado'} (${d.nome_turma || 'Turma?'})</span></div>`).join('') : '<p class="text-sm text-gray-500">Nenhum.</p>';
+            const totalDiasLetivos = data.length;
+            const totalLancados = diasLancados.length;
+            const taxa = totalDiasLetivos > 0 ? ((totalLancados / totalDiasLetivos) * 100).toFixed(1) + '%' : 'N/A';
+            const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
+            const periodoTexto = `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}`;
+
+            const reportHTML = `<div class="printable-area"><div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Professores</h2><p>Professor: ${nomeProfessor}</p><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Professores</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="lancamentoChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="text-lg font-bold mb-4">Resumo do Período para: <span class="text-indigo-600">${nomeProfessor}</span></h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center"><div><p class="text-sm text-gray-500">Total de Dias Letivos</p><p class="text-2xl font-bold">${totalDiasLetivos}</p></div><div><p class="text-sm text-gray-500">Dias com Chamada Lançada</p><p class="text-2xl font-bold text-green-600">${totalLancados}</p></div><div><p class="text-sm text-gray-500">Taxa de Lançamento</p><p class="text-2xl font-bold text-blue-600">${taxa}</p></div></div></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6"><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dias com Chamada Lançada (${totalLancados})</h3><div class="flex flex-wrap gap-2">${lancadosHtml}</div></div><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dias Letivos Sem Lançamento (${diasNaoLancados.length})</h3><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${naoLancadosHtml}</div></div></div></div>`;
+            const chartScriptContent = `setTimeout(() => { const ctx = document.getElementById('lancamentoChart'); if (ctx) { new Chart(ctx, { type: 'pie', data: { labels: ['Dias com Chamada Lançada', 'Dias Sem Lançamento'], datasets: [{ data: [${totalLancados}, ${diasNaoLancados.length}], backgroundColor: ['#10B981', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral de Lançamentos' } } } }); } }, 100);`;
+            renderReport(reportHTML, chartScriptContent);
         }
-    };
-    
-    // CORREÇÃO FINAL: Define o 'onload' ANTES de definir o 'src' para garantir que o evento seja capturado.
-    chartJsScript.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-    newWindow.document.head.appendChild(chartJsScript);
+    } catch (e) {
+        console.error("Erro ao gerar relatório:", e);
+        newWindow.document.getElementById('report-content').innerHTML = `<div class="text-red-500 font-bold text-center">Ocorreu um erro ao gerar o relatório: ${e.message}</div>`;
+    }
 }
 
 
 // ===============================================================
-// INICIALIZAÇÃO E EVENT LISTENERS GERAIS
+// =================== EVENT LISTENERS ===========================
 // ===============================================================
-
 document.addEventListener('DOMContentLoaded', () => {
     const setupSupportLinks = () => {
         const numero = "5548991004780";
@@ -1365,12 +1612,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('click', (e) => {
         const target = e.target;
         const closest = (selector) => target.closest(selector);
-        
-        const sidebarToggleBtn = closest('#sidebar-toggle-btn');
-        const adminSidebar = document.getElementById('admin-sidebar');
-        if (sidebarToggleBtn && adminSidebar) {
-            adminSidebar.classList.toggle('-translate-x-full');
-        }
 
         if (closest('.date-clear-btn')) {
             const targetId = closest('.date-clear-btn').dataset.target;
@@ -1396,9 +1637,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
                 if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
                 if (targetPanelId === 'admin-config-panel') renderConfigPanel();
-            }
-             if (window.innerWidth < 768 && adminSidebar) { // Fecha o sidebar no mobile ao clicar num link
-                adminSidebar.classList.add('-translate-x-full');
             }
         }
         if (closest('#add-aluno-btn')) openAlunoModal();
@@ -1434,7 +1672,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closest('#admin-logout-btn') || closest('#professor-logout-btn')) signOutUser();
         if (closest('#gerar-relatorio-btn')) handleGerarRelatorio();
         if (closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('faltas');
-        if (closest('#gerar-apoia-relatorio-btn')) handleApoiaRelatorio();
+        if (closest('#gerar-apoia-relatorio-btn')) handleGerarApoiaRelatorio();
         if (closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('apoia');
         if (closest('#imprimir-historico-btn')) handleImprimirRelatorio('historico');
         if (closest('#correcao-chamada-btn')) {
@@ -1591,6 +1829,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
         }
     });
+
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    const adminSidebar = document.getElementById('admin-sidebar');
+    if (sidebarToggleBtn && adminSidebar) {
+        sidebarToggleBtn.addEventListener('click', () => {
+            adminSidebar.classList.toggle('-translate-x-full');
+        });
+    }
 
     // Inicialização
     dataSelect.value = getLocalDateString();
