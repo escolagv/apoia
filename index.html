@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-
     <title>Sistema de Faltas - APOIA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,99 +24,113 @@
     </div>
 
     <div id="app-container" class="hidden">
-
         <div id="login-view" class="flex items-center justify-center min-h-screen hidden">
-            <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-                <img src="./logo.png" alt="Logo da Escola" class="w-32 h-32 mx-auto">
-                <h1 class="text-2xl font-bold text-center text-gray-900">Sistema de Faltas - APOIA</h1>
-                <form id="login-form" class="space-y-6">
-                    <div>
-                        <label for="email" class="text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="email" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="seu@email.com" autocomplete="email">
-                    </div>
-                    <div>
-                        <label for="password" class="text-sm font-medium text-gray-700">Senha</label>
-                        <div class="relative">
-                            <input type="password" id="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10" placeholder="********" autocomplete="current-password">
-                            <button type="button" id="toggle-password-btn" class="absolute inset-y-0 right-0 top-1 flex items-center px-3 text-gray-500 hover:text-gray-700">
-                                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                            </button>
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400">Entrar</button>
-                    <p id="login-error" class="text-sm text-center text-red-600"></p>
-                </form>
-            </div>
-        </div>
-
-        <div id="professor-view" class="hidden">
-            <header class="bg-white shadow-md p-4 flex justify-between items-center">
-                <div class="flex items-center gap-4">
-                    <img src="./logo.png" alt="Logo da Escola" class="h-10">
-                    <div>
-                        <h1 class="text-xl font-bold">Painel do Professor</h1>
-                        <p id="professor-info" class="text-sm text-gray-600"></p>
-                    </div>
-                </div>
-                <button id="professor-logout-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
-            </header>
-            <main class="p-4 md:p-6">
-                <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-bold mb-4">Lançar Chamada</h2>
-                    <div class="flex flex-col md:flex-row gap-4 mb-6">
-                        <div class="flex-1"><label for="professor-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="professor-turma-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"><option value="">Carregando turmas...</option></select></div>
-                        <div class="flex-1"><label for="professor-data-select" class="block text-sm font-medium text-gray-700">Data</label><input type="date" id="professor-data-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"></div>
-                    </div>
-                    <div id="chamada-lista-container">
-                        <div class="flex justify-between items-center mb-4"><h3 id="chamada-header" class="text-lg font-semibold">Selecione uma turma e data</h3></div>
-                        <div id="chamada-lista-alunos" class="space-y-4"></div>
-                    </div>
-                    <div class="mt-8 text-center"><button id="salvar-chamada-btn" class="hidden w-full md:w-auto px-8 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400">Salvar Chamada</button></div>
-                </div>
-            </main>
-            <footer class="text-center p-4 text-xs text-gray-500">
-                <div class="flex items-center justify-center gap-4"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16"><div><p>Desenvolvido por: Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-prof" class="text-blue-600 hover:underline">Suporte Técnico via WhatsApp</a></div></div>
-            </footer>
-        </div>
-        <div id="admin-view" class="hidden">
-            <div class="relative md:flex h-screen bg-gray-200">
-                <aside id="admin-sidebar" class="w-64 bg-gray-800 text-white flex flex-col fixed inset-y-0 left-0 z-30 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
-                    </aside>
-                <main class="flex-1 p-6 overflow-y-auto">
-                    <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-                        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
-                            <h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3>
-                            <div class="border-b border-gray-200">
-                                <nav class="-mb-px flex space-x-6" id="assiduidade-tabs">
-                                    <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos">Alunos</a>
-                                    <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-turmas">Turmas</a>
-                                    <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores (Chamadas)</a>
-                                </nav>
-                            </div>
-                            </div>
+            <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                <img src="./logo.png" alt="Logo da Escola" class="w-32 h-32 mx-auto">
+                <h1 class="text-2xl font-bold text-center text-gray-900">Sistema de Faltas - APOIA</h1>
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="email" class="text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="email" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="seu@email.com" autocomplete="email">
                     </div>
-
-                    <div id="promover-turmas-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-                        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
-                            <h3 class="text-xl font-bold mb-6">Promover Turmas para o Próximo Ano Letivo</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                                <div>
-                                    <label for="promover-turmas-ano-origem" class="block text-sm font-medium text-gray-700">Ano de Origem</label>
-                                    <select id="promover-turmas-ano-origem" class="w-full mt-1 p-2 border rounded-md"></select>
-                                </div>
-                                <div>
-                                    <label for="promover-turmas-ano-destino" class="block text-sm font-medium text-gray-700">Ano de Destino</label>
-                                    <input type="number" id="promover-turmas-ano-destino" class="w-full mt-1 p-2 border rounded-md bg-gray-200" readonly>
-                                </div>
-                            </div>
-                            </div>
+                    <div>
+                        <label for="password" class="text-sm font-medium text-gray-700">Senha</label>
+                        <div class="relative">
+                            <input type="password" id="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10" placeholder="********" autocomplete="current-password">
+                            <button type="button" id="toggle-password-btn" class="absolute inset-y-0 right-0 top-1 flex items-center px-3 text-gray-500 hover:text-gray-700">
+                                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                            </button>
+                        </div>
                     </div>
-                </main>
+                    <button type="submit" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400">Entrar</button>
+                    <p id="login-error" class="text-sm text-center text-red-600"></p>
+                </form>
             </div>
         </div>
 
+        <div id="professor-view" class="hidden">
+            <header class="bg-white shadow-md p-4 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <img src="./logo.png" alt="Logo da Escola" class="h-10">
+                    <div>
+                        <h1 class="text-xl font-bold">Painel do Professor</h1>
+                        <p id="professor-info" class="text-sm text-gray-600"></p>
+                    </div>
+                </div>
+                <button id="professor-logout-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
+            </header>
+            <main class="p-4 md:p-6">
+                <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold mb-4">Lançar Chamada</h2>
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <div class="flex-1"><label for="professor-turma-select" class="block text-sm font-medium text-gray-700">Turma</label><select id="professor-turma-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"><option value="">Carregando turmas...</option></select></div>
+                        <div class="flex-1"><label for="professor-data-select" class="block text-sm font-medium text-gray-700">Data</label><input type="date" id="professor-data-select" class="w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm"></div>
+                    </div>
+                    <div id="chamada-lista-container">
+                        <div class="flex justify-between items-center mb-4"><h3 id="chamada-header" class="text-lg font-semibold">Selecione uma turma e data</h3></div>
+                        <div id="chamada-lista-alunos" class="space-y-4"></div>
+                    </div>
+                    <div class="mt-8 text-center"><button id="salvar-chamada-btn" class="hidden w-full md:w-auto px-8 py-3 font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400">Salvar Chamada</button></div>
+                </div>
+            </main>
+            <footer class="text-center p-4 text-xs text-gray-500">
+                <div class="flex items-center justify-center gap-4"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16"><div><p>Desenvolvido por: Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-prof" class="text-blue-600 hover:underline">Suporte Técnico via WhatsApp</a></div></div>
+            </footer>
         </div>
+
+        <div id="admin-view" class="hidden">
+            <div class="relative md:flex h-screen bg-gray-200">
+                <div id="sidebar-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+                <aside id="admin-sidebar" class="w-64 bg-gray-800 text-white flex flex-col fixed inset-y-0 left-0 z-30 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+                    <div class="p-4 border-b border-gray-700 flex flex-col items-center gap-3"><img src="./logo_admin.png" alt="Logo da Escola" class="h-16"><div><h1 class="text-xl font-bold">Painel Admin</h1><p id="admin-info" class="text-sm text-gray-400 text-center"></p></div></div>
+                    <nav id="admin-sidebar-nav" class="flex-1 p-4 space-y-2">
+                        <a href="#" class="admin-nav-link block px-4 py-2 rounded-md bg-gray-700" data-target="admin-dashboard-panel">Dashboard</a>
+                        <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-professores-panel">Professores</a>
+                        <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-turmas-panel">Turmas</a>
+                        <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-alunos-panel">Alunos</a>
+                        <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-apoia-panel">Acompanhamento APOIA</a>
+                        <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-calendario-panel">Calendário</a>
+                        <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-ano-letivo-panel">Ano Letivo</a>
+                        <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-relatorios-panel">Relatórios Faltas</a>
+                        <a href="#" class="admin-nav-link block px-4 py-2 rounded-md hover:bg-gray-700" data-target="admin-config-panel">Configurações</a>
+                    </nav>
+                    <div class="p-4 border-t border-gray-700 space-y-4"><div class="text-xs text-center text-gray-400"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16 mx-auto mb-2"><p>Desenvolvido por:</p><p>Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-admin" class="text-blue-400 hover:underline">Suporte Técnico</a></div><button id="admin-logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button></div>
+                </aside>
+                <main class="flex-1 p-6 overflow-y-auto">
+                    </main>
+            </div>
+        </div>
+
+        <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
+                <h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3>
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-6" id="assiduidade-tabs">
+                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos">Alunos</a>
+                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-turmas">Turmas</a>
+                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores (Chamadas)</a>
+                    </nav>
+                </div>
+                </div>
+        </div>
+        
+        <div id="promover-turmas-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
+                <h3 class="text-xl font-bold mb-6">Promover Turmas para o Próximo Ano Letivo</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                    <div>
+                        <label for="promover-turmas-ano-origem" class="block text-sm font-medium text-gray-700">Ano de Origem</label>
+                        <select id="promover-turmas-ano-origem" class="w-full mt-1 p-2 border rounded-md"></select>
+                    </div>
+                    <div>
+                        <label for="promover-turmas-ano-destino" class="block text-sm font-medium text-gray-700">Ano de Destino</label>
+                        <input type="number" id="promover-turmas-ano-destino" class="w-full mt-1 p-2 border rounded-md bg-gray-200" readonly>
+                    </div>
+                </div>
+                </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
