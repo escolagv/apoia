@@ -386,7 +386,9 @@ async function loadNotifications() {
         console.error("Erro ao buscar notificações:", error);
         return;
     }
-    document.getElementById('clear-notifications-btn').classList.toggle('hidden', count === 0);
+    const clearBtn = document.getElementById('clear-notifications-btn');
+    if (clearBtn) clearBtn.classList.toggle('hidden', count === 0);
+    
     if (count > 0) {
         notificationBell.classList.add('notification-badge');
         notificationBell.setAttribute('data-count', count);
@@ -429,16 +431,22 @@ async function renderDashboardPanel() {
     await loadDailySummary(dashboardSelectedDate);
     await renderDashboardCalendar();
     const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento'));
-    document.getElementById('dashboard-acompanhamento').textContent = count === null ? 'N/A' : count;
+    
+    const acompanhamentoEl = document.getElementById('dashboard-acompanhamento');
+    if (acompanhamentoEl) acompanhamentoEl.textContent = count === null ? 'N/A' : count;
 }
 
 async function loadDailySummary(selectedDate) {
     const presencasEl = document.getElementById('dashboard-presencas');
     const faltasEl = document.getElementById('dashboard-faltas');
     const ausentesListEl = document.getElementById('dashboard-ausentes-list');
+    
+    if(!presencasEl || !faltasEl || !ausentesListEl) return;
+
     presencasEl.textContent = '...';
     faltasEl.textContent = '...';
     ausentesListEl.innerHTML = '<li>Carregando...</li>';
+    
     const { data } = await safeQuery(db.from('presencas').select('justificativa, alunos ( id, nome_completo ), turmas ( nome_turma )').eq('data', selectedDate).eq('status', 'falta'));
     if (!data) {
         ausentesListEl.innerHTML = `<li>Erro ao carregar dados.</li>`;
@@ -459,8 +467,10 @@ async function loadDailySummary(selectedDate) {
 
 async function renderDashboardCalendar() {
     const { month, year } = dashboardCalendar;
-    calendarMonthYear.textContent = new Date(year, month).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    calendarGrid.innerHTML = '';
+    
+    if (calendarMonthYear) calendarMonthYear.textContent = new Date(year, month).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    if (calendarGrid) calendarGrid.innerHTML = '';
+    
     const firstDayOfMonth = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
@@ -497,8 +507,11 @@ async function renderDashboardCalendar() {
         }
         html += `<div class="${dayContainerClass}" data-date="${dateString}">${tooltipHtml}<span class="${daySpanClass}">${day}</span></div>`;
     }
-    calendarGrid.innerHTML = html;
+    if(calendarGrid) calendarGrid.innerHTML = html;
 }
+
+// ... (O restante do código, a partir daqui, não apresenta riscos de erro de inicialização e permanece o mesmo)
+// (Vou colar o resto completo para evitar confusão)
 
 // --- Gerenciamento de Alunos ---
 async function renderAlunosPanel(options = {}) {
@@ -1312,21 +1325,18 @@ async function openAlunoHistoricoModal(alunoId) {
 
 // --- Análise de Assiduidade ---
 function openAssiduidadeModal() {
-    // Popula filtros de Alunos
     const anoSelAluno = document.getElementById('assiduidade-aluno-ano');
     const alunoSel = document.getElementById('assiduidade-aluno-aluno');
     anoSelAluno.innerHTML = '<option value="">Todos os Anos</option>';
     anosLetivosCache.forEach(ano => anoSelAluno.innerHTML += `<option value="${ano}">${ano}</option>`);
     alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
 
-    // Popula filtros de Turmas
     const anoSelTurma = document.getElementById('assiduidade-turma-ano');
     const turmaSelTurma = document.getElementById('assiduidade-turma-turma');
     anoSelTurma.innerHTML = '<option value="">Todos os Anos</option>';
     anosLetivosCache.forEach(ano => anoSelTurma.innerHTML += `<option value="${ano}">${ano}</option>`);
     turmaSelTurma.innerHTML = '<option value="">Todas as Turmas</option>';
 
-    // Popula filtros de Professores
     const profSel = document.getElementById('assiduidade-prof-professor');
     profSel.innerHTML = '<option value="">Todos os Professores</option>';
     usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
@@ -1358,7 +1368,6 @@ async function generateAssiduidadeReport() {
     try {
         const activeTab = document.querySelector('#assiduidade-tabs a[aria-current="page"]').dataset.target;
 
-        // Helper para injetar HTML e Script de forma segura
         const renderReport = (reportHTML, chartScriptContent) => {
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             const scriptEl = newWindow.document.createElement('script');
@@ -1522,12 +1531,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setupSupportLinks();
 
-    togglePasswordBtn.addEventListener('click', () => {
-        const isPassword = passwordInput.type === 'password';
-        passwordInput.type = isPassword ? 'text' : 'password';
-        eyeIcon.classList.toggle('hidden', isPassword);
-        eyeOffIcon.classList.toggle('hidden', !isPassword);
-    });
+    if(togglePasswordBtn) {
+        togglePasswordBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.classList.toggle('hidden', isPassword);
+            eyeOffIcon.classList.toggle('hidden', !isPassword);
+        });
+    }
 
     setInterval(async () => { if (currentUser) { const { error } = await db.auth.refreshSession(); if (error) console.error(error); } }, 10 * 60 * 1000);
     document.addEventListener('visibilitychange', async () => { if (!document.hidden && currentUser) await db.auth.refreshSession(); });
@@ -1539,15 +1550,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const loginButton = e.target.querySelector('button[type="submit"]');
             loginButton.disabled = true;
             loginButton.innerHTML = `<div class="loader mx-auto"></div>`;
-            loginError.textContent = '';
+            if(loginError) loginError.textContent = '';
             try {
                 const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value });
                 if (error) {
-                    loginError.textContent = "Email ou senha inválidos.";
+                    if(loginError) loginError.textContent = "Email ou senha inválidos.";
                     resetLoginFormState();
                 }
             } catch (err) {
-                loginError.textContent = "Ocorreu um erro de conexão.";
+                if(loginError) loginError.textContent = "Ocorreu um erro de conexão.";
                 resetLoginFormState();
             }
         }
@@ -1612,10 +1623,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Listeners de Click Diretos para Botões Principais
-    document.getElementById('gerar-assiduidade-btn').addEventListener('click', generateAssiduidadeReport);
-    document.getElementById('open-promover-turmas-modal-btn').addEventListener('click', openPromoverTurmasModal);
-    document.getElementById('promover-turmas-btn').addEventListener('click', handlePromoverTurmas);
-    document.getElementById('confirm-promocao-turmas-btn').addEventListener('click', handleConfirmPromocaoTurmas);
+    const gerarAssiduidadeBtn = document.getElementById('gerar-assiduidade-btn');
+    if (gerarAssiduidadeBtn) gerarAssiduidadeBtn.addEventListener('click', generateAssiduidadeReport);
+
+    const openPromoverBtn = document.getElementById('open-promover-turmas-modal-btn');
+    if(openPromoverBtn) openPromoverBtn.addEventListener('click', openPromoverTurmasModal);
+
+    const promoverBtn = document.getElementById('promover-turmas-btn');
+    if(promoverBtn) promoverBtn.addEventListener('click', handlePromoverTurmas);
+
+    const confirmPromocaoBtn = document.getElementById('confirm-promocao-turmas-btn');
+    if(confirmPromocaoBtn) confirmPromocaoBtn.addEventListener('click', handleConfirmPromocaoTurmas);
 
     // Listener de Click Genérico para elementos dinâmicos
     document.body.addEventListener('click', (e) => {
@@ -1624,7 +1642,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (closest('.date-clear-btn')) {
             const targetId = closest('.date-clear-btn').dataset.target;
-            document.getElementById(targetId).value = '';
+            const el = document.getElementById(targetId);
+            if(el) el.value = '';
         }
 
         const navLink = closest('.admin-nav-link');
@@ -1696,7 +1715,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const type = card.dataset.type;
             if (type === 'presencas' || type === 'faltas') {
                 const date = dashboardSelectedDate;
-                document.querySelector('.admin-nav-link[data-target="admin-relatorios-panel"]').click();
+                const navLink = document.querySelector('.admin-nav-link[data-target="admin-relatorios-panel"]');
+                if(navLink) navLink.click();
+                
                 setTimeout(() => {
                     document.getElementById('relatorio-data-inicio').value = date;
                     document.getElementById('relatorio-data-fim').value = date;
@@ -1707,7 +1728,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (type === 'assiduidade') {
                 openAssiduidadeModal();
             } else if (type === 'acompanhamento') {
-                document.querySelector('.admin-nav-link[data-target="admin-apoia-panel"]').click();
+                const navLink = document.querySelector('.admin-nav-link[data-target="admin-apoia-panel"]');
+                if(navLink) navLink.click();
             }
         }
         const alunoLink = closest('.dashboard-aluno-link');
@@ -1725,22 +1747,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+    
+    if(notificationBell) {
+        notificationBell.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if(notificationPanel) notificationPanel.classList.toggle('hidden');
+        });
+    }
 
-    notificationBell.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notificationPanel.classList.toggle('hidden');
-    });
     document.addEventListener('click', (e) => {
         const closest = (selector) => e.target.closest(selector);
-        if (!notificationPanel.classList.contains('hidden') && !closest('#notification-panel') && !closest('#notification-bell')) {
+        if (notificationPanel && !notificationPanel.classList.contains('hidden') && !closest('#notification-panel') && !closest('#notification-bell')) {
             notificationPanel.classList.add('hidden');
         }
     });
-    if (document.getElementById('clear-notifications-btn')) {
-        document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
+    
+    const clearNotifBtn = document.getElementById('clear-notifications-btn');
+    if (clearNotifBtn) {
+        clearNotifBtn.addEventListener('click', markAllNotificationsAsRead);
     }
-    if (document.getElementById('notification-list')) {
-        document.getElementById('notification-list').addEventListener('click', (e) => {
+    
+    if (notificationList) {
+        notificationList.addEventListener('click', (e) => {
             const item = e.target.closest('.notification-item');
             if (item) {
                 markNotificationAsRead(item.dataset.id);
@@ -1770,25 +1798,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    turmaSelect.addEventListener('change', loadChamada);
-    dataSelect.addEventListener('change', loadChamada);
-    salvarChamadaBtn.addEventListener('click', saveChamada);
-    document.getElementById('delete-confirm-checkbox').addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
-    document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
-    document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
-    document.getElementById('aluno-search-input').addEventListener('input', () => renderAlunosPanel());
-    document.getElementById('turma-ano-letivo-filter').addEventListener('change', renderTurmasPanel);
-    document.getElementById('aluno-ano-letivo-filter').addEventListener('change', () => {
-        document.getElementById('aluno-turma-filter').value = '';
-        renderAlunosPanel();
+    if (turmaSelect) turmaSelect.addEventListener('change', loadChamada);
+    if (dataSelect) dataSelect.addEventListener('change', loadChamada);
+    if (salvarChamadaBtn) salvarChamadaBtn.addEventListener('click', saveChamada);
+    
+    const deleteConfirmCheckbox = document.getElementById('delete-confirm-checkbox');
+    if(deleteConfirmCheckbox) deleteConfirmCheckbox.addEventListener('change', (e) => { 
+        const confirmBtn = document.getElementById('confirm-delete-btn');
+        if(confirmBtn) confirmBtn.disabled = !e.target.checked; 
     });
-    document.getElementById('aluno-turma-filter').addEventListener('change', () => {
-        renderAlunosPanel();
-    });
-    correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
-    correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
 
-    document.getElementById('promover-turmas-ano-origem').addEventListener('change', renderPromocaoTurmasLista);
+    const eventoInicioFilter = document.getElementById('evento-data-inicio-filter');
+    if(eventoInicioFilter) eventoInicioFilter.addEventListener('change', renderCalendarioPanel);
+
+    const eventoFimFilter = document.getElementById('evento-data-fim-filter');
+    if(eventoFimFilter) eventoFimFilter.addEventListener('change', renderCalendarioPanel);
+
+    const alunoSearchInput = document.getElementById('aluno-search-input');
+    if(alunoSearchInput) alunoSearchInput.addEventListener('input', () => renderAlunosPanel());
+
+    const turmaAnoFilter = document.getElementById('turma-ano-letivo-filter');
+    if(turmaAnoFilter) turmaAnoFilter.addEventListener('change', renderTurmasPanel);
+    
+    const alunoAnoFilter = document.getElementById('aluno-ano-letivo-filter');
+    if(alunoAnoFilter) alunoAnoFilter.addEventListener('change', () => {
+        const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
+        if(alunoTurmaFilter) alunoTurmaFilter.value = '';
+        renderAlunosPanel();
+    });
+
+    const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
+    if(alunoTurmaFilter) alunoTurmaFilter.addEventListener('change', () => {
+        renderAlunosPanel();
+    });
+
+    if(correcaoTurmaSel) correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
+    if(correcaoDataSel) correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
+
+    const promoverAnoOrigem = document.getElementById('promover-turmas-ano-origem');
+    if(promoverAnoOrigem) promoverAnoOrigem.addEventListener('change', renderPromocaoTurmasLista);
     
     const promoverConfirmCheckbox = document.getElementById('promover-turmas-confirm-checkbox');
     if(promoverConfirmCheckbox) {
@@ -1808,23 +1856,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.getElementById('assiduidade-tabs').addEventListener('click', (e) => {
-        e.preventDefault();
-        const link = e.target.closest('a');
-        if (!link || link.getAttribute('aria-current') === 'page') return;
-        document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
-            a.removeAttribute('aria-current');
-            a.classList.remove('text-indigo-600', 'border-indigo-500');
-            a.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
+    const assiduidadeTabs = document.getElementById('assiduidade-tabs');
+    if(assiduidadeTabs) {
+        assiduidadeTabs.addEventListener('click', (e) => {
+            e.preventDefault();
+            const link = e.target.closest('a');
+            if (!link || link.getAttribute('aria-current') === 'page') return;
+            document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
+                a.removeAttribute('aria-current');
+                a.classList.remove('text-indigo-600', 'border-indigo-500');
+                a.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
+            });
+            link.setAttribute('aria-current', 'page');
+            link.classList.add('text-indigo-600', 'border-indigo-500');
+            link.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
+            document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
+            const targetPanel = document.getElementById(link.dataset.target);
+            if(targetPanel) targetPanel.classList.remove('hidden');
         });
-        link.setAttribute('aria-current', 'page');
-        link.classList.add('text-indigo-600', 'border-indigo-500');
-        link.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
-        document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
-        document.getElementById(link.dataset.target).classList.remove('hidden');
-    });
+    }
 
-    document.getElementById('assiduidade-aluno-ano').addEventListener('change', e => {
+    const assiduidadeAlunoAno = document.getElementById('assiduidade-aluno-ano');
+    if(assiduidadeAlunoAno) assiduidadeAlunoAno.addEventListener('change', e => {
         const anoLetivo = e.target.value;
         const alunoSel = document.getElementById('assiduidade-aluno-aluno');
         alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
@@ -1834,7 +1887,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('assiduidade-turma-ano').addEventListener('change', e => {
+    const assiduidadeTurmaAno = document.getElementById('assiduidade-turma-ano');
+    if(assiduidadeTurmaAno) assiduidadeTurmaAno.addEventListener('change', e => {
         const ano = e.target.value;
         const turmaSel = document.getElementById('assiduidade-turma-turma');
         turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
@@ -1853,7 +1907,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Inicialização
-    dataSelect.value = getLocalDateString();
+    if(dataSelect) dataSelect.value = getLocalDateString();
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
     console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
 });
