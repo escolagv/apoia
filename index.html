@@ -99,22 +99,21 @@
                     <div class="p-4 border-t border-gray-700 space-y-4"><div class="text-xs text-center text-gray-400"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16 mx-auto mb-2"><p>Desenvolvido por:</p><p>Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-admin" class="text-blue-400 hover:underline">Suporte Técnico</a></div><button id="admin-logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button></div>
                 </aside>
                 <main class="flex-1 p-6 overflow-y-auto">
-                    </main>
+                    <!-- Conteúdo principal do admin aqui -->
+                </main>
             </div>
         </div>
 
-        <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
-                <h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3>
-                <div class="border-b border-gray-200">
-                    <nav class="-mb-px flex space-x-6" id="assiduidade-tabs">
-                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos">Alunos</a>
-                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-turmas">Turmas</a>
-                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores (Chamadas)</a>
-                    </nav>
-                </div>
-                </div>
-        </div>
+        <!-- MODAIS E OUTROS ELEMENTOS GLOBAIS -->
+        <div id="aluno-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
+        <div id="professor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
+        <div id="turma-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
+        <div id="acompanhamento-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
+        <div id="evento-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
+        <div id="reset-password-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
+        <div id="delete-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
+        <div id="correcao-chamada-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
+        <div id="aluno-historico-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
         
         <div id="promover-turmas-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
@@ -129,9 +128,59 @@
                         <input type="number" id="promover-turmas-ano-destino" class="w-full mt-1 p-2 border rounded-md bg-gray-200" readonly>
                     </div>
                 </div>
+                <div id="promover-turmas-lista-container" class="hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-semibold text-gray-800">Selecione as Turmas para Promover</h4>
+                        <button type="button" id="promover-turmas-toggle-all" class="text-sm text-blue-600 hover:underline">Desmarcar Todas</button>
+                    </div>
+                    <div id="promover-turmas-lista" class="max-h-60 overflow-y-auto border rounded-md p-3 bg-gray-50 space-y-3"></div>
                 </div>
+                <div class="mt-8 flex justify-end gap-4">
+                    <button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button>
+                    <button type="button" id="promover-turmas-btn" class="px-6 py-2 bg-teal-600 text-white font-semibold rounded-md disabled:bg-teal-300" disabled>Iniciar Promoção</button>
+                </div>
+            </div>
         </div>
 
+        <div id="promover-turmas-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+                <h3 class="text-xl font-bold mb-4 text-teal-600">Confirmar Promoção em Massa</h3>
+                <p id="promover-turmas-confirm-message" class="mb-4"></p>
+                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 rounded-md text-sm mb-4">
+                    Esta ação é irreversível. Alunos das turmas selecionadas serão movidos para novas turmas no ano letivo de destino. As turmas de destino serão criadas se não existirem.
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="promover-turmas-confirm-checkbox" class="form-checkbox h-5 w-5 text-teal-600">
+                        <span class="ml-2 text-sm">Sim, eu entendo e quero continuar.</span>
+                    </label>
+                </div>
+                <div class="mt-6 flex justify-end gap-4">
+                    <button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button>
+                    <button type="button" id="confirm-promocao-turmas-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md disabled:bg-teal-300" disabled>Executar Promoção</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
+                <h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3>
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-6" id="assiduidade-tabs">
+                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos">Alunos</a>
+                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-turmas">Turmas</a>
+                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores (Chamadas)</a>
+                    </nav>
+                </div>
+                <div id="assiduidade-content" class="mt-6">
+                    <!-- Conteúdo das abas do modal -->
+                </div>
+                <div class="mt-8 flex justify-end gap-4">
+                    <button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button>
+                    <button type="button" id="gerar-assiduidade-btn" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-md">Gerar Relatório</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
