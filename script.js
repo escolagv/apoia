@@ -1,4 +1,961 @@
-// INÍCIO - PARTE 4 de 4 (Cole após a Parte 3)
+
+// INÍCIO DO CÓDIGO JAVASCRIPT COMPLETO
+const { createClient } = supabase;
+const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
+
+if (SUPABASE_URL === 'SUA_URL_DO_PROJETO') throw new Error("Credenciais da Supabase não configuradas.");
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let turmasCache = [];
+let usuariosCache = [];
+let alunosCache = [];
+let dashboardCalendar = { month: new Date().getMonth(), year: new Date().getFullYear() };
+let apoiaCurrentPage = 1;
+const apoiaItemsPerPage = 10;
+let anosLetivosCache = [];
+let dashboardSelectedDate;
+
+// --- Mapeamento dos Elementos da UI ---
+const loadingView = document.getElementById('loading-view');
+const appContainer = document.getElementById('app-container');
+const loginView = document.getElementById('login-view');
+const loginError = document.getElementById('login-error');
+const professorView = document.getElementById('professor-view');
+const adminView = document.getElementById('admin-view');
+const passwordInput = document.getElementById('password');
+const togglePasswordBtn = document.getElementById('toggle-password-btn');
+const eyeIcon = document.getElementById('eye-icon');
+const eyeOffIcon = document.getElementById('eye-off-icon');
+const toastContainer = document.getElementById('toast-container');
+const turmaSelect = document.getElementById('professor-turma-select');
+const dataSelect = document.getElementById('professor-data-select');
+const listaAlunosContainer = document.getElementById('chamada-lista-alunos');
+const chamadaHeader = document.getElementById('chamada-header');
+const salvarChamadaBtn = document.getElementById('salvar-chamada-btn');
+const alunosTableBody = document.getElementById('alunos-table-body');
+const apoiaTableBody = document.getElementById('apoia-table-body');
+const professoresTableBody = document.getElementById('professores-table-body');
+const turmasTableBody = document.getElementById('turmas-table-body');
+const eventosTableBody = document.getElementById('eventos-table-body');
+const notificationBell = document.getElementById('notification-bell');
+const notificationPanel = document.getElementById('notification-panel');
+const notificationList = document.getElementById('notification-list');
+const allModals = document.querySelectorAll('.fixed.inset-0.z-50');
+const alunoModal = document.getElementById('aluno-modal');
+const professorModal = document.getElementById('professor-modal');
+const turmaModal = document.getElementById('turma-modal');
+const eventoModal = document.getElementById('evento-modal');
+const acompanhamentoModal = document.getElementById('acompanhamento-modal');
+const correcaoChamadaModal = document.getElementById('correcao-chamada-modal');
+const resetPasswordModal = document.getElementById('reset-password-modal');
+const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+const alunoHistoricoModal = document.getElementById('aluno-historico-modal');
+const promoverTurmasModal = document.getElementById('promover-turmas-modal');
+const promoverTurmasConfirmModal = document.getElementById('promover-turmas-confirm-modal');
+const assiduidadeModal = document.getElementById('assiduidade-modal');
+const alunoForm = document.getElementById('aluno-form');
+const professorForm = document.getElementById('professor-form');
+const turmaForm = document.getElementById('turma-form');
+const eventoForm = document.getElementById('evento-form');
+const acompanhamentoForm = document.getElementById('acompanhamento-form');
+const correcaoChamadaForm = document.getElementById('correcao-chamada-form');
+const resetPasswordForm = document.getElementById('reset-password-form');
+const correcaoTurmaSel = document.getElementById('correcao-turma-select');
+const correcaoDataSel = document.getElementById('correcao-data-select');
+const correcaoListaAlunos = document.getElementById('correcao-chamada-lista-alunos');
+const alunoTurmaSelect = document.getElementById('aluno-turma');
+const turmaProfessoresList = document.getElementById('turma-professores-list');
+const acompanhamentoAlunoSelect = document.getElementById('acompanhamento-aluno-select');
+const relatorioResultados = document.getElementById('relatorio-resultados');
+const relatorioTableBody = document.getElementById('relatorio-table-body');
+const imprimirRelatorioBtn = document.getElementById('imprimir-relatorio-btn');
+const imprimirApoiaRelatorioBtn = document.getElementById('imprimir-apoia-relatorio-btn');
+const configForm = document.getElementById('config-form');
+const calendarMonthYear = document.getElementById('calendar-month-year');
+const calendarGrid = document.getElementById('calendar-grid');
+
+// --- Funções Auxiliares ---
+function getLocalDateString() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+dashboardSelectedDate = getLocalDateString();
+
+function showView(viewId) {
+    loadingView.classList.add('hidden');
+    appContainer.classList.remove('hidden');
+    loginView.classList.add('hidden');
+    professorView.classList.add('hidden');
+    adminView.classList.add('hidden');
+    if (document.getElementById(viewId)) {
+        document.getElementById(viewId).classList.remove('hidden');
+    }
+}
+
+async function signOutUser(message) {
+    resetLoginFormState();
+    if (message) showToast(message, true);
+    await db.auth.signOut();
+}
+
+function resetApplicationState() {
+    currentUser = null;
+    turmasCache = [];
+    usuariosCache = [];
+    alunosCache = [];
+    anosLetivosCache = [];
+    dashboardCalendar = { month: new Date().getMonth(), year: new Date().getFullYear() };
+    dashboardSelectedDate = getLocalDateString();
+}
+
+function resetLoginFormState() {
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        const loginButton = loginForm.querySelector('button[type="submit"]');
+        loginForm.reset();
+        loginError.textContent = '';
+        if (loginButton) {
+            loginButton.disabled = false;
+            loginButton.innerHTML = 'Entrar';
+        }
+    }
+}
+
+function showToast(message, isError = false) {
+    const toast = document.createElement('div');
+    toast.className = `toast p-4 rounded-lg shadow-lg text-white ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('hide');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 5000);
+}
+
+function closeModal(modalElement) {
+    if (modalElement) {
+        modalElement.classList.add('hidden');
+    }
+}
+
+function closeAllModals() {
+    allModals.forEach(modal => modal.classList.add('hidden'));
+}
+
+async function safeQuery(queryBuilder) {
+    const { data, error, count } = await queryBuilder;
+    if (error) {
+        if (error.message.includes('JWT') || error.code === '401' || error.status === 401 || (error.details && error.details.includes('revoked'))) {
+            await signOutUser("Sua sessão expirou por segurança. Por favor, faça o login novamente.");
+            return { data: null, error, count: null };
+        }
+        throw error;
+    }
+    return { data, error, count };
+}
+
+let inactivityTimer;
+const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
+
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+        if (currentUser) {
+            signOutUser("Sessão encerrada por inatividade.");
+        }
+    }, INACTIVITY_TIMEOUT);
+}
+
+// ===============================================================
+// LÓGICA DE AUTENTICAÇÃO
+// ===============================================================
+
+async function handleAuthChange(session) {
+    if (!session) {
+        resetApplicationState();
+        clearTimeout(inactivityTimer);
+        showView('login-view');
+        return;
+    }
+    try {
+        currentUser = session.user;
+        const { data, error } = await safeQuery(db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single());
+        if (error || !data || data.status !== 'ativo') {
+            const errorMessage = !data ? 'Seu usuário foi autenticado, mas não possui um perfil no sistema. Contate o suporte.' : 'Seu perfil de usuário não está ativo. Contate o suporte.';
+            showToast(errorMessage, true);
+            await db.auth.signOut();
+            return;
+        }
+        const { papel, nome } = data;
+        if (papel === 'admin') {
+            document.getElementById('admin-info').textContent = nome || currentUser.email;
+            await loadAdminData();
+            await renderDashboardPanel();
+            await loadNotifications();
+            showView('admin-view');
+        } else if (papel === 'professor') {
+            document.getElementById('professor-info').textContent = nome || currentUser.email;
+            await loadProfessorData(currentUser.id);
+            showView('professor-view');
+        } else {
+            throw new Error('Papel de usuário desconhecido.');
+        }
+        resetInactivityTimer();
+    } catch (err) {
+        showToast(err.message || 'Erro ao carregar seu perfil. Tente novamente.', true);
+        await signOutUser();
+    }
+}
+
+db.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        handleAuthChange(session);
+    } else if (event === 'SIGNED_OUT') {
+        handleAuthChange(null);
+    }
+    if (event === 'PASSWORD_RECOVERY') {
+        showView('login-view');
+        resetPasswordModal.classList.remove('hidden');
+    }
+});
+
+// ===============================================================
+// LÓGICA DO PAINEL DO PROFESSOR
+// ===============================================================
+
+async function loadProfessorData(professorUid) {
+    const { data: rels } = await safeQuery(db.from('professores_turmas').select('turma_id').eq('professor_id', professorUid));
+    if (!rels || rels.length === 0) return;
+    const turmaIds = rels.map(r => r.turma_id);
+    const { data } = await safeQuery(db.from('turmas').select('id, nome_turma').in('id', turmaIds));
+    if (!data) return;
+    turmaSelect.innerHTML = '<option value="">Selecione uma turma</option>';
+    data.sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true })).forEach(t => turmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+}
+
+async function loadChamada() {
+    const turmaId = turmaSelect.value;
+    const data = dataSelect.value;
+    const isEditable = data === getLocalDateString();
+    listaAlunosContainer.innerHTML = '';
+    chamadaHeader.textContent = 'Selecione uma turma e data';
+    salvarChamadaBtn.classList.add('hidden');
+    if (!turmaId || !data) return;
+    chamadaHeader.innerHTML = '<div class="loader mx-auto"></div>';
+    const { data: alunos } = await safeQuery(db.from('alunos').select('id, nome_completo').eq('turma_id', turmaId).eq('status', 'ativo').order('nome_completo'));
+    if (!alunos) return;
+    if (alunos.length === 0) {
+        chamadaHeader.textContent = 'Nenhum aluno ativo encontrado.';
+        return;
+    }
+    const { data: presencas } = await safeQuery(db.from('presencas').select('aluno_id, status, justificativa').eq('turma_id', turmaId).eq('data', data));
+    const presencasMap = new Map((presencas || []).map(p => [p.aluno_id, { status: p.status, justificativa: p.justificativa }]));
+    alunos.forEach(aluno => {
+        const presenca = presencasMap.get(aluno.id) || { status: 'presente', justificativa: null };
+        const isJustificada = presenca.justificativa === 'Falta justificada';
+        const isInjustificada = presenca.justificativa === 'Falta injustificada' || (!presenca.justificativa && presenca.status === 'falta');
+        const alunoDiv = document.createElement('div');
+        alunoDiv.className = 'p-3 bg-gray-50 rounded-lg';
+        alunoDiv.dataset.alunoId = aluno.id;
+        alunoDiv.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="font-medium">${aluno.nome_completo}</span>
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="presente" class="form-radio h-5 w-5 text-green-600 status-radio" ${presenca.status === 'presente' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Presente</span></label>
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="status-${aluno.id}" value="falta" class="form-radio h-5 w-5 text-red-600 status-radio" ${presenca.status === 'falta' ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Falta</span></label>
+                </div>
+            </div>
+            <div class="justificativa-container mt-2 pt-2 border-t border-gray-200 ${presenca.status === 'falta' ? 'flex' : 'hidden'} items-center gap-x-3">
+                <div class="text-sm font-medium">Justificativa:</div>
+                <div class="flex items-center gap-x-3">
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="just-${aluno.id}" value="Falta justificada" class="form-radio h-4 w-4" ${isJustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Justificada</span></label>
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="just-${aluno.id}" value="Falta injustificada" class="form-radio h-4 w-4" ${isInjustificada ? 'checked' : ''} ${!isEditable ? 'disabled' : ''}><span class="ml-2 text-sm">Injustificada</span></label>
+                </div>
+            </div>`;
+        listaAlunosContainer.appendChild(alunoDiv);
+    });
+    chamadaHeader.textContent = `Chamada para ${turmaSelect.options[turmaSelect.selectedIndex].text}`;
+    if (isEditable) {
+        salvarChamadaBtn.classList.remove('hidden');
+    } else {
+        showToast('Visualizando chamada. Apenas a chamada do dia atual pode ser editada.', false);
+    }
+}
+
+async function saveChamada() {
+    salvarChamadaBtn.disabled = true;
+    salvarChamadaBtn.innerHTML = '<div class="loader mx-auto"></div>';
+    const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => {
+        const status = row.querySelector('.status-radio:checked').value;
+        let justificativa = null;
+        if (status === 'falta') {
+            const justRadio = row.querySelector(`input[name="just-${row.dataset.alunoId}"]:checked`);
+            justificativa = justRadio ? justRadio.value : 'Falta injustificada';
+        }
+        return {
+            aluno_id: parseInt(row.dataset.alunoId),
+            turma_id: parseInt(turmaSelect.value),
+            data: dataSelect.value,
+            status: status,
+            justificativa: justificativa,
+            registrado_por_uid: currentUser.id
+        };
+    });
+    const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
+    if (error) {
+        console.error("Erro detalhado ao salvar chamada:", error);
+        let userMessage = 'Erro ao salvar chamada: ' + error.message;
+        if (error.message.includes('security policy')) {
+            userMessage = "Falha de permissão ao salvar. Verifique no painel de admin se este professor está corretamente associado à turma.";
+        }
+        showToast(userMessage, true);
+    } else {
+        showToast('Chamada salva com sucesso!');
+    }
+    salvarChamadaBtn.disabled = false;
+    salvarChamadaBtn.textContent = 'Salvar Chamada';
+}
+
+
+// ===============================================================
+// LÓGICA DO PAINEL DE ADMINISTRADOR
+// ===============================================================
+
+// --- Lógica Geral e Dashboard ---
+async function loadNotifications() {
+    const { data, error, count } = await safeQuery(db.from('alertas').select('*', { count: 'exact' }).eq('lido', false).order('created_at', { ascending: false }));
+    if (error) {
+        console.error("Erro ao buscar notificações:", error);
+        return;
+    }
+    document.getElementById('clear-notifications-btn').classList.toggle('hidden', count === 0);
+    if (count > 0) {
+        notificationBell.classList.add('notification-badge');
+        notificationBell.setAttribute('data-count', count);
+    } else {
+        notificationBell.classList.remove('notification-badge');
+        notificationBell.setAttribute('data-count', 0);
+    }
+    if (data.length === 0) {
+        notificationList.innerHTML = '<p class="text-sm text-gray-500 p-4 text-center">Nenhuma nova notificação.</p>';
+    } else {
+        notificationList.innerHTML = data.map(alert => `<div class="p-2 border-b hover:bg-gray-100 cursor-pointer text-sm text-gray-700 notification-item" data-id="${alert.id}">${alert.mensagem}</div>`).join('');
+    }
+}
+
+async function markNotificationAsRead(alertId) {
+    const { error } = await safeQuery(db.from('alertas').update({ lido: true }).eq('id', alertId));
+    if (error) showToast("Erro ao marcar notificação como lida.", true);
+    else await loadNotifications();
+}
+
+async function markAllNotificationsAsRead() {
+    const { error } = await safeQuery(db.from('alertas').update({ lido: true }).eq('lido', false));
+    if (error) showToast("Erro ao limpar notificações.", true);
+    else await loadNotifications();
+}
+
+async function loadAdminData() {
+    const { data: turmas } = await safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo'));
+    turmasCache = (turmas || []).sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true }));
+    const { data: users } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, papel, email_confirmado').in('papel', ['professor', 'admin']).eq('status', 'ativo'));
+    usuariosCache = (users || []).sort((a, b) => a.nome.localeCompare(b.nome));
+    const { data: allAlunos } = await safeQuery(db.from('alunos').select('id, nome_completo, turma_id').eq('status', 'ativo'));
+    alunosCache = (allAlunos || []).sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
+    const { data: anos } = await safeQuery(db.rpc('get_distinct_ano_letivo'));
+    anosLetivosCache = anos ? anos.sort((a, b) => b - a) : [];
+}
+
+async function renderDashboardPanel() {
+    await loadDailySummary(dashboardSelectedDate);
+    await renderDashboardCalendar();
+    const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento'));
+    document.getElementById('dashboard-acompanhamento').textContent = count === null ? 'N/A' : count;
+}
+
+async function loadDailySummary(selectedDate) {
+    const presencasEl = document.getElementById('dashboard-presencas');
+    const faltasEl = document.getElementById('dashboard-faltas');
+    const ausentesListEl = document.getElementById('dashboard-ausentes-list');
+    presencasEl.textContent = '...';
+    faltasEl.textContent = '...';
+    ausentesListEl.innerHTML = '<li>Carregando...</li>';
+    const { data } = await safeQuery(db.from('presencas').select('justificativa, alunos ( id, nome_completo ), turmas ( nome_turma )').eq('data', selectedDate).eq('status', 'falta'));
+    if (!data) {
+        ausentesListEl.innerHTML = `<li>Erro ao carregar dados.</li>`;
+        return;
+    }
+    const { count: totalPresencas } = await safeQuery(db.from('presencas').select('*', { count: 'exact', head: true }).eq('data', selectedDate).eq('status', 'presente'));
+    presencasEl.textContent = totalPresencas || 0;
+    faltasEl.textContent = data.length;
+    if (data.length === 0) {
+        ausentesListEl.innerHTML = '<li>Nenhum aluno ausente.</li>';
+    } else {
+        ausentesListEl.innerHTML = data.map(a => {
+            const justificativaTexto = a.justificativa ? `- ${a.justificativa}` : '';
+            return `<li><a href="#" class="text-blue-600 hover:underline dashboard-aluno-link" data-aluno-id="${a.alunos.id}">${a.alunos.nome_completo}</a> <span class="text-gray-500">(${a.turmas.nome_turma}) ${justificativaTexto}</span></li>`
+        }).join('');
+    }
+}
+
+async function renderDashboardCalendar() {
+    const { month, year } = dashboardCalendar;
+    calendarMonthYear.textContent = new Date(year, month).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    calendarGrid.innerHTML = '';
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+    const { data: eventos } = await safeQuery(db.from('eventos').select('*').or(`data.gte.${monthStart},data_fim.gte.${monthStart}`).or(`data.lte.${monthEnd},data_fim.lte.${monthEnd}`));
+    let html = '';
+    for (let i = 0; i < firstDayOfMonth; i++) {
+        html += '<div></div>';
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+        const currentDate = new Date(year, month, day);
+        const dayOfWeek = currentDate.getDay();
+        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        let dayEvent = null;
+        if (eventos) {
+            dayEvent = eventos.find(e => {
+                const startDate = new Date(e.data + 'T00:00:00');
+                const endDate = e.data_fim ? new Date(e.data_fim + 'T00:00:00') : startDate;
+                return currentDate >= startDate && currentDate <= endDate;
+            });
+        }
+        let dayContainerClass = 'calendar-day-container';
+        let daySpanClass = 'calendar-day-content';
+        let tooltipHtml = '';
+        if (dayEvent) {
+            daySpanClass += ' calendar-day-event';
+            dayContainerClass += ' has-tooltip relative';
+            tooltipHtml = `<div class="tooltip">${dayEvent.descricao}</div>`;
+        } else if (dayOfWeek === 0 || dayOfWeek === 6) {
+            daySpanClass += ' calendar-day-weekend';
+        }
+        if (dateString === dashboardSelectedDate) {
+            dayContainerClass += ' calendar-day-selected';
+        }
+        html += `<div class="${dayContainerClass}" data-date="${dateString}">${tooltipHtml}<span class="${daySpanClass}">${day}</span></div>`;
+    }
+    calendarGrid.innerHTML = html;
+}
+
+
+// --- Gestão de Alunos ---
+async function renderAlunosPanel(options = {}) {
+    const { defaultToLatestYear = false } = options;
+    const searchTerm = document.getElementById('aluno-search-input').value;
+    const anoLetivoFilter = document.getElementById('aluno-ano-letivo-filter');
+    const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
+    let currentAnoVal = anoLetivoFilter.value;
+    anoLetivoFilter.innerHTML = '<option value="">Todos os Anos</option>';
+    anosLetivosCache.filter(ano => ano != null).forEach(ano => {
+        anoLetivoFilter.innerHTML += `<option value="${ano}">${ano}</option>`;
+    });
+    if (defaultToLatestYear && anosLetivosCache.length > 0) {
+        anoLetivoFilter.value = anosLetivosCache[0];
+    } else {
+        anoLetivoFilter.value = currentAnoVal;
+    }
+    currentAnoVal = anoLetivoFilter.value;
+    const currentTurmaVal = defaultToLatestYear ? '' : alunoTurmaFilter.value;
+    alunoTurmaFilter.innerHTML = '<option value="">Todas as Turmas</option>';
+    if (currentAnoVal) {
+        turmasCache.filter(t => t.ano_letivo == currentAnoVal).forEach(t => {
+            alunoTurmaFilter.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`;
+        });
+    }
+    alunoTurmaFilter.value = currentTurmaVal;
+    alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Carregando...</td></tr>';
+    let queryBuilder = db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`).order('turma_id', { nullsFirst: false }).order('status', { ascending: true }).order('nome_completo', { ascending: true });
+    if (searchTerm) {
+        queryBuilder = queryBuilder.or(`nome_completo.ilike.%${searchTerm}%,matricula.ilike.%${searchTerm}%,nome_responsavel.ilike.%${searchTerm}%`);
+    }
+    if (anoLetivoFilter.value) {
+        queryBuilder = queryBuilder.eq('turmas.ano_letivo', anoLetivoFilter.value);
+    }
+    if (alunoTurmaFilter.value) {
+        queryBuilder = queryBuilder.eq('turma_id', alunoTurmaFilter.value);
+    }
+    const { data, error } = await safeQuery(queryBuilder);
+    if (error) {
+        alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+        return;
+    }
+    if (data.length === 0) {
+        alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Nenhum aluno encontrado.</td></tr>';
+        return;
+    }
+    alunosTableBody.innerHTML = data.map(aluno => {
+        let statusClass = 'bg-gray-100 text-gray-800';
+        if (aluno.status === 'ativo') statusClass = 'bg-green-100 text-green-800';
+        else if (aluno.status === 'inativo') statusClass = 'bg-red-100 text-red-800';
+        else if (aluno.status === 'transferido') statusClass = 'bg-blue-100 text-blue-800';
+        return `
+        <tr class="border-b">
+            <td class="p-3">${aluno.nome_completo}</td>
+            <td class="p-3">${aluno.matricula || ''}</td>
+            <td class="p-3">${aluno.turmas ? aluno.turmas.nome_turma : 'Sem turma'}</td>
+            <td class="p-3">${aluno.nome_responsavel || ''}</td>
+            <td class="p-3">${aluno.telefone || ''}</td>
+            <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${aluno.status}</span></td>
+            <td class="p-3">
+                <button class="text-blue-600 hover:underline edit-aluno-btn" data-id="${aluno.id}">Editar</button>
+                <button class="text-indigo-600 hover:underline ml-2 historico-aluno-btn" data-id="${aluno.id}">Ver Histórico</button>
+            </td>
+        </tr>
+        `}).join('');
+}
+
+async function openAlunoModal(editId = null) {
+    alunoForm.reset();
+    alunoTurmaSelect.innerHTML = '<option value="">Selecione...</option>';
+    turmasCache.forEach(t => alunoTurmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma} (${t.ano_letivo})</option>`);
+    document.getElementById('aluno-delete-container').classList.add('hidden');
+    if (editId) {
+        const { data } = await safeQuery(db.from('alunos').select('*').eq('id', editId).single());
+        document.getElementById('aluno-modal-title').textContent = 'Editar Aluno';
+        document.getElementById('aluno-id').value = data.id;
+        document.getElementById('aluno-nome').value = data.nome_completo;
+        document.getElementById('aluno-matricula').value = data.matricula;
+        alunoTurmaSelect.value = data.turma_id;
+        document.getElementById('aluno-telefone').value = data.telefone;
+        document.getElementById('aluno-email').value = data.email;
+        document.getElementById('aluno-responsavel').value = data.nome_responsavel;
+        document.getElementById('aluno-status').value = data.status;
+        document.getElementById('aluno-delete-container').classList.remove('hidden');
+    } else {
+        document.getElementById('aluno-modal-title').textContent = 'Adicionar Aluno';
+        document.getElementById('aluno-id').value = '';
+    }
+    alunoModal.classList.remove('hidden');
+}
+
+async function handleAlunoFormSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('aluno-id').value;
+    const alunoData = {
+        nome_completo: document.getElementById('aluno-nome').value,
+        matricula: document.getElementById('aluno-matricula').value,
+        turma_id: document.getElementById('aluno-turma').value || null,
+        telefone: document.getElementById('aluno-telefone').value,
+        email: document.getElementById('aluno-email').value,
+        nome_responsavel: document.getElementById('aluno-responsavel').value,
+        status: document.getElementById('aluno-status').value
+    };
+    const queryBuilder = id ? db.from('alunos').update(alunoData).eq('id', id) : db.from('alunos').insert(alunoData);
+    const { error } = await safeQuery(queryBuilder);
+    if (error) {
+        showToast('Erro ao salvar o aluno: ' + error.message, true);
+    } else {
+        showToast('Aluno salvo com sucesso!');
+        closeModal(alunoModal);
+        await renderAlunosPanel();
+    }
+}
+
+
+// --- Acompanhamento APOIA ---
+async function renderApoiaPanel(page = 1) {
+    apoiaCurrentPage = page;
+    apoiaTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
+    const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }));
+    const totalPages = Math.ceil(count / apoiaItemsPerPage);
+    const from = (page - 1) * apoiaItemsPerPage;
+    const to = from + apoiaItemsPerPage - 1;
+    const { data, error } = await safeQuery(db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('status', { ascending: true }).order('data_encaminhamento', { ascending: false }).range(from, to));
+    if (error) {
+        apoiaTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+        return;
+    }
+    if (data.length === 0) {
+        apoiaTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Nenhum aluno em acompanhamento.</td></tr>';
+        document.getElementById('apoia-pagination').innerHTML = '';
+        return;
+    }
+    apoiaTableBody.innerHTML = data.map(item => `
+        <tr class="border-b">
+            <td class="p-3">${item.alunos.nome_completo}</td>
+            <td class="p-3">${new Date(item.data_encaminhamento + 'T00:00:00').toLocaleDateString()}</td>
+            <td class="p-3">${item.motivo}</td>
+            <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'Finalizado' ? 'bg-gray-200 text-gray-800' : 'bg-yellow-100 text-yellow-800'}">${item.status}</span></td>
+            <td class="p-3"><button class="text-blue-600 hover:underline edit-acompanhamento-btn" data-id="${item.id}">Editar</button></td>
+        </tr>`).join('');
+    renderApoiaPagination(totalPages, page);
+}
+
+function renderApoiaPagination(totalPages, currentPage) {
+    const paginationContainer = document.getElementById('apoia-pagination');
+    paginationContainer.innerHTML = '';
+    if (totalPages <= 1) return;
+    for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.textContent = i;
+        pageButton.dataset.page = i;
+        pageButton.className = `px-3 py-1 rounded-md text-sm font-medium ${ i === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-200'}`;
+        paginationContainer.appendChild(pageButton);
+    }
+}
+
+async function openAcompanhamentoModal(editId = null) {
+    acompanhamentoForm.reset();
+    const alunoSelect = document.getElementById('acompanhamento-aluno-select');
+    const deleteContainer = document.getElementById('acompanhamento-delete-container');
+    deleteContainer.classList.add('hidden');
+    if (editId) {
+        const { data } = await safeQuery(db.from('apoia_encaminhamentos').select('*, alunos(nome_completo)').eq('id', editId).single());
+        document.getElementById('acompanhamento-modal-title').textContent = 'Editar Acompanhamento';
+        alunoSelect.innerHTML = `<option value="${data.aluno_id}">${data.alunos.nome_completo}</option>`;
+        alunoSelect.disabled = true;
+        document.getElementById('acompanhamento-id').value = data.id;
+        document.getElementById('acompanhamento-motivo').value = data.motivo;
+        document.getElementById('acompanhamento-status').value = data.status;
+        document.getElementById('acompanhamento-observacoes').value = data.observacoes;
+        deleteContainer.classList.remove('hidden');
+    } else {
+        document.getElementById('acompanhamento-modal-title').textContent = 'Adicionar Aluno ao Acompanhamento';
+        alunoSelect.innerHTML = '<option value="">Selecione um aluno...</option>';
+        alunosCache.forEach(a => alunoSelect.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
+        alunoSelect.disabled = false;
+        document.getElementById('acompanhamento-id').value = '';
+    }
+    acompanhamentoModal.classList.remove('hidden');
+}
+
+async function handleAcompanhamentoFormSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('acompanhamento-id').value;
+    const acompanhamentoData = {
+        aluno_id: document.getElementById('acompanhamento-aluno-select').value,
+        data_encaminhamento: getLocalDateString(),
+        motivo: document.getElementById('acompanhamento-motivo').value,
+        status: document.getElementById('acompanhamento-status').value,
+        observacoes: document.getElementById('acompanhamento-observacoes').value
+    };
+    const queryBuilder = id ? db.from('apoia_encaminhamentos').update(acompanhamentoData).eq('id', id) : db.from('apoia_encaminhamentos').insert(acompanhamentoData);
+    const { error } = await safeQuery(queryBuilder);
+    if (error) {
+        showToast('Erro ao salvar acompanhamento: ' + error.message, true);
+    } else {
+        showToast('Acompanhamento salvo com sucesso!');
+        closeModal(acompanhamentoModal);
+        await renderApoiaPanel();
+    }
+}
+
+
+// --- Gestão de Professores e Turmas ---
+async function renderProfessoresPanel() {
+    professoresTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
+    const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status, email_confirmado').eq('papel', 'professor').order('status', { ascending: true }).order('nome', { ascending: true }));
+    if (error) {
+        professoresTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+        return;
+    }
+    if (data.length === 0) {
+        professoresTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Nenhum professor cadastrado.</td></tr>';
+        return;
+    }
+    professoresTableBody.innerHTML = data.map(p => {
+        const emailStatusIndicator = p.email_confirmado ? `<div class="has-tooltip relative"><div class="w-3 h-3 bg-green-500 rounded-full"></div><div class="tooltip">E-mail Confirmado</div></div>` : `<div class="has-tooltip relative"><div class="w-3 h-3 bg-red-500 rounded-full"></div><div class="tooltip">Confirmação Pendente</div></div>`;
+        return `
+        <tr class="border-b">
+            <td class="p-3">${p.nome}</td>
+            <td class="p-3">${p.email || 'Não informado'}</td>
+            <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${p.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.status}</span></td>
+            <td class="p-3 flex justify-center items-center">${emailStatusIndicator}</td>
+            <td class="p-3">
+                <button class="text-blue-600 hover:underline mr-4 edit-professor-btn" data-id="${p.id}">Editar</button>
+                <button class="text-orange-600 hover:underline reset-password-btn" data-email="${p.email}">Resetar Senha</button>
+            </td>
+        </tr>
+        `}).join('');
+}
+
+async function openProfessorModal(editId = null) {
+    professorForm.reset();
+    const passwordContainer = document.getElementById('password-field-container');
+    const statusContainer = document.getElementById('status-field-container');
+    document.getElementById('professor-delete-container').classList.add('hidden');
+    if (editId) {
+        const { data } = await safeQuery(db.from('usuarios').select('*').eq('id', editId).single());
+        document.getElementById('professor-modal-title').textContent = 'Editar Professor';
+        document.getElementById('professor-id').value = data.id;
+        document.getElementById('professor-nome').value = data.nome;
+        document.getElementById('professor-email').value = data.email;
+        document.getElementById('professor-status').value = data.status;
+        passwordContainer.classList.add('hidden');
+        statusContainer.classList.remove('hidden');
+        document.getElementById('professor-delete-container').classList.remove('hidden');
+    } else {
+        document.getElementById('professor-modal-title').textContent = 'Adicionar Professor';
+        document.getElementById('professor-id').value = '';
+        passwordContainer.classList.remove('hidden');
+        statusContainer.classList.add('hidden');
+    }
+    professorModal.classList.remove('hidden');
+}
+
+async function handleProfessorFormSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('professor-id').value;
+    const nome = document.getElementById('professor-nome').value;
+    const email = document.getElementById('professor-email').value;
+    if (id) {
+        const status = document.getElementById('professor-status').value;
+        const { error } = await safeQuery(db.from('usuarios').update({ nome, email, status }).eq('id', id));
+        if (error) {
+            showToast('Erro ao atualizar professor: ' + error.message, true);
+        } else {
+            showToast('Professor atualizado com sucesso!');
+        }
+    } else {
+        const password = document.getElementById('professor-password').value;
+        if (password.length < 6) {
+            showToast('A senha temporária deve ter no mínimo 6 caracteres.', true);
+            return;
+        }
+        const { data: authData, error: authError } = await db.auth.signUp({ email, password });
+        if (authError) {
+            showToast('Erro ao criar login do professor: ' + authError.message, true);
+            return;
+        }
+        const { error: profileError } = await safeQuery(db.from('usuarios').insert({ user_uid: authData.user.id, nome: nome, email: email, papel: 'professor', status: 'ativo' }));
+        if (profileError) {
+            showToast('Login criado, mas falha ao criar perfil.', true);
+        } else {
+            showToast('Professor criado! E-mail de confirmação enviado.');
+        }
+    }
+    closeModal(professorModal);
+    await loadAdminData();
+    await renderProfessoresPanel();
+}
+
+async function handleResetPassword(email) {
+    if (!email) {
+        showToast('Este professor não tem um e-mail cadastrado.', true);
+        return;
+    }
+    if (confirm(`Deseja enviar um link de redefinição de senha para ${email}?`)) {
+        const { error } = await db.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.href.split('#')[0]
+        });
+        if (error) {
+            showToast('Erro ao enviar e-mail: ' + error.message, true);
+        } else {
+            showToast('E-mail de redefinição enviado com sucesso!');
+        }
+    }
+}
+
+async function renderTurmasPanel() {
+    const anoLetivoFilter = document.getElementById('turma-ano-letivo-filter');
+    anoLetivoFilter.innerHTML = '<option value="">Todos os Anos</option>';
+    anosLetivosCache.forEach(ano => anoLetivoFilter.innerHTML += `<option value="${ano}">${ano}</option>`);
+    turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
+    let queryBuilder = db.from('turmas').select(`id, nome_turma, ano_letivo, professores_turmas(usuarios(nome))`);
+    if (anoLetivoFilter.value) {
+        queryBuilder = queryBuilder.eq('ano_letivo', anoLetivoFilter.value);
+    }
+    const { data, error } = await safeQuery(queryBuilder);
+    if (error) {
+        turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+        return;
+    }
+    data.sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true }));
+    if (data.length === 0) {
+        turmasTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Nenhuma turma encontrada.</td></tr>';
+        return;
+    }
+    turmasTableBody.innerHTML = data.map(t => {
+        const profs = t.professores_turmas.map(pt => pt.usuarios ? pt.usuarios.nome : 'Professor Removido').join(', ');
+        return `
+        <tr class="border-b">
+            <td class="p-3">${t.nome_turma} (${t.ano_letivo})</td>
+            <td class="p-3">${profs || 'Sem professor'}</td>
+            <td class="p-3">
+                <button class="text-blue-600 hover:underline mr-4 edit-turma-btn" data-id="${t.id}">Editar</button>
+                <button class="text-red-600 hover:underline delete-turma-btn" data-id="${t.id}">Excluir</button>
+            </td>
+        </tr>
+        `}).join('');
+}
+
+async function openTurmaModal(editId = null) {
+    turmaForm.reset();
+    turmaProfessoresList.innerHTML = '';
+    usuariosCache.filter(u => u.papel === 'professor').forEach(p => {
+        turmaProfessoresList.innerHTML += `<label class="flex items-center"><input type="checkbox" class="form-checkbox" value="${p.user_uid}"><span class="ml-2">${p.nome}</span></label>`;
+    });
+    document.getElementById('turma-delete-container').classList.add('hidden');
+    if (editId) {
+        const { data } = await safeQuery(db.from('turmas').select('*').eq('id', editId).single());
+        document.getElementById('turma-modal-title').textContent = 'Editar Turma';
+        document.getElementById('turma-id').value = data.id;
+        document.getElementById('turma-nome').value = data.nome_turma;
+        document.getElementById('turma-ano-letivo').value = data.ano_letivo;
+        document.getElementById('turma-delete-container').classList.remove('hidden');
+        const { data: profsAtuais } = await safeQuery(db.from('professores_turmas').select('professor_id').eq('turma_id', editId));
+        if (profsAtuais) {
+            const profIds = profsAtuais.map(p => p.professor_id);
+            turmaProfessoresList.querySelectorAll('input').forEach(input => {
+                if (profIds.includes(input.value)) input.checked = true;
+            });
+        }
+    } else {
+        document.getElementById('turma-modal-title').textContent = 'Adicionar Turma';
+        document.getElementById('turma-id').value = '';
+        document.getElementById('turma-ano-letivo').value = new Date().getFullYear();
+    }
+    turmaModal.classList.remove('hidden');
+}
+
+async function handleTurmaFormSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('turma-id').value;
+    const nome = document.getElementById('turma-nome').value;
+    const ano_letivo = document.getElementById('turma-ano-letivo').value;
+    const selectedProfIds = Array.from(turmaProfessoresList.querySelectorAll('input:checked')).map(input => input.value);
+    if (id) {
+        const { error: updateError } = await safeQuery(db.from('turmas').update({ nome_turma: nome, ano_letivo: ano_letivo }).eq('id', id));
+        if (updateError) { showToast('Erro ao atualizar turma.', true); return; }
+        await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
+        const rels = selectedProfIds.map(profId => ({ turma_id: id, professor_id: profId }));
+        if (rels.length > 0) await safeQuery(db.from('professores_turmas').insert(rels));
+    } else {
+        const { data, error: insertError } = await safeQuery(db.from('turmas').insert({ nome_turma: nome, ano_letivo: ano_letivo }).select().single());
+        if (insertError) { showToast('Erro ao criar turma.', true); return; }
+        const newTurmaId = data.id;
+        const rels = selectedProfIds.map(profId => ({ turma_id: newTurmaId, professor_id: profId }));
+        if (rels.length > 0) await safeQuery(db.from('professores_turmas').insert(rels));
+    }
+    showToast('Turma salva com sucesso!');
+    closeModal(turmaModal);
+    await loadAdminData();
+    await renderTurmasPanel();
+}
+
+
+// --- Gestão de Ano Letivo ---
+function renderAnoLetivoPanel() {
+    // A lógica está nos botões que abrem os modais
+}
+
+async function openPromoverTurmasModal() {
+    const anoOrigemSel = document.getElementById('promover-turmas-ano-origem');
+    const listaContainer = document.getElementById('promover-turmas-lista-container');
+    const listaEl = document.getElementById('promover-turmas-lista');
+
+    listaContainer.classList.add('hidden');
+    listaEl.innerHTML = '';
+    document.getElementById('promover-turmas-btn').disabled = true;
+
+    anoOrigemSel.innerHTML = '<option value="">Selecione...</option>';
+    anosLetivosCache.forEach(ano => {
+        anoOrigemSel.innerHTML += `<option value="${ano}">${ano}</option>`;
+    });
+
+    if (anosLetivosCache.length > 0) {
+        const ultimoAno = anosLetivosCache[0];
+        anoOrigemSel.value = ultimoAno;
+        anoOrigemSel.dispatchEvent(new Event('change'));
+    }
+
+    promoverTurmasModal.classList.remove('hidden');
+}
+
+async function renderPromocaoTurmasLista() {
+    const anoOrigemEl = document.getElementById('promover-turmas-ano-origem');
+    const anoDestinoEl = document.getElementById('promover-turmas-ano-destino');
+    const container = document.getElementById('promover-turmas-lista-container');
+    const listEl = document.getElementById('promover-turmas-lista');
+    const promoverBtn = document.getElementById('promover-turmas-btn');
+    
+    const anoOrigem = anoOrigemEl.value;
+
+    listEl.innerHTML = '';
+    promoverBtn.disabled = true;
+
+    if (!anoOrigem) {
+        container.classList.add('hidden');
+        anoDestinoEl.value = '';
+        return;
+    }
+    
+    // Preenche o ano de destino automaticamente
+    anoDestinoEl.value = parseInt(anoOrigem) + 1;
+    listEl.innerHTML = '<div class="loader mx-auto my-4"></div>';
+    container.classList.remove('hidden');
+
+    const { data: turmas } = await safeQuery(
+        db.from('turmas').select('id, nome_turma').eq('ano_letivo', anoOrigem)
+    );
+
+    if (!turmas || turmas.length === 0) {
+        listEl.innerHTML = `<p class="p-4 text-center text-gray-600">Nenhuma turma encontrada para o ano de origem.</p>`;
+        return;
+    }
+
+    listEl.innerHTML = turmas
+        .sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true }))
+        .map(turma => `
+        <label class="flex items-center p-2 bg-white rounded-md border hover:bg-gray-50">
+            <input type="checkbox" class="form-checkbox h-5 w-5 promocao-turma-checkbox" value="${turma.id}" checked>
+            <span class="ml-3 text-sm">${turma.nome_turma}</span>
+        </label>
+    `).join('');
+
+    promoverBtn.disabled = false;
+}
+
+async function handlePromoverTurmas() {
+    const turmasSelecionadasIds = Array.from(document.querySelectorAll('#promover-turmas-lista input:checked')).map(cb => cb.value);
+
+    if (turmasSelecionadasIds.length === 0) {
+        showToast("Nenhuma turma foi selecionada para a promoção.", true);
+        return;
+    }
+
+    document.getElementById('promover-turmas-confirm-message').textContent = `Você está prestes a promover todos os alunos de ${turmasSelecionadasIds.length} turma(s).`;
+    document.getElementById('confirm-promocao-turmas-btn').dataset.turmas = JSON.stringify(turmasSelecionadasIds);
+    document.getElementById('promover-turmas-confirm-checkbox').checked = false;
+    document.getElementById('confirm-promocao-turmas-btn').disabled = true;
+    promoverTurmasConfirmModal.classList.remove('hidden');
+}
+
+async function handleConfirmPromocaoTurmas() {
+    const btn = document.getElementById('confirm-promocao-turmas-btn');
+    const turmaIds = JSON.parse(btn.dataset.turmas);
+    const anoDestino = document.getElementById('promover-turmas-ano-destino').value;
+
+    btn.innerHTML = '<div class="loader mx-auto"></div>';
+    btn.disabled = true;
+
+    const { error } = await db.rpc('promover_turmas_em_massa', {
+        origem_turma_ids: turmaIds,
+        ano_destino: parseInt(anoDestino)
+    });
+
+    if (error) {
+        showToast("Erro ao executar a promoção em massa: " + error.message, true);
+        console.error(error);
+    } else {
+        showToast("Turmas promovidas com sucesso! Os alunos foram movidos e novas turmas criadas conforme necessário.");
+        closeAllModals();
+        await loadAdminData();
+        await renderAlunosPanel({ defaultToLatestYear: true });
+    }
+    btn.innerHTML = 'Executar Promoção';
+}
+
 
 // ===============================================================
 // SEÇÃO 4.1: LÓGICA DO PAINEL DE ADMINISTRADOR - RELATÓRIOS E ASSIDUIDADE
