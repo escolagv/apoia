@@ -1,6 +1,6 @@
 const { createClient } = supabase;
 const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI体制NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
 
 if (SUPABASE_URL === 'SUA_URL_DO_PROJETO') throw new Error("Credenciais da Supabase não configuradas.");
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1340,10 +1340,9 @@ function openAssiduidadeModal() {
     assiduidadeModal.classList.remove('hidden');
 }
 
-// *** FUNÇÃO ATUALIZADA - INÍCIO ***
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
-    
+
     // 1. Escreve a estrutura BÁSICA da página, sem o script do Chart.js
     newWindow.document.write(`
         <html>
@@ -1379,16 +1378,15 @@ async function generateAssiduidadeReport() {
             </body>
         </html>
     `);
-    newWindow.document.close(); 
+    newWindow.document.close();
 
     // 2. Cria o elemento <script> para o Chart.js dinamicamente
     const chartJsScript = newWindow.document.createElement('script');
-    chartJsScript.src = 'https://cdn.jsdelivr.net/npm/chart.js';
 
     // 3. Executa o resto da nossa lógica APENAS QUANDO o script do Chart.js terminar de carregar
     chartJsScript.onload = async () => {
         closeModal(assiduidadeModal);
-        
+
         const renderReport = (reportHTML, chartScriptContent) => {
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             const scriptEl = newWindow.document.createElement('script');
