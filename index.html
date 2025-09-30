@@ -99,21 +99,33 @@
                     <div class="p-4 border-t border-gray-700 space-y-4"><div class="text-xs text-center text-gray-400"><img src="./qr_code_altnix.png" alt="QR Code Altnix" class="h-16 mx-auto mb-2"><p>Desenvolvido por:</p><p>Cristian Berão - Altnix Tecnologia</p><p>WhatsApp: (48) 99100-4780</p><a href="#" id="support-link-admin" class="text-blue-400 hover:underline">Suporte Técnico</a></div><button id="admin-logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button></div>
                 </aside>
                 <main class="flex-1 p-6 overflow-y-auto">
-                    <!-- Conteúdo principal do admin aqui -->
+                    <!-- Todos os painéis do admin (Dashboard, Alunos, etc.) serão injetados aqui pelo JS, mas os divs estão abaixo -->
                 </main>
             </div>
         </div>
 
-        <!-- MODAIS E OUTROS ELEMENTOS GLOBAIS -->
-        <div id="aluno-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
-        <div id="professor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
-        <div id="turma-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
-        <div id="acompanhamento-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
-        <div id="evento-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
-        <div id="reset-password-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
-        <div id="delete-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
-        <div id="correcao-chamada-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
-        <div id="aluno-historico-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"> <!-- ... --> </div>
+        <!-- MODAIS E PAINÉIS DO ADMIN -->
+        <div id="admin-content" class="hidden">
+            <div id="admin-dashboard-panel" class="admin-panel"> <!-- ... --> </div>
+            <div id="admin-alunos-panel" class="admin-panel hidden"> <!-- ... --> </div>
+            <div id="admin-professores-panel" class="admin-panel hidden"> <!-- ... --> </div>
+            <div id="admin-turmas-panel" class="admin-panel hidden"> <!-- ... --> </div>
+            <div id="admin-apoia-panel" class="admin-panel hidden"> <!-- ... --> </div>
+            <div id="admin-calendario-panel" class="admin-panel hidden"> <!-- ... --> </div>
+            <div id="admin-ano-letivo-panel" class="admin-panel hidden"> <!-- ... --> </div>
+            <div id="admin-relatorios-panel" class="admin-panel hidden"> <!-- ... --> </div>
+            <div id="admin-config-panel" class="admin-panel hidden"> <!-- ... --> </div>
+        </div>
+        
+        <div id="aluno-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+        <div id="professor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+        <div id="turma-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+        <div id="acompanhamento-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+        <div id="evento-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+        <div id="reset-password-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+        <div id="delete-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+        <div id="correcao-chamada-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+        <div id="aluno-historico-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
         
         <div id="promover-turmas-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
@@ -163,26 +175,12 @@
         </div>
         
         <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
-                <h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3>
-                <div class="border-b border-gray-200">
-                    <nav class="-mb-px flex space-x-6" id="assiduidade-tabs">
-                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos">Alunos</a>
-                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-turmas">Turmas</a>
-                        <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores (Chamadas)</a>
-                    </nav>
-                </div>
-                <div id="assiduidade-content" class="mt-6">
-                    <!-- Conteúdo das abas do modal -->
-                </div>
-                <div class="mt-8 flex justify-end gap-4">
-                    <button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button>
-                    <button type="button" id="gerar-assiduidade-btn" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-md">Gerar Relatório</button>
-                </div>
-            </div>
+             <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6"><h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3><div class="border-b border-gray-200"><nav class="-mb-px flex space-x-6" id="assiduidade-tabs"><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos">Alunos</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-turmas">Turmas</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores (Chamadas)</a></nav></div><div id="assiduidade-content" class="mt-6"><div id="assiduidade-alunos" class="assiduidade-panel"><h4 class="font-semibold mb-3">Filtros para Relatório de Alunos</h4><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-aluno-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-aluno-data-inicio">×</span></div><input type="date" id="assiduidade-aluno-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-aluno-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-aluno-data-fim">×</span></div><input type="date" id="assiduidade-aluno-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-aluno-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-aluno-ano" class="w-full mt-1 p-2 border rounded-md"></select></div><div class="lg:col-span-3"><label for="assiduidade-aluno-aluno" class="block text-sm font-medium">Aluno Específico (Opcional)</label><select id="assiduidade-aluno-aluno" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-turmas" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Relatório de Turmas</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-turma-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-turma-data-inicio">×</span></div><input type="date" id="assiduidade-turma-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-turma-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-turma-data-fim">×</span></div><input type="date" id="assiduidade-turma-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-turma-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-turma-ano" class="w-full mt-1 p-2 border rounded-md"></select></div><div class="md:col-span-3"><label for="assiduidade-turma-turma" class="block text-sm font-medium">Turma Específica (Opcional)</label><select id="assiduidade-turma-turma" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-professores" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Relatório de Professores</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-prof-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-prof-data-inicio">×</span></div><input type="date" id="assiduidade-prof-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-prof-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-prof-data-fim">×</span></div><input type="date" id="assiduidade-prof-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div class="md:col-span-2"><label for="assiduidade-prof-professor" class="block text-sm font-medium">Professor Específico (Opcional)</label><select id="assiduidade-prof-professor" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div></div><div class="mt-8 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="gerar-assiduidade-btn" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-md">Gerar Relatório</button></div></div>
         </div>
+
     </div>
 
     <script src="script.js"></script>
 </body>
 </html>
+
