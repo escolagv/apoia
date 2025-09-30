@@ -1344,7 +1344,7 @@ function openAssiduidadeModal() {
 }
 
 // ===============================================================
-// ATENÇÃO: A FUNÇÃO ABAIXO FOI COMPLETAMENTE ATUALIZADA
+// ATENÇÃO: A FUNÇÃO ABAIXO FOI COMPLETAMENTE REVISADA E CORRIGIDA
 // ===============================================================
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
@@ -1354,6 +1354,7 @@ async function generateAssiduidadeReport() {
     try {
         const activeTab = document.querySelector('#assiduidade-tabs a[aria-current="page"]').dataset.target;
         const renderReport = (reportHTML, chartScriptContent = '') => {
+            if (!newWindow || newWindow.closed) return;
             newWindow.document.getElementById('report-content').innerHTML = reportHTML;
             if (chartScriptContent) {
                 const scriptEl = newWindow.document.createElement('script');
@@ -1363,7 +1364,7 @@ async function generateAssiduidadeReport() {
         };
 
         if (activeTab === 'assiduidade-alunos') {
-            // CÓDIGO DESTA ABA NÃO FOI ALTERADO E CONTINUA O MESMO
+            // Lógica para Alunos (não alterada)
             let dataInicio = document.getElementById('assiduidade-aluno-data-inicio').value;
             let dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
             if (dataInicio && !dataFim) dataFim = dataInicio;
@@ -1411,7 +1412,7 @@ async function generateAssiduidadeReport() {
             renderReport(reportHTML, chartScriptContent);
 
         } else if (activeTab === 'assiduidade-turmas') {
-            // CÓDIGO DESTA ABA NÃO FOI ALTERADO E CONTINUA O MESMO
+            // Lógica para Turmas (não alterada)
             let dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
             let dataFim = document.getElementById('assiduidade-turma-data-fim').value;
             if (dataInicio && !dataFim) dataFim = dataInicio;
@@ -1513,7 +1514,7 @@ async function generateAssiduidadeReport() {
             
             const totalLancados = diasLancados.length;
 
-            // CORREÇÃO 2: Cálculo correto da taxa de lançamento
+            // CORREÇÃO 2: Definição e cálculo correto da taxa de lançamento
             const totalEsperado = data.length; // O total de linhas é o total de chamadas esperadas (dias x profs x turmas)
             const taxa = totalEsperado > 0 ? ((totalLancados / totalEsperado) * 100).toFixed(1) + '%' : 'N/A';
             
@@ -1592,17 +1593,23 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setupSupportLinks();
 
-    togglePasswordBtn.addEventListener('click', () => {
+    // Listeners de botões e interações diretas
+    document.getElementById('gerar-assiduidade-btn').addEventListener('click', generateAssiduidadeReport);
+    document.getElementById('open-promover-turmas-modal-btn').addEventListener('click', openPromoverTurmasModal);
+    document.getElementById('promover-turmas-btn').addEventListener('click', handlePromoverTurmas);
+    document.getElementById('confirm-promocao-turmas-btn').addEventListener('click', handleConfirmPromocaoTurmas);
+    togglePasswordBtn.addEventListener('click', () => {
         const isPassword = passwordInput.type === 'password';
         passwordInput.type = isPassword ? 'text' : 'password';
         eyeIcon.classList.toggle('hidden', isPassword);
         eyeOffIcon.classList.toggle('hidden', !isPassword);
     });
-
+    
+    // Listeners de sessão e inatividade
     setInterval(async () => { if (currentUser) { const { error } = await db.auth.refreshSession(); if (error) console.error(error); } }, 10 * 60 * 1000);
     document.addEventListener('visibilitychange', async () => { if (!document.hidden && currentUser) await db.auth.refreshSession(); });
 
-    // Formulários
+    // Listener genérico para formulários
     document.body.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (e.target.id === 'login-form') {
@@ -1681,7 +1688,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Listener de Click Genérico para elementos dinâmicos
+    // Listener genérico para cliques em elementos dinâmicos
     document.body.addEventListener('click', (e) => {
         const target = e.target;
         const closest = (selector) => target.closest(selector);
@@ -1790,25 +1797,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Listeners de notificação
-    notificationBell.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notificationPanel.classList.toggle('hidden');
-    });
-    document.addEventListener('click', (e) => {
-        if (!notificationPanel.classList.contains('hidden') && !e.target.closest('#notification-panel') && !e.target.closest('#notification-bell')) {
-            notificationPanel.classList.add('hidden');
-        }
-    });
-    document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
-    document.getElementById('notification-list').addEventListener('click', (e) => {
-        const item = e.target.closest('.notification-item');
-        if (item) {
-            markNotificationAsRead(item.dataset.id);
-        }
-    });
-
-    // Listeners de mudança em formulários de chamada
+    // Listeners de mudança em formulários
     ['#chamada-lista-alunos', '#correcao-chamada-lista-alunos'].forEach(selector => {
         const container = document.querySelector(selector);
         if (container) {
@@ -1833,10 +1822,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Outros listeners diretos
+    // Outros listeners de mudança
     turmaSelect.addEventListener('change', loadChamada);
     dataSelect.addEventListener('change', loadChamada);
-    salvarChamadaBtn.addEventListener('click', saveChamada);
     document.getElementById('delete-confirm-checkbox').addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
     document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
     document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
@@ -1902,14 +1890,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
         }
     });
-
-    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
-    const adminSidebar = document.getElementById('admin-sidebar');
-    if (sidebarToggleBtn && adminSidebar) {
-        sidebarToggleBtn.addEventListener('click', () => {
-            adminSidebar.classList.toggle('-translate-x-full');
-        });
-    }
 
     // Inicialização
     dataSelect.value = getLocalDateString();
