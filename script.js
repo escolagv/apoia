@@ -1364,7 +1364,7 @@ async function generateAssiduidadeReport() {
         };
 
         if (activeTab === 'assiduidade-alunos') {
-            // Lógica para Alunos (não alterada)
+            // CÓDIGO DESTA ABA NÃO FOI ALTERADO E CONTINUA O MESMO
             let dataInicio = document.getElementById('assiduidade-aluno-data-inicio').value;
             let dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
             if (dataInicio && !dataFim) dataFim = dataInicio;
@@ -1412,7 +1412,7 @@ async function generateAssiduidadeReport() {
             renderReport(reportHTML, chartScriptContent);
 
         } else if (activeTab === 'assiduidade-turmas') {
-            // Lógica para Turmas (não alterada)
+            // CÓDIGO DESTA ABA NÃO FOI ALTERADO E CONTINUA O MESMO
             let dataInicio = document.getElementById('assiduidade-turma-data-inicio').value;
             let dataFim = document.getElementById('assiduidade-turma-data-fim').value;
             if (dataInicio && !dataFim) dataFim = dataInicio;
@@ -1487,14 +1487,11 @@ async function generateAssiduidadeReport() {
                 renderReport('<div class="bg-white p-6 rounded-lg shadow-md text-center"><h2 class="font-bold">Nenhum Resultado</h2><p>Nenhum dia letivo foi encontrado para o período e filtros selecionados.</p></div>');
                 return;
             }
-
-            // =========================================================================
-            // INÍCIO DAS CORREÇÕES E MELHORIAS DESTA VERSÃO
-            // =========================================================================
+            
             const diasLancados = data.filter(d => d.status === 'Lançado');
             const diasNaoLancados = data.filter(d => d.status !== 'Lançado');
 
-            // MELHORIA 1: Padroniza o HTML para os dias lançados, mostrando os detalhes
+            // MELHORIA: HTML padronizado para dias lançados
             const lancadosHtml = diasLancados.length > 0 ? diasLancados.map(d => 
                 `<div class="flex flex-col text-center bg-green-100 text-green-800 text-xs font-medium p-2 rounded-lg">
                     <strong class="text-sm">${new Date(d.dia + 'T00:00:00').toLocaleDateString('pt-BR')}</strong>
@@ -1509,13 +1506,10 @@ async function generateAssiduidadeReport() {
                 </div>`
             ).join('') : '<p class="text-sm text-gray-500">Nenhuma chamada pendente.</p>';
             
-            // CORREÇÃO 1: Contagem correta dos dias letivos únicos no período
+            // CORREÇÃO: Lógica de contagem e taxa
             const totalDiasLetivos = new Set(data.map(d => d.dia)).size;
-            
             const totalLancados = diasLancados.length;
-
-            // CORREÇÃO 2: Definição e cálculo correto da taxa de lançamento
-            const totalEsperado = data.length; // O total de linhas é o total de chamadas esperadas (dias x profs x turmas)
+            const totalEsperado = data.length;
             const taxa = totalEsperado > 0 ? ((totalLancados / totalEsperado) * 100).toFixed(1) + '%' : 'N/A';
             
             const nomeProfessor = professorId ? usuariosCache.find(u => u.user_uid === professorId)?.nome : 'Todos os Professores';
@@ -1523,22 +1517,10 @@ async function generateAssiduidadeReport() {
 
             const reportHTML = `
                 <div class="printable-area">
-                    <div class="print-header hidden">
-                        <img src="./logo.png">
-                        <div class="print-header-info">
-                            <h2>Relatório de Lançamento de Professores</h2>
-                            <p>Professor: ${nomeProfessor}</p>
-                            <p>${periodoTexto}</p>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center mb-6 no-print">
-                        <h1 class="text-2xl font-bold">Relatório de Lançamento de Professores</h1>
-                        <button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button>
-                    </div>
+                    <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Professores</h2><p>Professor: ${nomeProfessor}</p><p>${periodoTexto}</p></div></div>
+                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Professores</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md">
-                            <div style="height: 320px; position: relative;"><canvas id="lancamentoChart"></canvas></div>
-                        </div>
+                        <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="lancamentoChart"></canvas></div></div>
                         <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
                             <h3 class="text-lg font-bold mb-4">Resumo do Período para: <span class="text-indigo-600">${nomeProfessor}</span></h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
@@ -1549,21 +1531,12 @@ async function generateAssiduidadeReport() {
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="font-bold mb-4">Chamadas Lançadas (${totalLancados})</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${lancadosHtml}</div>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="font-bold mb-4">Chamadas Não Lançadas (${diasNaoLancados.length})</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${naoLancadosHtml}</div>
-                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Chamadas Lançadas (${totalLancados})</h3><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${lancadosHtml}</div></div>
+                        <div class="bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Chamadas Não Lançadas (${diasNaoLancados.length})</h3><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${naoLancadosHtml}</div></div>
                     </div>
                 </div>`;
             const chartScriptContent = `setTimeout(() => { const ctx = document.getElementById('lancamentoChart'); if (ctx) { new Chart(ctx, { type: 'pie', data: { labels: ['Chamadas Lançadas', 'Chamadas Não Lançadas'], datasets: [{ data: [${totalLancados}, ${diasNaoLancados.length}], backgroundColor: ['#10B981', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral de Lançamentos' } } } }); } }, 100);`;
             renderReport(reportHTML, chartScriptContent);
-            // =========================================================================
-            // FIM DAS CORREÇÕES
-            // =========================================================================
         }
     } catch (e) {
         console.error("Erro ao gerar relatório:", e);
@@ -1571,7 +1544,7 @@ async function generateAssiduidadeReport() {
         if (e.message.includes('permission denied')) {
             errorMessage = "Erro de permissão. Verifique as políticas de segurança (RLS) da sua tabela.";
         } else if (e.message.includes('function public.get_professor_assiduidade')) {
-            errorMessage = "Erro Crítico: A função 'get_professor_assiduidade' não foi encontrada no banco de dados. Por favor, certifique-se de que você executou o código SQL do Passo 1 no SQL Editor do Supabase.";
+            errorMessage = "Erro Crítico: A função 'get_professor_assiduidade' não foi encontrada no banco de dados. Por favor, certifique-se de que você executou o código SQL necessário no SQL Editor do Supabase.";
         }
         renderReport(`<div class="bg-white p-6 rounded-lg shadow-md text-center"><h2 class="font-bold text-red-600">Falha na Geração do Relatório</h2><p class="mt-2 text-gray-700">${errorMessage}</p><p class="mt-4 text-xs text-gray-500">Verifique o console para mais detalhes técnicos.</p></div>`);
     }
@@ -1593,19 +1566,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setupSupportLinks();
 
-    // Listeners de botões e interações diretas
+    // Listeners diretos para botões principais
     document.getElementById('gerar-assiduidade-btn').addEventListener('click', generateAssiduidadeReport);
-    document.getElementById('open-promover-turmas-modal-btn').addEventListener('click', openPromoverTurmasModal);
-    document.getElementById('promover-turmas-btn').addEventListener('click', handlePromoverTurmas);
-    document.getElementById('confirm-promocao-turmas-btn').addEventListener('click', handleConfirmPromocaoTurmas);
-    togglePasswordBtn.addEventListener('click', () => {
+    document.getElementById('open-promover-turmas-modal-btn').addEventListener('click', openPromoverTurmasModal);
+
+    // Outros listeners
+    togglePasswordBtn.addEventListener('click', () => {
         const isPassword = passwordInput.type === 'password';
         passwordInput.type = isPassword ? 'text' : 'password';
         eyeIcon.classList.toggle('hidden', isPassword);
         eyeOffIcon.classList.toggle('hidden', !isPassword);
     });
-    
-    // Listeners de sessão e inatividade
+
     setInterval(async () => { if (currentUser) { const { error } = await db.auth.refreshSession(); if (error) console.error(error); } }, 10 * 60 * 1000);
     document.addEventListener('visibilitychange', async () => { if (!document.hidden && currentUser) await db.auth.refreshSession(); });
 
@@ -1688,7 +1660,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Listener genérico para cliques em elementos dinâmicos
+    // Listener genérico para cliques
     document.body.addEventListener('click', (e) => {
         const target = e.target;
         const closest = (selector) => target.closest(selector);
@@ -1720,34 +1692,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         if (closest('#add-aluno-btn')) openAlunoModal();
-        const editAlunoBtn = closest('.edit-aluno-btn');
-        if (editAlunoBtn) openAlunoModal(editAlunoBtn.dataset.id);
-        const historicoAlunoBtn = closest('.historico-aluno-btn');
-        if (historicoAlunoBtn) openAlunoHistoricoModal(historicoAlunoBtn.dataset.id);
+        if (closest('.edit-aluno-btn')) openAlunoModal(closest('.edit-aluno-btn').dataset.id);
+        if (closest('.historico-aluno-btn')) openAlunoHistoricoModal(closest('.historico-aluno-btn').dataset.id);
         if (closest('#add-professor-btn')) openProfessorModal();
-        const editProfessorBtn = closest('.edit-professor-btn');
-        if (editProfessorBtn) openProfessorModal(editProfessorBtn.dataset.id);
+        if (closest('.edit-professor-btn')) openProfessorModal(closest('.edit-professor-btn').dataset.id);
         if (closest('#add-turma-btn')) openTurmaModal();
-        const editTurmaBtn = closest('.edit-turma-btn');
-        if (editTurmaBtn) openTurmaModal(editTurmaBtn.dataset.id);
-        const deleteTurmaBtn = closest('.delete-turma-btn');
-        if (deleteTurmaBtn) openDeleteConfirmModal('turma', deleteTurmaBtn.dataset.id);
+        if (closest('.edit-turma-btn')) openTurmaModal(closest('.edit-turma-btn').dataset.id);
+        if (closest('.delete-turma-btn')) openDeleteConfirmModal('turma', closest('.delete-turma-btn').dataset.id);
         if (closest('#add-evento-btn')) openEventoModal();
-        const editEventoBtn = closest('.edit-evento-btn');
-        if (editEventoBtn) openEventoModal(editEventoBtn.dataset.id);
+        if (closest('.edit-evento-btn')) openEventoModal(closest('.edit-evento-btn').dataset.id);
         if (closest('.cancel-modal-btn')) closeAllModals();
-        const deleteBtn = closest('.delete-btn');
-        if (deleteBtn) {
+        if (closest('.delete-btn')) {
             let id;
-            if (deleteBtn.dataset.type === 'aluno') id = alunoModal.querySelector('#aluno-id').value;
-            else if (deleteBtn.dataset.type === 'professor') id = professorModal.querySelector('#professor-id').value;
-            else if (deleteBtn.dataset.type === 'turma') id = turmaModal.querySelector('#turma-id').value;
-            else if (deleteBtn.dataset.type === 'evento') id = eventoModal.querySelector('#evento-id').value;
-            else if (deleteBtn.dataset.type === 'acompanhamento') id = acompanhamentoModal.querySelector('#acompanhamento-id').value;
-            if (id) openDeleteConfirmModal(deleteBtn.dataset.type, id);
+            const type = closest('.delete-btn').dataset.type;
+            if (type === 'aluno') id = alunoModal.querySelector('#aluno-id').value;
+            else if (type === 'professor') id = professorModal.querySelector('#professor-id').value;
+            else if (type === 'turma') id = turmaModal.querySelector('#turma-id').value;
+            else if (type === 'evento') id = eventoModal.querySelector('#evento-id').value;
+            else if (type === 'acompanhamento') id = acompanhamentoModal.querySelector('#acompanhamento-id').value;
+            if (id) openDeleteConfirmModal(type, id);
         }
-        const resetPassBtn = closest('.reset-password-btn');
-        if (resetPassBtn) handleResetPassword(resetPassBtn.dataset.email);
+        if (closest('.reset-password-btn')) handleResetPassword(closest('.reset-password-btn').dataset.email);
         if (closest('#confirm-delete-btn')) handleConfirmDelete();
         if (closest('#admin-logout-btn') || closest('#professor-logout-btn')) signOutUser();
         if (closest('#gerar-relatorio-btn')) handleGerarRelatorio();
@@ -1781,14 +1746,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelector('.admin-nav-link[data-target="admin-apoia-panel"]').click();
             }
         }
-        const alunoLink = closest('.dashboard-aluno-link');
-        if (alunoLink) {
+        if (closest('.dashboard-aluno-link')) {
             e.preventDefault();
-            openAlunoHistoricoModal(alunoLink.dataset.alunoId);
+            openAlunoHistoricoModal(closest('.dashboard-aluno-link').dataset.alunoId);
         }
-        const calendarDayCell = closest('[data-date]');
-        if (calendarDayCell) {
-            const newDate = calendarDayCell.dataset.date;
+        if (closest('[data-date]')) {
+            const newDate = closest('[data-date]').dataset.date;
             if (newDate) {
                 dashboardSelectedDate = newDate;
                 renderDashboardCalendar();
@@ -1797,7 +1760,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Listeners de mudança em formulários
+    // Listener de notificação
+    notificationBell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notificationPanel.classList.toggle('hidden');
+    });
+    document.addEventListener('click', (e) => {
+        if (!notificationPanel.classList.contains('hidden') && !e.target.closest('#notification-panel') && !e.target.closest('#notification-bell')) {
+            notificationPanel.classList.add('hidden');
+        }
+    });
+    document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
+    document.getElementById('notification-list').addEventListener('click', (e) => {
+        const item = e.target.closest('.notification-item');
+        if (item) {
+            markNotificationAsRead(item.dataset.id);
+        }
+    });
+
+    // Listener de formulário de chamada
     ['#chamada-lista-alunos', '#correcao-chamada-lista-alunos'].forEach(selector => {
         const container = document.querySelector(selector);
         if (container) {
@@ -1822,9 +1803,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Outros listeners de mudança
+    // Outros listeners
     turmaSelect.addEventListener('change', loadChamada);
     dataSelect.addEventListener('change', loadChamada);
+    salvarChamadaBtn.addEventListener('click', saveChamada);
     document.getElementById('delete-confirm-checkbox').addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
     document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
     document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
