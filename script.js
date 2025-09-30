@@ -117,7 +117,7 @@ function resetLoginFormState() {
     if (loginForm) {
         const loginButton = loginForm.querySelector('button[type="submit"]');
         loginForm.reset();
-        loginError.textContent = '';
+        if (loginError) loginError.textContent = '';
         if (loginButton) {
             loginButton.disabled = false;
             loginButton.innerHTML = 'Entrar';
@@ -191,25 +191,34 @@ async function handleAuthChange(session) {
             return;
         }
         const { papel, nome } = data;
+
         if (papel === 'admin') {
-            document.getElementById('admin-info').textContent = nome || currentUser.email;
+            const adminInfoEl = document.getElementById('admin-info');
+            if (adminInfoEl) { // VERIFICAÇÃO DE SEGURANÇA para não travar o app
+                adminInfoEl.textContent = nome || currentUser.email;
+            }
             await loadAdminData();
             await renderDashboardPanel();
             await loadNotifications();
             showView('admin-view');
         } else if (papel === 'professor') {
-            document.getElementById('professor-info').textContent = nome || currentUser.email;
+            const professorInfoEl = document.getElementById('professor-info');
+            if (professorInfoEl) { // VERIFICAÇÃO DE SEGURANÇA para não travar o app
+                professorInfoEl.textContent = nome || currentUser.email;
+            }
             await loadProfessorData(currentUser.id);
             showView('professor-view');
         } else {
             throw new Error('Papel de usuário desconhecido.');
         }
+
         resetInactivityTimer();
     } catch (err) {
         showToast(err.message || 'Erro ao carregar seu perfil. Tente novamente.', true);
         await signOutUser();
     }
 }
+
 
 db.auth.onAuthStateChange(async (event, session) => {
     if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
