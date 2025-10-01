@@ -543,6 +543,7 @@ async function handleAlunoFormSubmit(e) {
     } else {
         showToast('Aluno salvo com sucesso!');
         closeModal(document.getElementById('aluno-modal'));
+        await loadAdminData();
         await renderAlunosPanel();
     }
 }
@@ -1495,12 +1496,13 @@ async function generateAssiduidadeReport() {
     }
 }
 
+
 // ===============================================================
 // INICIALIZAÇÃO E EVENT LISTENERS
 // ===============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-
+    
     // Mapeamento de Elementos da UI
     const passwordInput = document.getElementById('password');
     const togglePasswordBtn = document.getElementById('toggle-password-btn');
