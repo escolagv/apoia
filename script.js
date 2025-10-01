@@ -1492,334 +1492,367 @@ async function generateAssiduidadeReport() {
         renderReport(`<div class="bg-white p-6 rounded-lg shadow-md text-center"><h2 class="font-bold text-red-600">Falha na Geração do Relatório</h2><p class="mt-2 text-gray-700">${errorMessage}</p><p class="mt-4 text-xs text-gray-500">Verifique o console para mais detalhes técnicos.</p></div>`);
     }
 }
-// ... (O restante das funções do script continuam aqui, inalteradas)
-
-
 
 // ===============================================================
-// =================== EVENT LISTENERS ===========================
+// INICIALIZAÇÃO E EVENT LISTENERS
 // ===============================================================
+
 document.addEventListener('DOMContentLoaded', () => {
-    const setupSupportLinks = () => {
-        const numero = "5548991004780";
-        const mensagem = "Olá! Mensagem enviada do Sistema de chamadas da EEB Getúlio Vargas. Preciso de suporte.";
-        const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
-        const linkProf = document.getElementById('support-link-prof');
-        const linkAdmin = document.getElementById('support-link-admin');
-        if (linkProf) { linkProf.href = url; linkProf.target = "_blank"; }
-        if (linkAdmin) { linkAdmin.href = url; linkAdmin.target = "_blank"; }
-    };
-    setupSupportLinks();
+    
+    // Mapeamento de Elementos da UI
+    const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('toggle-password-btn');
+    const eyeIcon = document.getElementById('eye-icon');
+    const eyeOffIcon = document.getElementById('eye-off-icon');
+    const turmaSelect = document.getElementById('professor-turma-select');
+    const dataSelect = document.getElementById('professor-data-select');
+    const salvarChamadaBtn = document.getElementById('salvar-chamada-btn');
+    const notificationBell = document.getElementById('notification-bell');
+    const notificationPanel = document.getElementById('notification-panel');
+    const correcaoTurmaSel = document.getElementById('correcao-turma-select');
+    const correcaoDataSel = document.getElementById('correcao-data-select');
+    const gerarAssiduidadeBtn = document.getElementById('gerar-assiduidade-btn');
+    const promoverTurmasBtn = document.getElementById('open-promover-turmas-modal-btn');
 
-    // Listeners diretos para botões principais
-    document.getElementById('gerar-assiduidade-btn').addEventListener('click', generateAssiduidadeReport);
-    document.getElementById('open-promover-turmas-modal-btn').addEventListener('click', openPromoverTurmasModal);
+    // Inicialização
+    dashboardSelectedDate = getLocalDateString();
+    if (dataSelect) dataSelect.value = getLocalDateString();
+    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
+    db.auth.onAuthStateChange((event, session) => { handleAuthChange(session); });
 
-    // Outros listeners
-    togglePasswordBtn.addEventListener('click', () => {
-        const isPassword = passwordInput.type === 'password';
-        passwordInput.type = isPassword ? 'text' : 'password';
-        eyeIcon.classList.toggle('hidden', isPassword);
-        eyeOffIcon.classList.toggle('hidden', !isPassword);
-    });
+    const setupSupportLinks = () => {
+        const numero = "5548991004780";
+        const mensagem = "Olá! Mensagem enviada do Sistema de chamadas da EEB Getúlio Vargas. Preciso de suporte.";
+        const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+        const linkProf = document.getElementById('support-link-prof');
+        const linkAdmin = document.getElementById('support-link-admin');
+        if (linkProf) { linkProf.href = url; linkProf.target = "_blank"; }
+        if (linkAdmin) { linkAdmin.href = url; linkAdmin.target = "_blank"; }
+    };
+    setupSupportLinks();
 
-    setInterval(async () => { if (currentUser) { const { error } = await db.auth.refreshSession(); if (error) console.error(error); } }, 10 * 60 * 1000);
-    document.addEventListener('visibilitychange', async () => { if (!document.hidden && currentUser) await db.auth.refreshSession(); });
+    // Listeners de Eventos
+    if (togglePasswordBtn) {
+        togglePasswordBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.classList.toggle('hidden', isPassword);
+            eyeOffIcon.classList.toggle('hidden', !isPassword);
+        });
+    }
+    if (turmaSelect) turmaSelect.addEventListener('change', loadChamada);
+    if (dataSelect) dataSelect.addEventListener('change', loadChamada);
+    if (salvarChamadaBtn) salvarChamadaBtn.addEventListener('click', saveChamada);
+    if (correcaoTurmaSel) correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
+    if (correcaoDataSel) correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
+    if (gerarAssiduidadeBtn) gerarAssiduidadeBtn.addEventListener('click', generateAssiduidadeReport);
+    if (promoverTurmasBtn) promoverTurmasBtn.addEventListener('click', openPromoverTurmasModal);
 
-    // Listener genérico para formulários
-    document.body.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (e.target.id === 'login-form') {
-            const loginButton = e.target.querySelector('button[type="submit"]');
-            loginButton.disabled = true;
-            loginButton.innerHTML = `<div class="loader mx-auto"></div>`;
-            loginError.textContent = '';
-            try {
-                const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value });
-                if (error) {
-                    loginError.textContent = "Email ou senha inválidos.";
-                    resetLoginFormState();
-                }
-            } catch (err) {
-                loginError.textContent = "Ocorreu um erro de conexão.";
-                resetLoginFormState();
-            }
-        }
-        if (e.target.id === 'aluno-form') await handleAlunoFormSubmit(e);
-        if (e.target.id === 'professor-form') await handleProfessorFormSubmit(e);
-        if (e.target.id === 'turma-form') await handleTurmaFormSubmit(e);
-        if (e.target.id === 'evento-form') await handleEventoFormSubmit(e);
-        if (e.target.id === 'acompanhamento-form') await handleAcompanhamentoFormSubmit(e);
-        if (e.target.id === 'config-form') await handleConfigFormSubmit(e);
-        if (e.target.id === 'correcao-chamada-form') {
-            const form = e.target;
-            const turmaId = form.querySelector('#correcao-turma-select').value;
-            const data = form.querySelector('#correcao-data-select').value;
-            const alunoRows = form.querySelectorAll('[data-aluno-id]');
-            const registros = Array.from(alunoRows).map(row => {
-                const status = row.querySelector('.status-radio:checked').value;
-                let justificativa = null;
-                if (status === 'falta') {
-                    const justRadio = row.querySelector(`input[name="corr-just-${row.dataset.alunoId}"]:checked`);
-                    if (justRadio) {
-                        if (justRadio.value === 'outros') {
-                            justificativa = row.querySelector('.justificativa-outros-input').value.trim() || 'Outros';
-                        } else {
-                            justificativa = justRadio.value;
-                        }
-                    } else {
-                        justificativa = 'Falta injustificada';
-                    }
-                }
-                return {
-                    aluno_id: parseInt(row.dataset.alunoId),
-                    turma_id: parseInt(turmaId),
-                    data: data,
-                    status: status,
-                    justificativa: justificativa,
-                    registrado_por_uid: currentUser.id
-                };
-            });
-            const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
-            if (error) showToast('Erro ao salvar correção: ' + error.message, true);
-            else {
-                showToast('Chamada corrigida com sucesso!');
-                closeModal(correcaoChamadaModal);
-            }
-        }
-        if (e.target.id === 'reset-password-form') {
-            const newPassword = document.getElementById('new-password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            const errorEl = document.getElementById('reset-password-error');
-            errorEl.textContent = '';
-            if (newPassword.length < 6) { errorEl.textContent = 'A senha deve ter no mínimo 6 caracteres.'; return; }
-            if (newPassword !== confirmPassword) { errorEl.textContent = 'As senhas não coincidem.'; return; }
-            const { error } = await db.auth.updateUser({ password: newPassword });
-            if (error) {
-                errorEl.textContent = 'Erro ao atualizar a senha: ' + error.message;
-            } else {
-                showToast('Senha atualizada com sucesso! Por favor, faça o login com sua nova senha.');
-                closeModal(resetPasswordModal);
-                await signOutUser();
-            }
-        }
-    });
+    document.body.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const loginError = document.getElementById('login-error');
+        if (e.target.id === 'login-form') {
+            const loginButton = e.target.querySelector('button[type="submit"]');
+            loginButton.disabled = true;
+            loginButton.innerHTML = `<div class="loader mx-auto"></div>`;
+            loginError.textContent = '';
+            try {
+                const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value });
+                if (error) {
+                    loginError.textContent = "Email ou senha inválidos.";
+                    resetLoginFormState();
+                }
+            } catch (err) {
+                loginError.textContent = "Ocorreu um erro de conexão.";
+                resetLoginFormState();
+            }
+        }
+        if (e.target.id === 'aluno-form') await handleAlunoFormSubmit(e);
+        if (e.target.id === 'professor-form') await handleProfessorFormSubmit(e);
+        if (e.target.id === 'turma-form') await handleTurmaFormSubmit(e);
+        if (e.target.id === 'evento-form') await handleEventoFormSubmit(e);
+        if (e.target.id === 'acompanhamento-form') await handleAcompanhamentoFormSubmit(e);
+        if (e.target.id === 'config-form') await handleConfigFormSubmit(e);
+        if (e.target.id === 'correcao-chamada-form') {
+            const form = e.target;
+            const turmaId = form.querySelector('#correcao-turma-select').value;
+            const data = form.querySelector('#correcao-data-select').value;
+            const alunoRows = form.querySelectorAll('[data-aluno-id]');
+            const registros = Array.from(alunoRows).map(row => {
+                const status = row.querySelector('.status-radio:checked').value;
+                let justificativa = null;
+                if (status === 'falta') {
+                    const justRadio = row.querySelector(`input[name="corr-just-${row.dataset.alunoId}"]:checked`);
+                    if (justRadio) {
+                        if (justRadio.value === 'outros') {
+                            justificativa = row.querySelector('.justificativa-outros-input').value.trim() || 'Outros';
+                        } else {
+                            justificativa = justRadio.value;
+                        }
+                    } else {
+                        justificativa = 'Falta injustificada';
+                    }
+                }
+                return {
+                    aluno_id: parseInt(row.dataset.alunoId),
+                    turma_id: parseInt(turmaId),
+                    data: data,
+                    status: status,
+                    justificativa: justificativa,
+                    registrado_por_uid: currentUser.id
+                };
+            });
+            const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
+            if (error) showToast('Erro ao salvar correção: ' + error.message, true);
+            else {
+                showToast('Chamada corrigida com sucesso!');
+                closeModal(document.getElementById('correcao-chamada-modal'));
+            }
+        }
+        if (e.target.id === 'reset-password-form') {
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorEl = document.getElementById('reset-password-error');
+            errorEl.textContent = '';
+            if (newPassword.length < 6) { errorEl.textContent = 'A senha deve ter no mínimo 6 caracteres.'; return; }
+            if (newPassword !== confirmPassword) { errorEl.textContent = 'As senhas não coincidem.'; return; }
+            const { error } = await db.auth.updateUser({ password: newPassword });
+            if (error) {
+                errorEl.textContent = 'Erro ao atualizar a senha: ' + error.message;
+            } else {
+                showToast('Senha atualizada com sucesso! Por favor, faça o login com sua nova senha.');
+                closeModal(document.getElementById('reset-password-modal'));
+                await signOutUser();
+            }
+        }
+    });
 
-    // Listener genérico para cliques
-    document.body.addEventListener('click', (e) => {
-        const target = e.target;
-        const closest = (selector) => target.closest(selector);
+    document.body.addEventListener('click', (e) => {
+        const target = e.target;
+        const closest = (selector) => target.closest(selector);
 
-        if (closest('.date-clear-btn')) {
-            const targetId = closest('.date-clear-btn').dataset.target;
-            document.getElementById(targetId).value = '';
-        }
+        if (closest('.date-clear-btn')) {
+            const targetId = closest('.date-clear-btn').dataset.target;
+            document.getElementById(targetId).value = '';
+        }
 
-        const navLink = closest('.admin-nav-link');
-        if (navLink) {
-            e.preventDefault();
-            document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
-            navLink.classList.add('bg-gray-700');
-            const targetPanelId = navLink.dataset.target;
-            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
-            const panel = document.getElementById(targetPanelId);
-            if (panel) {
-                panel.classList.remove('hidden');
-                if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
-                if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
-                if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
-                if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
-                if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
-                if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
-                if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
-                if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
-                if (targetPanelId === 'admin-config-panel') renderConfigPanel();
-            }
-        }
-        if (closest('#add-aluno-btn')) openAlunoModal();
-        if (closest('.edit-aluno-btn')) openAlunoModal(closest('.edit-aluno-btn').dataset.id);
-        if (closest('.historico-aluno-btn')) openAlunoHistoricoModal(closest('.historico-aluno-btn').dataset.id);
-        if (closest('#add-professor-btn')) openProfessorModal();
-        if (closest('.edit-professor-btn')) openProfessorModal(closest('.edit-professor-btn').dataset.id);
-        if (closest('#add-turma-btn')) openTurmaModal();
-        if (closest('.edit-turma-btn')) openTurmaModal(closest('.edit-turma-btn').dataset.id);
-        if (closest('.delete-turma-btn')) openDeleteConfirmModal('turma', closest('.delete-turma-btn').dataset.id);
-        if (closest('#add-evento-btn')) openEventoModal();
-        if (closest('.edit-evento-btn')) openEventoModal(closest('.edit-evento-btn').dataset.id);
-        if (closest('.cancel-modal-btn')) closeAllModals();
-        if (closest('.delete-btn')) {
-            let id;
-            const type = closest('.delete-btn').dataset.type;
-            if (type === 'aluno') id = alunoModal.querySelector('#aluno-id').value;
-            else if (type === 'professor') id = professorModal.querySelector('#professor-id').value;
-            else if (type === 'turma') id = turmaModal.querySelector('#turma-id').value;
-            else if (type === 'evento') id = eventoModal.querySelector('#evento-id').value;
-            else if (type === 'acompanhamento') id = acompanhamentoModal.querySelector('#acompanhamento-id').value;
-            if (id) openDeleteConfirmModal(type, id);
-        }
-        if (closest('.reset-password-btn')) handleResetPassword(closest('.reset-password-btn').dataset.email);
-        if (closest('#confirm-delete-btn')) handleConfirmDelete();
-        if (closest('#admin-logout-btn') || closest('#professor-logout-btn')) signOutUser();
-        if (closest('#gerar-relatorio-btn')) handleGerarRelatorio();
-        if (closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('faltas');
-        if (closest('#gerar-apoia-relatorio-btn')) handleGerarApoiaRelatorio();
-        if (closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('apoia');
-        if (closest('#imprimir-historico-btn')) handleImprimirRelatorio('historico');
-        if (closest('#correcao-chamada-btn')) {
-            correcaoChamadaModal.classList.remove('hidden');
-            correcaoTurmaSel.innerHTML = '<option value="">Selecione uma turma...</option>';
-            turmasCache.forEach(t => correcaoTurmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
-        }
-        if (closest('#prev-month-btn')) { dashboardCalendar.month--; if (dashboardCalendar.month < 0) { dashboardCalendar.month = 11; dashboardCalendar.year--; } renderDashboardCalendar(); }
-        if (closest('#next-month-btn')) { dashboardCalendar.month++; if (dashboardCalendar.month > 11) { dashboardCalendar.month = 0; dashboardCalendar.year++; } renderDashboardCalendar(); }
-        const card = closest('.clickable-card');
-        if (card) {
-            const type = card.dataset.type;
-            if (type === 'presencas' || type === 'faltas') {
-                const date = dashboardSelectedDate;
-                document.querySelector('.admin-nav-link[data-target="admin-relatorios-panel"]').click();
-                setTimeout(() => {
-                    document.getElementById('relatorio-data-inicio').value = date;
-                    document.getElementById('relatorio-data-fim').value = date;
-                    if (type === 'faltas') document.getElementById('relatorio-status-select').value = 'falta';
-                    if (type === 'presencas') document.getElementById('relatorio-status-select').value = 'presente';
-                    handleGerarRelatorio();
-                }, 100);
-            } else if (type === 'assiduidade') {
-                openAssiduidadeModal();
-            } else if (type === 'acompanhamento') {
-                document.querySelector('.admin-nav-link[data-target="admin-apoia-panel"]').click();
-            }
-        }
-        if (closest('.dashboard-aluno-link')) {
-            e.preventDefault();
-            openAlunoHistoricoModal(closest('.dashboard-aluno-link').dataset.alunoId);
-        }
-        if (closest('[data-date]')) {
-            const newDate = closest('[data-date]').dataset.date;
-            if (newDate) {
-                dashboardSelectedDate = newDate;
-                renderDashboardCalendar();
-                loadDailySummary(dashboardSelectedDate);
-            }
-        }
-    });
+        const navLink = closest('.admin-nav-link');
+        if (navLink) {
+            e.preventDefault();
+            document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
+            navLink.classList.add('bg-gray-700');
+            const targetPanelId = navLink.dataset.target;
+            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+            const panel = document.getElementById(targetPanelId);
+            if (panel) {
+                panel.classList.remove('hidden');
+                if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
+                if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
+                if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
+                if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
+                if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
+                if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
+                if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
+                if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
+                if (targetPanelId === 'admin-config-panel') renderConfigPanel();
+            }
+        }
+        
+        const card = closest('.clickable-card');
+        if (card) {
+            const type = card.dataset.type;
+            if (type === 'presencas' || type === 'faltas') {
+                const date = dashboardSelectedDate;
+                document.querySelector('.admin-nav-link[data-target="admin-relatorios-panel"]').click();
+                setTimeout(() => {
+                    document.getElementById('relatorio-data-inicio').value = date;
+                    document.getElementById('relatorio-data-fim').value = date;
+                    if (type === 'faltas') document.getElementById('relatorio-status-select').value = 'falta';
+                    if (type === 'presencas') document.getElementById('relatorio-status-select').value = 'presente';
+                    handleGerarRelatorio();
+                }, 100);
+            } else if (type === 'assiduidade') {
+                openAssiduidadeModal();
+            } else if (type === 'acompanhamento') {
+                document.querySelector('.admin-nav-link[data-target="admin-apoia-panel"]').click();
+            }
+        }
 
-    // Listener de notificação
-    notificationBell.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notificationPanel.classList.toggle('hidden');
-    });
-    document.addEventListener('click', (e) => {
-        if (!notificationPanel.classList.contains('hidden') && !e.target.closest('#notification-panel') && !e.target.closest('#notification-bell')) {
-            notificationPanel.classList.add('hidden');
-        }
-    });
-    document.getElementById('clear-notifications-btn').addEventListener('click', markAllNotificationsAsRead);
-    document.getElementById('notification-list').addEventListener('click', (e) => {
-        const item = e.target.closest('.notification-item');
-        if (item) {
-            markNotificationAsRead(item.dataset.id);
-        }
-    });
+        if (closest('#add-aluno-btn')) openAlunoModal();
+        if (closest('.edit-aluno-btn')) openAlunoModal(closest('.edit-aluno-btn').dataset.id);
+        if (closest('.historico-aluno-btn')) openAlunoHistoricoModal(closest('.historico-aluno-btn').dataset.id);
+        if (closest('#add-professor-btn')) openProfessorModal();
+        if (closest('.edit-professor-btn')) openProfessorModal(closest('.edit-professor-btn').dataset.id);
+        if (closest('#add-turma-btn')) openTurmaModal();
+        if (closest('.edit-turma-btn')) openTurmaModal(closest('.edit-turma-btn').dataset.id);
+        if (closest('.delete-turma-btn')) openDeleteConfirmModal('turma', closest('.delete-turma-btn').dataset.id);
+        if (closest('#add-evento-btn')) openEventoModal();
+        if (closest('.edit-evento-btn')) openEventoModal(closest('.edit-evento-btn').dataset.id);
+        if (closest('.cancel-modal-btn')) closeAllModals();
+        if (closest('.delete-btn')) {
+            let id;
+            const type = closest('.delete-btn').dataset.type;
+            if (type === 'aluno') id = document.getElementById('aluno-id').value;
+            else if (type === 'professor') id = document.getElementById('professor-id').value;
+            else if (type === 'turma') id = document.getElementById('turma-id').value;
+            else if (type === 'evento') id = document.getElementById('evento-id').value;
+            else if (type === 'acompanhamento') id = document.getElementById('acompanhamento-id').value;
+            if (id) openDeleteConfirmModal(type, id);
+        }
+        if (closest('.reset-password-btn')) handleResetPassword(closest('.reset-password-btn').dataset.email);
+        if (closest('#confirm-delete-btn')) handleConfirmDelete();
+        if (closest('#admin-logout-btn') || closest('#professor-logout-btn')) signOutUser();
+        if (closest('#gerar-relatorio-btn')) handleGerarRelatorio();
+        if (closest('#imprimir-relatorio-btn')) handleImprimirRelatorio('faltas');
+        if (closest('#gerar-apoia-relatorio-btn')) handleGerarApoiaRelatorio();
+        if (closest('#imprimir-apoia-relatorio-btn')) handleImprimirRelatorio('apoia');
+        if (closest('#imprimir-historico-btn')) handleImprimirRelatorio('historico');
+        if (closest('#correcao-chamada-btn')) {
+            document.getElementById('correcao-chamada-modal').classList.remove('hidden');
+            const sel = document.getElementById('correcao-turma-select');
+            sel.innerHTML = '<option value="">Selecione uma turma...</option>';
+            turmasCache.forEach(t => sel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+        }
+        if (closest('#prev-month-btn')) { dashboardCalendar.month--; if (dashboardCalendar.month < 0) { dashboardCalendar.month = 11; dashboardCalendar.year--; } renderDashboardCalendar(); }
+        if (closest('#next-month-btn')) { dashboardCalendar.month++; if (dashboardCalendar.month > 11) { dashboardCalendar.month = 0; dashboardCalendar.year++; } renderDashboardCalendar(); }
+        if (closest('.dashboard-aluno-link')) {
+            e.preventDefault();
+            openAlunoHistoricoModal(closest('.dashboard-aluno-link').dataset.alunoId);
+        }
+        if (closest('[data-date]')) {
+            const newDate = closest('[data-date]').dataset.date;
+            if (newDate) {
+                dashboardSelectedDate = newDate;
+                renderDashboardCalendar();
+                loadDailySummary(dashboardSelectedDate);
+            }
+        }
+    });
+    
+    if (notificationBell) {
+        notificationBell.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationPanel.classList.toggle('hidden');
+        });
+    }
+    
+    document.addEventListener('click', (e) => {
+        const notificationPanel = document.getElementById('notification-panel');
+        if (notificationPanel && !notificationPanel.classList.contains('hidden') && !e.target.closest('#notification-panel') && !e.target.closest('#notification-bell')) {
+            notificationPanel.classList.add('hidden');
+        }
+    });
 
-    // Listener de formulário de chamada
-    ['#chamada-lista-alunos', '#correcao-chamada-lista-alunos'].forEach(selector => {
-        const container = document.querySelector(selector);
-        if (container) {
-            container.addEventListener('change', e => {
-                if (e.target.classList.contains('status-radio')) {
-                    const row = e.target.closest('[data-aluno-id]');
-                    const justDiv = row.querySelector('.justificativa-container');
-                    const isFalta = e.target.value === 'falta';
-                    if (justDiv) {
-                        justDiv.classList.toggle('hidden', !isFalta);
-                        if (isFalta) {
-                            const radiosJust = Array.from(row.querySelectorAll('input[name^="just-"], input[name^="corr-just-"]'));
-                            const hasChecked = radiosJust.some(r => r.checked);
-                            if (!hasChecked) {
-                                const injustificadaRadio = radiosJust.find(r => r.value === 'Falta injustificada');
-                                if (injustificadaRadio) injustificadaRadio.checked = true;
-                            }
-                        }
-                    }
-                }
-            });
-        }
-    });
+    const clearNotificationsBtn = document.getElementById('clear-notifications-btn');
+    if (clearNotificationsBtn) clearNotificationsBtn.addEventListener('click', markAllNotificationsAsRead);
 
-    // Outros listeners
-    turmaSelect.addEventListener('change', loadChamada);
-    dataSelect.addEventListener('change', loadChamada);
-    salvarChamadaBtn.addEventListener('click', saveChamada);
-    document.getElementById('delete-confirm-checkbox').addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
-    document.getElementById('evento-data-inicio-filter').addEventListener('change', renderCalendarioPanel);
-    document.getElementById('evento-data-fim-filter').addEventListener('change', renderCalendarioPanel);
-    document.getElementById('aluno-search-input').addEventListener('input', () => renderAlunosPanel());
-    document.getElementById('turma-ano-letivo-filter').addEventListener('change', renderTurmasPanel);
-    document.getElementById('aluno-ano-letivo-filter').addEventListener('change', () => {
-        document.getElementById('aluno-turma-filter').value = '';
-        renderAlunosPanel();
-    });
-    document.getElementById('aluno-turma-filter').addEventListener('change', () => {
-        renderAlunosPanel();
-    });
-    correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
-    correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
+    const notificationList = document.getElementById('notification-list');
+    if (notificationList) {
+        notificationList.addEventListener('click', (e) => {
+            const item = e.target.closest('.notification-item');
+            if (item) markNotificationAsRead(item.dataset.id);
+        });
+    }
 
-    document.getElementById('promover-turmas-ano-origem').addEventListener('change', renderPromocaoTurmasLista);
-    document.getElementById('promover-turmas-confirm-checkbox').addEventListener('change', (e) => {
-        document.getElementById('confirm-promocao-turmas-btn').disabled = !e.target.checked;
-    });
+    ['#chamada-lista-alunos', '#correcao-chamada-lista-alunos'].forEach(selector => {
+        const container = document.querySelector(selector);
+        if (container) {
+            container.addEventListener('change', e => {
+                if (e.target.classList.contains('status-radio')) {
+                    const row = e.target.closest('[data-aluno-id]');
+                    const justDiv = row.querySelector('.justificativa-container');
+                    const isFalta = e.target.value === 'falta';
+                    if (justDiv) {
+                        justDiv.classList.toggle('hidden', !isFalta);
+                        if (isFalta) {
+                            const radiosJust = Array.from(row.querySelectorAll('input[name^="just-"], input[name^="corr-just-"]'));
+                            const hasChecked = radiosJust.some(r => r.checked);
+                            if (!hasChecked) {
+                                const injustificadaRadio = radiosJust.find(r => r.value === 'Falta injustificada');
+                                if (injustificadaRadio) injustificadaRadio.checked = true;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
 
-    const toggleAllCheckbox = document.getElementById('promover-turmas-toggle-all');
-    if (toggleAllCheckbox) {
-        toggleAllCheckbox.addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('.promocao-turma-checkbox');
-            const isTudoMarcado = [...checkboxes].every(cb => cb.checked);
-            checkboxes.forEach(cb => cb.checked = !isTudoMarcado);
-            toggleAllCheckbox.textContent = !isTudoMarcado ? 'Desmarcar Todas' : 'Marcar Todas';
-        });
-    }
+    const deleteCheckbox = document.getElementById('delete-confirm-checkbox');
+    if(deleteCheckbox) deleteCheckbox.addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
+    
+    const eventoInicioFilter = document.getElementById('evento-data-inicio-filter');
+    if(eventoInicioFilter) eventoInicioFilter.addEventListener('change', renderCalendarioPanel);
+    
+    const eventoFimFilter = document.getElementById('evento-data-fim-filter');
+    if(eventoFimFilter) eventoFimFilter.addEventListener('change', renderCalendarioPanel);
 
-    document.getElementById('assiduidade-tabs').addEventListener('click', (e) => {
-        e.preventDefault();
-        const link = e.target.closest('a');
-        if (!link || link.getAttribute('aria-current') === 'page') return;
-        document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
-            a.removeAttribute('aria-current');
-            a.classList.remove('text-indigo-600', 'border-indigo-500');
-            a.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
-        });
-        link.setAttribute('aria-current', 'page');
-        link.classList.add('text-indigo-600', 'border-indigo-500');
-        link.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
-        document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
-        document.getElementById(link.dataset.target).classList.remove('hidden');
-    });
+    const alunoSearch = document.getElementById('aluno-search-input');
+    if(alunoSearch) alunoSearch.addEventListener('input', () => renderAlunosPanel());
 
-    document.getElementById('assiduidade-aluno-ano').addEventListener('change', e => {
-        const anoLetivo = e.target.value;
-        const alunoSel = document.getElementById('assiduidade-aluno-aluno');
-        alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
-        const turmasDoAnoIds = turmasCache.filter(t => t.ano_letivo == anoLetivo).map(t => t.id);
-        if (anoLetivo) {
-            alunosCache.filter(a => turmasDoAnoIds.includes(a.turma_id)).forEach(a => alunoSel.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
-        }
-    });
+    const turmaAnoFilter = document.getElementById('turma-ano-letivo-filter');
+    if(turmaAnoFilter) turmaAnoFilter.addEventListener('change', renderTurmasPanel);
 
-    document.getElementById('assiduidade-turma-ano').addEventListener('change', e => {
-        const ano = e.target.value;
-        const turmaSel = document.getElementById('assiduidade-turma-turma');
-        turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
-        if (ano) {
-            turmasCache.filter(t => t.ano_letivo == ano)
-                .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
-        }
-    });
+    const alunoAnoFilter = document.getElementById('aluno-ano-letivo-filter');
+    if(alunoAnoFilter) alunoAnoFilter.addEventListener('change', () => {
+        document.getElementById('aluno-turma-filter').value = '';
+        renderAlunosPanel();
+    });
 
-    // Inicialização
-    dataSelect.value = getLocalDateString();
-    ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
-    console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
+    const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
+    if(alunoTurmaFilter) alunoTurmaFilter.addEventListener('change', () => { renderAlunosPanel(); });
+
+    document.getElementById('promover-turmas-ano-origem').addEventListener('change', renderPromocaoTurmasLista);
+    document.getElementById('promover-turmas-confirm-checkbox').addEventListener('change', (e) => {
+        document.getElementById('confirm-promocao-turmas-btn').disabled = !e.target.checked;
+    });
+
+    const toggleAllCheckbox = document.getElementById('promover-turmas-toggle-all');
+    if (toggleAllCheckbox) {
+        toggleAllCheckbox.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.promocao-turma-checkbox');
+            const isTudoMarcado = [...checkboxes].every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !isTudoMarcado);
+            toggleAllCheckbox.textContent = !isTudoMarcado ? 'Desmarcar Todas' : 'Marcar Todas';
+        });
+    }
+
+    document.getElementById('assiduidade-tabs').addEventListener('click', (e) => {
+        e.preventDefault();
+        const link = e.target.closest('a');
+        if (!link || link.getAttribute('aria-current') === 'page') return;
+        document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
+            a.removeAttribute('aria-current');
+            a.classList.remove('text-indigo-600', 'border-indigo-500');
+            a.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
+        });
+        link.setAttribute('aria-current', 'page');
+        link.classList.add('text-indigo-600', 'border-indigo-500');
+        link.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
+        document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
+        document.getElementById(link.dataset.target).classList.remove('hidden');
+    });
+
+    document.getElementById('assiduidade-aluno-ano').addEventListener('change', e => {
+        const anoLetivo = e.target.value;
+        const alunoSel = document.getElementById('assiduidade-aluno-aluno');
+        alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
+        const turmasDoAnoIds = turmasCache.filter(t => t.ano_letivo == anoLetivo).map(t => t.id);
+        if (anoLetivo) {
+            alunosCache.filter(a => turmasDoAnoIds.includes(a.turma_id)).forEach(a => alunoSel.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
+        }
+    });
+
+    document.getElementById('assiduidade-turma-ano').addEventListener('change', e => {
+        const ano = e.target.value;
+        const turmaSel = document.getElementById('assiduidade-turma-turma');
+        turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
+        if (ano) {
+            turmasCache.filter(t => t.ano_letivo == ano)
+                .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+        }
+    });
+
+    console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
 });
+
