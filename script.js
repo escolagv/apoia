@@ -1506,12 +1506,13 @@ async function generateAssiduidadeReport() {
     }
 }
 
+
 // ===============================================================
 // INICIALIZAÇÃO E EVENT LISTENERS
 // ===============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     // Mapeamento de Elementos da UI
     const passwordInput = document.getElementById('password');
     const togglePasswordBtn = document.getElementById('toggle-password-btn');
@@ -1524,10 +1525,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const notificationPanel = document.getElementById('notification-panel');
     const correcaoTurmaSel = document.getElementById('correcao-turma-select');
     const correcaoDataSel = document.getElementById('correcao-data-select');
-    const gerarAssiduidadeBtn = document.getElementById('gerar-assiduidade-btn');
-    const promoverTurmasBtn = document.getElementById('open-promover-turmas-modal-btn');
-    const promoverTurmasConfirmBtn = document.getElementById('confirm-promocao-turmas-btn');
-
+    
     // Inicialização
     dashboardSelectedDate = getLocalDateString();
     if (dataSelect) dataSelect.value = getLocalDateString();
@@ -1559,10 +1557,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (salvarChamadaBtn) salvarChamadaBtn.addEventListener('click', saveChamada);
     if (correcaoTurmaSel) correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
     if (correcaoDataSel) correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
-    if (gerarAssiduidadeBtn) gerarAssiduidadeBtn.addEventListener('click', generateAssiduidadeReport);
-    if (promoverTurmasBtn) promoverTurmasBtn.addEventListener('click', openPromoverTurmasModal);
-    if (promoverTurmasConfirmBtn) promoverTurmasConfirmBtn.addEventListener('click', handleConfirmPromocaoTurmas);
-
+    
     document.body.addEventListener('submit', async (e) => {
         e.preventDefault();
         const loginError = document.getElementById('login-error');
@@ -1660,23 +1655,23 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
             navLink.classList.add('bg-gray-700');
             
-            adminContent.innerHTML = ''; // Limpa o conteúdo para recarregar o template
+            adminContent.innerHTML = '';
             
             const template = document.getElementById(`template-${targetPanelId}`);
             if(template) {
                 const content = template.content.cloneNode(true);
                 adminContent.appendChild(content);
-            }
 
-            if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
-            else if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
-            else if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
-            else if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
-            else if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
-            else if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
-            else if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
-            else if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
-            else if (targetPanelId === 'admin-config-panel') renderConfigPanel();
+                if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
+                else if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
+                else if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
+                else if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
+                else if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
+                else if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
+                else if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
+                else if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
+                else if (targetPanelId === 'admin-config-panel') renderConfigPanel();
+            }
         }
         
         const card = closest('.clickable-card');
