@@ -1316,11 +1316,13 @@ async function generateAssiduidadeReport() {
             let dataFim = document.getElementById('assiduidade-aluno-data-fim').value;
             if (dataInicio && !dataFim) dataFim = dataInicio;
             const alunoId = document.getElementById('assiduidade-aluno-aluno').value;
+            const anoLetivo = document.getElementById('assiduidade-aluno-ano').value;
 
-            let query = db.from('presencas').select('status, justificativa, alunos!inner(nome_completo), turmas!inner(nome_turma)');
+            let query = db.from('presencas').select('status, justificativa, alunos!inner(nome_completo), turmas!inner(nome_turma, ano_letivo)');
             if (dataInicio) query = query.gte('data', dataInicio);
             if (dataFim) query = query.lte('data', dataFim);
             if (alunoId) query = query.eq('aluno_id', alunoId);
+            if (anoLetivo) query = query.eq('turmas.ano_letivo', anoLetivo);
 
             const { data, error } = await safeQuery(query);
             if (error) throw error;
@@ -1354,7 +1356,7 @@ async function generateAssiduidadeReport() {
             const totalFaltasI = Object.values(stats).reduce((sum, s) => sum + s.faltas_i, 0);
             const periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
 
-            const reportHTML = `<div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="assiduidadeChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Detalhes da Frequência</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Aluno</th><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas Just.</th><th class="p-3 text-center">Faltas Injust.</th><th class="p-3 text-center">Assiduidade</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
+            const reportHTML = `<div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade de Alunos</h1><p class="text-sm text-gray-600">${periodoTexto}</p><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="assiduidadeChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Detalhes da Frequência</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Aluno</th><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas Just.</th><th class="p-3 text-center">Faltas Injust.</th><th class="p-3 text-center">Assiduidade</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
             const chartScriptContent = `setTimeout(() => { const ctx = document.getElementById('assiduidadeChart'); if (ctx) { new Chart(ctx, { type: 'pie', data: { labels: ['Presenças', 'Faltas Justificadas', 'Faltas Injustificadas'], datasets: [{ data: [${totalPresencas}, ${totalFaltasJ}, ${totalFaltasI}], backgroundColor: ['#10B981', '#F59E0B', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Visão Geral da Frequência' } } } }); } }, 100);`;
             renderReport(reportHTML, chartScriptContent);
 
@@ -1400,7 +1402,7 @@ async function generateAssiduidadeReport() {
             const totalFaltas = sortedStats.reduce((sum, t) => sum + t.faltas, 0);
             const periodoTexto = (dataInicio && dataFim) ? `Período: ${new Date(dataInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(dataFim + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Geral';
 
-            const reportHTML = `<div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="assiduidadeTurmaChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dados Consolidados</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
+            const reportHTML = `<div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Assiduidade por Turma</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Assiduidade por Turma</h1><p class="text-sm text-gray-600">${periodoTexto}</p><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="assiduidadeTurmaChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dados Consolidados</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presenças</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
             const chartScriptContent = `setTimeout(() => { const ctx = document.getElementById('assiduidadeTurmaChart'); if(ctx) { new Chart(ctx, { type: 'pie', data: { labels: ['Total de Presenças', 'Total de Faltas'], datasets: [{ label: 'Frequência Geral', data: [${totalPresencas}, ${totalFaltas}], backgroundColor: ['#10B981', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Frequência Geral das Turmas' } } } }); } }, 100);`;
             renderReport(reportHTML, chartScriptContent);
 
@@ -1461,11 +1463,11 @@ async function generateAssiduidadeReport() {
             const reportHTML = `
                 <div class="printable-area">
                     <div class="print-header hidden"><img src="./logo.png"><div class="print-header-info"><h2>Relatório de Lançamento de Professores</h2><p>Professor: ${nomeProfessor}</p><p>${periodoTexto}</p></div></div>
-                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento de Professores</h1><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
+                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatório de Lançamento</h1><p class="text-sm text-gray-600">${periodoTexto}</p><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir</button></div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md"><div style="height: 320px; position: relative;"><canvas id="lancamentoChart"></canvas></div></div>
                         <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold mb-4">Resumo do Período para: <span class="text-indigo-600">${nomeProfessor}</span></h3>
+                            <h3 class="text-lg font-bold mb-4">Resumo para: <span class="text-indigo-600">${nomeProfessor}</span></h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                                 <div><p class="text-sm text-gray-500">Total de Dias Letivos</p><p class="text-2xl font-bold">${totalDiasLetivos}</p></div>
                                 <div><p class="text-sm text-gray-500">Chamadas Lançadas</p><p class="text-2xl font-bold text-green-600">${totalLancados}</p></div>
@@ -1498,7 +1500,7 @@ async function generateAssiduidadeReport() {
 // ===============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     // Mapeamento de Elementos da UI
     const passwordInput = document.getElementById('password');
     const togglePasswordBtn = document.getElementById('toggle-password-btn');
@@ -1513,7 +1515,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const correcaoDataSel = document.getElementById('correcao-data-select');
     const gerarAssiduidadeBtn = document.getElementById('gerar-assiduidade-btn');
     const promoverTurmasBtn = document.getElementById('open-promover-turmas-modal-btn');
-
+    
     // Inicialização
     dashboardSelectedDate = getLocalDateString();
     if (dataSelect) dataSelect.value = getLocalDateString();
@@ -1534,11 +1536,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listeners de Eventos
     if (togglePasswordBtn) {
         togglePasswordBtn.addEventListener('click', () => {
-            const isPassword = passwordInput.type === 'password';
-            passwordInput.type = isPassword ? 'text' : 'password';
-            eyeIcon.classList.toggle('hidden', isPassword);
-            eyeOffIcon.classList.toggle('hidden', !isPassword);
-        });
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.classList.toggle('hidden', isPassword);
+            eyeOffIcon.classList.toggle('hidden', !isPassword);
+        });
     }
     if (turmaSelect) turmaSelect.addEventListener('change', loadChamada);
     if (dataSelect) dataSelect.addEventListener('change', loadChamada);
@@ -1639,11 +1641,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const navLink = closest('.admin-nav-link');
         if (navLink) {
             e.preventDefault();
+            const adminContent = document.getElementById('admin-content');
+            const targetPanelId = navLink.dataset.target;
+            
             document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
             navLink.classList.add('bg-gray-700');
-            const targetPanelId = navLink.dataset.target;
-            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
-            const panel = document.getElementById(targetPanelId);
+            
+            adminContent.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+            
+            let panel = document.getElementById(targetPanelId);
+            if (!panel) {
+                const template = document.getElementById(`template-${targetPanelId}`);
+                if(template) {
+                    const content = template.content.cloneNode(true);
+                    adminContent.appendChild(content);
+                    panel = document.getElementById(targetPanelId);
+                }
+            }
+
             if (panel) {
                 panel.classList.remove('hidden');
                 if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
@@ -1802,8 +1817,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
     if(alunoTurmaFilter) alunoTurmaFilter.addEventListener('change', () => { renderAlunosPanel(); });
 
-    document.getElementById('promover-turmas-ano-origem').addEventListener('change', renderPromocaoTurmasLista);
-    document.getElementById('promover-turmas-confirm-checkbox').addEventListener('change', (e) => {
+    const promoverTurmasAnoOrigem = document.getElementById('promover-turmas-ano-origem');
+    if(promoverTurmasAnoOrigem) promoverTurmasAnoOrigem.addEventListener('change', renderPromocaoTurmasLista);
+
+    const promoverTurmasConfirmCheckbox = document.getElementById('promover-turmas-confirm-checkbox');
+    if(promoverTurmasConfirmCheckbox) promoverTurmasConfirmCheckbox.addEventListener('change', (e) => {
         document.getElementById('confirm-promocao-turmas-btn').disabled = !e.target.checked;
     });
 
@@ -1817,41 +1835,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.getElementById('assiduidade-tabs').addEventListener('click', (e) => {
-        e.preventDefault();
-        const link = e.target.closest('a');
-        if (!link || link.getAttribute('aria-current') === 'page') return;
-        document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
-            a.removeAttribute('aria-current');
-            a.classList.remove('text-indigo-600', 'border-indigo-500');
-            a.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
+    const assiduidadeTabs = document.getElementById('assiduidade-tabs');
+    if (assiduidadeTabs) {
+        assiduidadeTabs.addEventListener('click', (e) => {
+            e.preventDefault();
+            const link = e.target.closest('a');
+            if (!link || link.getAttribute('aria-current') === 'page') return;
+            document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
+                a.removeAttribute('aria-current');
+                a.classList.remove('text-indigo-600', 'border-indigo-500');
+                a.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
+            });
+            link.setAttribute('aria-current', 'page');
+            link.classList.add('text-indigo-600', 'border-indigo-500');
+            link.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
+            document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById(link.dataset.target).classList.remove('hidden');
         });
-        link.setAttribute('aria-current', 'page');
-        link.classList.add('text-indigo-600', 'border-indigo-500');
-        link.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
-        document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
-        document.getElementById(link.dataset.target).classList.remove('hidden');
-    });
+    }
 
-    document.getElementById('assiduidade-aluno-ano').addEventListener('change', e => {
-        const anoLetivo = e.target.value;
-        const alunoSel = document.getElementById('assiduidade-aluno-aluno');
-        alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
-        const turmasDoAnoIds = turmasCache.filter(t => t.ano_letivo == anoLetivo).map(t => t.id);
-        if (anoLetivo) {
-            alunosCache.filter(a => turmasDoAnoIds.includes(a.turma_id)).forEach(a => alunoSel.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
-        }
-    });
+    const assiduidadeAlunoAno = document.getElementById('assiduidade-aluno-ano');
+    if (assiduidadeAlunoAno) {
+        assiduidadeAlunoAno.addEventListener('change', e => {
+            const anoLetivo = e.target.value;
+            const alunoSel = document.getElementById('assiduidade-aluno-aluno');
+            alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
+            const turmasDoAnoIds = turmasCache.filter(t => t.ano_letivo == anoLetivo).map(t => t.id);
+            if (anoLetivo) {
+                alunosCache.filter(a => turmasDoAnoIds.includes(a.turma_id)).forEach(a => alunoSel.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
+            }
+        });
+    }
 
-    document.getElementById('assiduidade-turma-ano').addEventListener('change', e => {
-        const ano = e.target.value;
-        const turmaSel = document.getElementById('assiduidade-turma-turma');
-        turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
-        if (ano) {
-            turmasCache.filter(t => t.ano_letivo == ano)
-                .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
-        }
-    });
+    const assiduidadeTurmaAno = document.getElementById('assiduidade-turma-ano');
+    if (assiduidadeTurmaAno) {
+        assiduidadeTurmaAno.addEventListener('change', e => {
+            const ano = e.target.value;
+            const turmaSel = document.getElementById('assiduidade-turma-turma');
+            turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
+            if (ano) {
+                turmasCache.filter(t => t.ano_letivo == ano)
+                    .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+            }
+        });
+    }
 
     console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
 });
