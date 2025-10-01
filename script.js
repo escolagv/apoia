@@ -120,6 +120,9 @@ function resetInactivityTimer() {
 }
 
 async function handleAuthChange(session) {
+    const adminContent = document.getElementById('admin-content');
+    const dashboardTemplate = document.getElementById('template-admin-dashboard-panel');
+
     if (!session) {
         resetApplicationState();
         clearTimeout(inactivityTimer);
@@ -139,6 +142,13 @@ async function handleAuthChange(session) {
         if (papel === 'admin') {
             document.getElementById('admin-info').textContent = nome || currentUser.email;
             await loadAdminData();
+            
+            if (dashboardTemplate && adminContent) {
+                adminContent.innerHTML = ''; // Limpa o conteúdo anterior
+                const dashboardNode = dashboardTemplate.content.cloneNode(true);
+                adminContent.appendChild(dashboardNode);
+            }
+            
             await renderDashboardPanel();
             await loadNotifications();
             showView('admin-view');
@@ -1496,7 +1506,6 @@ async function generateAssiduidadeReport() {
     }
 }
 
-
 // ===============================================================
 // INICIALIZAÇÃO E EVENT LISTENERS
 // ===============================================================
@@ -1517,7 +1526,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const correcaoDataSel = document.getElementById('correcao-data-select');
     const gerarAssiduidadeBtn = document.getElementById('gerar-assiduidade-btn');
     const promoverTurmasBtn = document.getElementById('open-promover-turmas-modal-btn');
-    
+    const promoverTurmasConfirmBtn = document.getElementById('confirm-promocao-turmas-btn');
+
     // Inicialização
     dashboardSelectedDate = getLocalDateString();
     if (dataSelect) dataSelect.value = getLocalDateString();
@@ -1551,6 +1561,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (correcaoDataSel) correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
     if (gerarAssiduidadeBtn) gerarAssiduidadeBtn.addEventListener('click', generateAssiduidadeReport);
     if (promoverTurmasBtn) promoverTurmasBtn.addEventListener('click', openPromoverTurmasModal);
+    if (promoverTurmasConfirmBtn) promoverTurmasConfirmBtn.addEventListener('click', handleConfirmPromocaoTurmas);
 
     document.body.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1649,30 +1660,23 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
             navLink.classList.add('bg-gray-700');
             
-            adminContent.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+            adminContent.innerHTML = ''; // Limpa o conteúdo para recarregar o template
             
-            let panel = document.getElementById(targetPanelId);
-            if (!panel) {
-                const template = document.getElementById(`template-${targetPanelId}`);
-                if(template) {
-                    const content = template.content.cloneNode(true);
-                    adminContent.appendChild(content);
-                    panel = document.getElementById(targetPanelId);
-                }
+            const template = document.getElementById(`template-${targetPanelId}`);
+            if(template) {
+                const content = template.content.cloneNode(true);
+                adminContent.appendChild(content);
             }
 
-            if (panel) {
-                panel.classList.remove('hidden');
-                if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
-                if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
-                if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
-                if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
-                if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
-                if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
-                if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
-                if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
-                if (targetPanelId === 'admin-config-panel') renderConfigPanel();
-            }
+            if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
+            else if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
+            else if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
+            else if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
+            else if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
+            else if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
+            else if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
+            else if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
+            else if (targetPanelId === 'admin-config-panel') renderConfigPanel();
         }
         
         const card = closest('.clickable-card');
