@@ -120,9 +120,6 @@ function resetInactivityTimer() {
 }
 
 async function handleAuthChange(session) {
-    const adminContent = document.getElementById('admin-content');
-    const dashboardTemplate = document.getElementById('template-admin-dashboard-panel');
-
     if (!session) {
         resetApplicationState();
         clearTimeout(inactivityTimer);
@@ -142,13 +139,6 @@ async function handleAuthChange(session) {
         if (papel === 'admin') {
             document.getElementById('admin-info').textContent = nome || currentUser.email;
             await loadAdminData();
-            
-            if (dashboardTemplate && adminContent) {
-                adminContent.innerHTML = ''; // Limpa o conteúdo anterior
-                const dashboardNode = dashboardTemplate.content.cloneNode(true);
-                adminContent.appendChild(dashboardNode);
-            }
-            
             await renderDashboardPanel();
             await loadNotifications();
             showView('admin-view');
@@ -1523,8 +1513,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const salvarChamadaBtn = document.getElementById('salvar-chamada-btn');
     const notificationBell = document.getElementById('notification-bell');
     const notificationPanel = document.getElementById('notification-panel');
-    const correcaoTurmaSel = document.getElementById('correcao-turma-select');
-    const correcaoDataSel = document.getElementById('correcao-data-select');
     
     // Inicialização
     dashboardSelectedDate = getLocalDateString();
@@ -1555,9 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (turmaSelect) turmaSelect.addEventListener('change', loadChamada);
     if (dataSelect) dataSelect.addEventListener('change', loadChamada);
     if (salvarChamadaBtn) salvarChamadaBtn.addEventListener('click', saveChamada);
-    if (correcaoTurmaSel) correcaoTurmaSel.addEventListener('change', loadCorrecaoChamada);
-    if (correcaoDataSel) correcaoDataSel.addEventListener('change', loadCorrecaoChamada);
-    
+
     document.body.addEventListener('submit', async (e) => {
         e.preventDefault();
         const loginError = document.getElementById('login-error');
