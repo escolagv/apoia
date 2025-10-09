@@ -1641,13 +1641,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
             navLink.classList.add('bg-gray-700');
             
-            adminContent.innerHTML = '';
+            adminContent.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
             
-            const template = document.getElementById(`template-${targetPanelId}`);
-            if(template) {
-                const content = template.content.cloneNode(true);
-                adminContent.appendChild(content);
-
+            let panel = document.getElementById(targetPanelId);
+            if (panel) {
+                panel.classList.remove('hidden');
                 if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
                 else if (targetPanelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
                 else if (targetPanelId === 'admin-professores-panel') renderProfessoresPanel();
@@ -1729,6 +1727,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadDailySummary(dashboardSelectedDate);
             }
         }
+        if (closest('#open-promover-turmas-modal-btn')) openPromoverTurmasModal();
+        if (closest('#promover-turmas-btn')) handlePromoverTurmas();
+        if (closest('#confirm-promocao-turmas-btn')) handleConfirmPromocaoTurmas();
     });
     
     if (notificationBell) {
