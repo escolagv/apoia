@@ -1502,7 +1502,7 @@ async function generateAssiduidadeReport() {
 // ===============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-
+    
     // Mapeamento de Elementos da UI
     const passwordInput = document.getElementById('password');
     const togglePasswordBtn = document.getElementById('toggle-password-btn');
@@ -1866,4 +1866,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
 });
-
