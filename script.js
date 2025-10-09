@@ -1635,15 +1635,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const navLink = closest('.admin-nav-link');
         if (navLink) {
             e.preventDefault();
-            const adminContent = document.getElementById('admin-content');
-            const targetPanelId = navLink.dataset.target;
-            
             document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
             navLink.classList.add('bg-gray-700');
-            
-            adminContent.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
-            
-            let panel = document.getElementById(targetPanelId);
+            const targetPanelId = navLink.dataset.target;
+            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+            const panel = document.getElementById(targetPanelId);
             if (panel) {
                 panel.classList.remove('hidden');
                 if (targetPanelId === 'admin-dashboard-panel') renderDashboardPanel();
