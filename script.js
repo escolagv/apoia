@@ -1649,7 +1649,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
                 else if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
                 else if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
-                else if (targetPanelId === 'admin-relatorios-panel') renderRelatoriosPanel();
+                else if (targetPanelId === 'admin-relatorios-panel') {
+                    renderRelatoriosPanel();
+                    document.getElementById('relatorio-data-inicio').value = '';
+                    document.getElementById('relatorio-data-fim').value = '';
+                } 
                 else if (targetPanelId === 'admin-config-panel') renderConfigPanel();
             }
         }
