@@ -94,7 +94,7 @@ function closeModal(modalElement) {
 }
 
 function closeAllModals() {
-    document.querySelectorAll('.fixed.inset-0.z-50').forEach(modal => modal.classList.add('hidden'));
+    document.querySelectorAll('.modal').forEach(modal => modal.classList.add('hidden'));
 }
 
 async function safeQuery(queryBuilder) {
@@ -1502,7 +1502,7 @@ async function generateAssiduidadeReport() {
 // ===============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     // Mapeamento de Elementos da UI
     const passwordInput = document.getElementById('password');
     const togglePasswordBtn = document.getElementById('toggle-password-btn');
