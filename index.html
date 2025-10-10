@@ -11,8 +11,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -262,10 +262,6 @@
                         <div>
                             <label for="assiduidade-aluno-ano" class="block text-sm font-medium">Ano Letivo</label>
                             <select id="assiduidade-aluno-ano" class="w-full mt-1 p-2 border rounded-md"></select>
-                        </div>
-                        <div>
-                            <label for="assiduidade-aluno-turma" class="block text-sm font-medium">Turma</label>
-                            <select id="assiduidade-aluno-turma" class="w-full mt-1 p-2 border rounded-md"></select>
                         </div>
                         <div class="lg:col-span-2">
                             <label for="assiduidade-aluno-aluno" class="block text-sm font-medium">Aluno Específico (Opcional)</label>
