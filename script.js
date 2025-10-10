@@ -94,7 +94,7 @@ function closeModal(modalElement) {
 }
 
 function closeAllModals() {
-    document.querySelectorAll('.modal').forEach(modal => modal.classList.add('hidden'));
+    document.querySelectorAll('[id$="-modal"]').forEach(modal => modal.classList.add('hidden'));
 }
 
 async function safeQuery(queryBuilder) {
@@ -119,13 +119,21 @@ function resetInactivityTimer() {
     }, INACTIVITY_TIMEOUT);
 }
 
-async function handleAuthChange(session) {
+async function handleAuthChange(event, session) {
+    // CORREÇÃO: Lida com o evento de recuperação de senha
+    if (event === 'PASSWORD_RECOVERY') {
+        showView('login-view'); // Garante que a tela de fundo seja a de login
+        document.getElementById('reset-password-modal').classList.remove('hidden');
+        return;
+    }
+
     if (!session) {
         resetApplicationState();
         clearTimeout(inactivityTimer);
         showView('login-view');
         return;
     }
+
     try {
         currentUser = session.user;
         const { data, error } = await safeQuery(db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single());
@@ -1522,7 +1530,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dashboardSelectedDate = getLocalDateString();
     if (dataSelect) dataSelect.value = getLocalDateString();
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
-    db.auth.onAuthStateChange((event, session) => { handleAuthChange(session); });
+    db.auth.onAuthStateChange((event, session) => { handleAuthChange(event, session); });
 
     const setupSupportLinks = () => {
         const numero = "5548991004780";
@@ -1550,9 +1558,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.body.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const loginError = document.getElementById('login-error');
-        if (e.target.id === 'login-form') {
+        const formId = e.target.id;
+        
+        if (formId === 'login-form') {
             const loginButton = e.target.querySelector('button[type="submit"]');
+            const loginError = document.getElementById('login-error');
             loginButton.disabled = true;
             loginButton.innerHTML = `<div class="loader mx-auto"></div>`;
             loginError.textContent = '';
@@ -1567,13 +1577,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 resetLoginFormState();
             }
         }
-        if (e.target.id === 'aluno-form') await handleAlunoFormSubmit(e);
-        if (e.target.id === 'professor-form') await handleProfessorFormSubmit(e);
-        if (e.target.id === 'turma-form') await handleTurmaFormSubmit(e);
-        if (e.target.id === 'evento-form') await handleEventoFormSubmit(e);
-        if (e.target.id === 'acompanhamento-form') await handleAcompanhamentoFormSubmit(e);
-        if (e.target.id === 'config-form') await handleConfigFormSubmit(e);
-        if (e.target.id === 'correcao-chamada-form') {
+        if (formId === 'forgot-password-form') {
+            const email = document.getElementById('recovery-email').value;
+            const { error } = await db.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.href.split('#')[0]
+            });
+            if (error) {
+                showToast(`Erro: ${error.message}`, true);
+            } else {
+                showToast('Se o e-mail estiver correto, um link de recuperação foi enviado.');
+                closeAllModals();
+            }
+        }
+        if (formId === 'aluno-form') await handleAlunoFormSubmit(e);
+        if (formId === 'professor-form') await handleProfessorFormSubmit(e);
+        if (formId === 'turma-form') await handleTurmaFormSubmit(e);
+        if (formId === 'evento-form') await handleEventoFormSubmit(e);
+        if (formId === 'acompanhamento-form') await handleAcompanhamentoFormSubmit(e);
+        if (formId === 'config-form') await handleConfigFormSubmit(e);
+        if (formId === 'correcao-chamada-form') {
             const form = e.target;
             const turmaId = form.querySelector('#correcao-turma-select').value;
             const data = form.querySelector('#correcao-data-select').value;
@@ -1609,7 +1631,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 closeModal(document.getElementById('correcao-chamada-modal'));
             }
         }
-        if (e.target.id === 'reset-password-form') {
+        if (formId === 'reset-password-form') {
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             const errorEl = document.getElementById('reset-password-error');
@@ -1633,7 +1655,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (closest('.date-clear-btn')) {
             const targetId = closest('.date-clear-btn').dataset.target;
-            document.getElementById(targetId).value = '';
+            const input = document.getElementById(targetId);
+            if (input) {
+                input.value = '';
+                input.dispatchEvent(new Event('change')); // Dispara o evento para recarregar a chamada se necessário
+            }
+        }
+        
+        if (closest('#forgot-password-link')) {
+            e.preventDefault();
+            document.getElementById('forgot-password-modal').classList.remove('hidden');
         }
 
         const navLink = closest('.admin-nav-link');
@@ -1660,6 +1691,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 } 
                 else if (targetPanelId === 'admin-config-panel') renderConfigPanel();
             }
+            // Fecha o menu mobile ao navegar
+            document.querySelector('aside').classList.add('-translate-x-full');
+            document.getElementById('sidebar-overlay').classList.add('hidden');
         }
         
         const card = closest('.clickable-card');
@@ -1735,6 +1769,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closest('#promover-turmas-btn')) handlePromoverTurmas();
         if (closest('#confirm-promocao-turmas-btn')) handleConfirmPromocaoTurmas();
         if (closest('#gerar-assiduidade-btn')) generateAssiduidadeReport();
+
+        // Listeners do menu mobile
+        if (closest('#mobile-menu-btn')) {
+            document.querySelector('aside').classList.remove('-translate-x-full');
+            document.getElementById('sidebar-overlay').classList.remove('hidden');
+        }
+        if (closest('#sidebar-overlay')) {
+            document.querySelector('aside').classList.add('-translate-x-full');
+            document.getElementById('sidebar-overlay').classList.add('hidden');
+        }
     });
     
     if (notificationBell) {
