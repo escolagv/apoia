@@ -11,8 +11,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -235,7 +235,93 @@
             </div>
         </div>
     </div>
-    <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop"><div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6"><h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3><div class="border-b border-gray-200"><nav class="-mb-px flex space-x-6" id="assiduidade-tabs"><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos">Alunos</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-turmas">Turmas</a><a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores</a></nav></div><div id="assiduidade-content" class="mt-6"><div id="assiduidade-alunos" class="assiduidade-panel"><h4 class="font-semibold mb-3">Filtros para Relatório de Alunos</h4><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-aluno-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-aluno-data-inicio">&times;</span></div><input type="date" id="assiduidade-aluno-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-aluno-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-aluno-data-fim">&times;</span></div><input type="date" id="assiduidade-aluno-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-aluno-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-aluno-ano" class="w-full mt-1 p-2 border rounded-md"></select></div><div><label for="assiduidade-aluno-turma" class="block text-sm font-medium">Turma</label><select id="assiduidade-aluno-turma" class="w-full mt-1 p-2 border rounded-md"></select></div><div class="lg:col-span-2"><label for="assiduidade-aluno-aluno" class="block text-sm font-medium">Aluno Específico (Opcional)</label><select id="assiduidade-aluno-aluno" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-turmas" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Relatório de Turmas</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-turma-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-turma-data-inicio">&times;</span></div><input type="date" id="assiduidade-turma-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-turma-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-turma-data-fim">&times;</span></div><input type="date" id="assiduidade-turma-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div><label for="assiduidade-turma-ano" class="block text-sm font-medium">Ano Letivo</label><select id="assiduidade-turma-ano" class="w-full mt-1 p-2 border rounded-md"></select></div><div class="md:col-span-3"><label for="assiduidade-turma-turma" class="block text-sm font-medium">Turma Específica (Opcional)</label><select id="assiduidade-turma-turma" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div><div id="assiduidade-professores" class="assiduidade-panel hidden"><h4 class="font-semibold mb-3">Filtros para Relatório de Professores</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><div class="flex items-center justify-between"><label for="assiduidade-prof-data-inicio" class="block text-sm font-medium">Data de Início</label><span class="date-clear-btn" data-target="assiduidade-prof-data-inicio">&times;</span></div><input type="date" id="assiduidade-prof-data-inicio" class="w-full mt-1 p-2 border rounded-md"></div><div><div class="flex items-center justify-between"><label for="assiduidade-prof-data-fim" class="block text-sm font-medium">Data de Fim</label><span class="date-clear-btn" data-target="assiduidade-prof-data-fim">&times;</span></div><input type="date" id="assiduidade-prof-data-fim" class="w-full mt-1 p-2 border rounded-md"></div><div class="md:col-span-2"><label for="assiduidade-prof-professor" class="block text-sm font-medium">Professor Específico (Opcional)</label><select id="assiduidade-prof-professor" class="w-full mt-1 p-2 border rounded-md"></select></div></div></div></div><div class="mt-8 flex justify-end gap-4"><button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button><button type="button" id="gerar-assiduidade-btn" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-md">Gerar Relatório</button></div></div></div>
+    <div id="assiduidade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
+            <h3 class="text-xl font-bold mb-4">Análise de Assiduidade</h3>
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-6" id="assiduidade-tabs">
+                    <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" aria-current="page" data-target="assiduidade-alunos">Alunos</a>
+                    <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-turmas">Turmas</a>
+                    <a href="#" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent" data-target="assiduidade-professores">Professores</a>
+                </nav>
+            </div>
+            <div id="assiduidade-content" class="mt-6">
+                <div id="assiduidade-alunos" class="assiduidade-panel">
+                    <h4 class="font-semibold mb-3">Filtros para Relatório de Alunos</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="relative">
+                            <label for="assiduidade-aluno-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
+                            <input type="date" id="assiduidade-aluno-data-inicio" class="w-full mt-1 p-2 border rounded-md pr-8">
+                            <span class="absolute inset-y-0 right-0 top-6 flex items-center pr-2 cursor-pointer text-gray-400 hover:text-gray-600 date-clear-btn" data-target="assiduidade-aluno-data-inicio">&times;</span>
+                        </div>
+                        <div class="relative">
+                            <label for="assiduidade-aluno-data-fim" class="block text-sm font-medium text-gray-700">Data de Fim</label>
+                            <input type="date" id="assiduidade-aluno-data-fim" class="w-full mt-1 p-2 border rounded-md pr-8">
+                            <span class="absolute inset-y-0 right-0 top-6 flex items-center pr-2 cursor-pointer text-gray-400 hover:text-gray-600 date-clear-btn" data-target="assiduidade-aluno-data-fim">&times;</span>
+                        </div>
+                        <div>
+                            <label for="assiduidade-aluno-ano" class="block text-sm font-medium">Ano Letivo</label>
+                            <select id="assiduidade-aluno-ano" class="w-full mt-1 p-2 border rounded-md"></select>
+                        </div>
+                        <div>
+                            <label for="assiduidade-aluno-turma" class="block text-sm font-medium">Turma</label>
+                            <select id="assiduidade-aluno-turma" class="w-full mt-1 p-2 border rounded-md"></select>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <label for="assiduidade-aluno-aluno" class="block text-sm font-medium">Aluno Específico (Opcional)</label>
+                            <select id="assiduidade-aluno-aluno" class="w-full mt-1 p-2 border rounded-md"></select>
+                        </div>
+                    </div>
+                </div>
+                <div id="assiduidade-turmas" class="assiduidade-panel hidden">
+                    <h4 class="font-semibold mb-3">Filtros para Relatório de Turmas</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="relative">
+                            <label for="assiduidade-turma-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
+                            <input type="date" id="assiduidade-turma-data-inicio" class="w-full mt-1 p-2 border rounded-md pr-8">
+                            <span class="absolute inset-y-0 right-0 top-6 flex items-center pr-2 cursor-pointer text-gray-400 hover:text-gray-600 date-clear-btn" data-target="assiduidade-turma-data-inicio">&times;</span>
+                        </div>
+                        <div class="relative">
+                            <label for="assiduidade-turma-data-fim" class="block text-sm font-medium text-gray-700">Data de Fim</label>
+                            <input type="date" id="assiduidade-turma-data-fim" class="w-full mt-1 p-2 border rounded-md pr-8">
+                            <span class="absolute inset-y-0 right-0 top-6 flex items-center pr-2 cursor-pointer text-gray-400 hover:text-gray-600 date-clear-btn" data-target="assiduidade-turma-data-fim">&times;</span>
+                        </div>
+                        <div>
+                            <label for="assiduidade-turma-ano" class="block text-sm font-medium">Ano Letivo</label>
+                            <select id="assiduidade-turma-ano" class="w-full mt-1 p-2 border rounded-md"></select>
+                        </div>
+                        <div class="md:col-span-3">
+                            <label for="assiduidade-turma-turma" class="block text-sm font-medium">Turma Específica (Opcional)</label>
+                            <select id="assiduidade-turma-turma" class="w-full mt-1 p-2 border rounded-md"></select>
+                        </div>
+                    </div>
+                </div>
+                <div id="assiduidade-professores" class="assiduidade-panel hidden">
+                    <h4 class="font-semibold mb-3">Filtros para Relatório de Professores</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="relative">
+                            <label for="assiduidade-prof-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
+                            <input type="date" id="assiduidade-prof-data-inicio" class="w-full mt-1 p-2 border rounded-md pr-8">
+                            <span class="absolute inset-y-0 right-0 top-6 flex items-center pr-2 cursor-pointer text-gray-400 hover:text-gray-600 date-clear-btn" data-target="assiduidade-prof-data-inicio">&times;</span>
+                        </div>
+                        <div class="relative">
+                            <label for="assiduidade-prof-data-fim" class="block text-sm font-medium text-gray-700">Data de Fim</label>
+                            <input type="date" id="assiduidade-prof-data-fim" class="w-full mt-1 p-2 border rounded-md pr-8">
+                            <span class="absolute inset-y-0 right-0 top-6 flex items-center pr-2 cursor-pointer text-gray-400 hover:text-gray-600 date-clear-btn" data-target="assiduidade-prof-data-fim">&times;</span>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="assiduidade-prof-professor" class="block text-sm font-medium">Professor Específico (Opcional)</label>
+                            <select id="assiduidade-prof-professor" class="w-full mt-1 p-2 border rounded-md"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-end gap-4">
+                <button type="button" class="px-4 py-2 bg-gray-200 rounded-md cancel-modal-btn">Cancelar</button>
+                <button type="button" id="gerar-assiduidade-btn" class="px-6 py-2 bg-purple-600 text-white font-semibold rounded-md">Gerar Relatório</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js" defer></script>
 </body>
