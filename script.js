@@ -1265,11 +1265,53 @@ async function openAlunoHistoricoModal(alunoId) {
     }
 }
 
+// FUNÇÃO RESTAURADA
+function openAssiduidadeModal() {
+    const assiduidadeModal = document.getElementById('assiduidade-modal');
+    if (!assiduidadeModal) {
+        console.error("Modal de assiduidade não encontrado no DOM.");
+        return;
+    }
+    const anoSelAluno = document.getElementById('assiduidade-aluno-ano');
+    const alunoSel = document.getElementById('assiduidade-aluno-aluno');
+    const anoSelTurma = document.getElementById('assiduidade-turma-ano');
+    const turmaSelTurma = document.getElementById('assiduidade-turma-turma');
+    const profSel = document.getElementById('assiduidade-prof-professor');
+    
+    anoSelAluno.innerHTML = '<option value="">Todos os Anos</option>';
+    anosLetivosCache.forEach(ano => anoSelAluno.innerHTML += `<option value="${ano}">${ano}</option>`);
+    alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
+
+    anoSelTurma.innerHTML = '<option value="">Todos os Anos</option>';
+    anosLetivosCache.forEach(ano => anoSelTurma.innerHTML += `<option value="${ano}">${ano}</option>`);
+    turmaSelTurma.innerHTML = '<option value="">Todas as Turmas</option>';
+
+    profSel.innerHTML = '<option value="">Todos os Professores</option>';
+    usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
+
+    const currentYear = new Date().getFullYear();
+    if (anosLetivosCache.some(y => y == currentYear)) {
+        anoSelAluno.value = currentYear;
+        anoSelTurma.value = currentYear;
+        anoSelAluno.dispatchEvent(new Event('change'));
+        anoSelTurma.dispatchEvent(new Event('change'));
+    }
+
+    document.getElementById('assiduidade-aluno-data-inicio').value = '';
+    document.getElementById('assiduidade-aluno-data-fim').value = '';
+    document.getElementById('assiduidade-turma-data-inicio').value = '';
+    document.getElementById('assiduidade-turma-data-fim').value = '';
+    document.getElementById('assiduidade-prof-data-inicio').value = '';
+    document.getElementById('assiduidade-prof-data-fim').value = '';
+
+    assiduidadeModal.classList.remove('hidden');
+}
+
 async function generateAssiduidadeReport() {
     const newWindow = window.open('', '_blank');
     newWindow.document.write(`<html><head><title>Relatório de Assiduidade</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>body { font-family: 'Inter', sans-serif; } .print-header { display: none; } @media print { .no-print { display: none !important; } .printable-area { position: absolute; left: 0; top: 0; width: 100%; } body * { visibility: hidden; } .printable-area, .printable-area * { visibility: visible; } .print-header { display: flex !important; justify-content: space-between; align-items: center; padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; } .print-header img { max-height: 60px; width: auto; } .print-header-info h2 { font-size: 1.25rem; font-weight: bold; margin: 0; } .print-header-info p { font-size: 0.875rem; margin: 0; } }</style></head><body class="bg-gray-100 p-8"><div class="printable-area"><div id="report-content"><div class="text-center"><div class="loader" style="width: 48px; height: 48px; margin: auto;"></div><p class="mt-4 text-gray-600">Gerando relatório, por favor aguarde...</p></div></div></div></body></html>`);
     
-    // CORREÇÃO: A linha abaixo foi removida para manter o modal aberto.
+    // CORREÇÃO: A linha que fechava o modal foi removida.
     // closeModal(document.getElementById('assiduidade-modal'));
 
     try {
