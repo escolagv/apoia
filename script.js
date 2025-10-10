@@ -1072,7 +1072,6 @@ async function openPromoverTurmasModal() {
     if (anosLetivosCache.length > 0) {
         const ultimoAno = anosLetivosCache[0];
         anoOrigemSel.value = ultimoAno;
-        // CORREÇÃO: Dispara o evento para carregar a lista e o ano de destino automaticamente
         anoOrigemSel.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
@@ -1525,6 +1524,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const salvarChamadaBtn = document.getElementById('salvar-chamada-btn');
     const notificationBell = document.getElementById('notification-bell');
     const notificationPanel = document.getElementById('notification-panel');
+    const correcaoTurmaSelect = document.getElementById('correcao-turma-select');
+    const correcaoDataSelect = document.getElementById('correcao-data-select');
     
     dashboardSelectedDate = getLocalDateString();
     if (dataSelect) dataSelect.value = getLocalDateString();
@@ -1553,6 +1554,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (turmaSelect) turmaSelect.addEventListener('change', loadChamada);
     if (dataSelect) dataSelect.addEventListener('change', loadChamada);
     if (salvarChamadaBtn) salvarChamadaBtn.addEventListener('click', saveChamada);
+    if (correcaoTurmaSelect) correcaoTurmaSelect.addEventListener('change', loadCorrecaoChamada);
+    if (correcaoDataSelect) correcaoDataSelect.addEventListener('change', loadCorrecaoChamada);
 
     document.body.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1723,6 +1726,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closest('.delete-turma-btn')) openDeleteConfirmModal('turma', closest('.delete-turma-btn').dataset.id);
         if (closest('#add-evento-btn')) openEventoModal();
         if (closest('.edit-evento-btn')) openEventoModal(closest('.edit-evento-btn').dataset.id);
+        if (closest('.edit-acompanhamento-btn')) openAcompanhamentoModal(closest('.edit-acompanhamento-btn').dataset.id);
         if (closest('.cancel-modal-btn')) closeAllModals();
         if (closest('.delete-btn')) {
             let id;
@@ -1767,7 +1771,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closest('#confirm-promocao-turmas-btn')) handleConfirmPromocaoTurmas();
         if (closest('#gerar-assiduidade-btn')) generateAssiduidadeReport();
 
-        // CORREÇÃO: Lógica para o botão de Marcar/Desmarcar Todas
         if (closest('#promover-turmas-toggle-all')) {
             const btn = closest('#promover-turmas-toggle-all');
             const checkboxes = document.querySelectorAll('#promover-turmas-lista .promocao-turma-checkbox');
