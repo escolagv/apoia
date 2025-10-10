@@ -110,18 +110,6 @@ body { font-family: 'Inter', sans-serif; }
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-.date-clear-btn {
-    position: absolute;
-    right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-    cursor: pointer;
-}
-.date-clear-btn:hover {
-    color: #ef4444;
-}
-
 .print-header {
     display: none;
 }
