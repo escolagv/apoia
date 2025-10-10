@@ -1507,7 +1507,6 @@ async function generateAssiduidadeReport() {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Mapeamento de Elementos da UI
     const passwordInput = document.getElementById('password');
     const togglePasswordBtn = document.getElementById('toggle-password-btn');
     const eyeIcon = document.getElementById('eye-icon');
@@ -1518,7 +1517,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const notificationBell = document.getElementById('notification-bell');
     const notificationPanel = document.getElementById('notification-panel');
     
-    // Inicialização
     dashboardSelectedDate = getLocalDateString();
     if (dataSelect) dataSelect.value = getLocalDateString();
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
@@ -1535,7 +1533,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setupSupportLinks();
 
-    // Listeners de Eventos
     if (togglePasswordBtn) {
         togglePasswordBtn.addEventListener('click', () => {
             const isPassword = passwordInput.type === 'password';
@@ -1785,92 +1782,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const deleteCheckbox = document.getElementById('delete-confirm-checkbox');
-    if(deleteCheckbox) deleteCheckbox.addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
-    
-    const eventoInicioFilter = document.getElementById('evento-data-inicio-filter');
-    if(eventoInicioFilter) eventoInicioFilter.addEventListener('change', renderCalendarioPanel);
-    
-    const eventoFimFilter = document.getElementById('evento-data-fim-filter');
-    if(eventoFimFilter) eventoFimFilter.addEventListener('change', renderCalendarioPanel);
-
-    const alunoSearch = document.getElementById('aluno-search-input');
-    if(alunoSearch) alunoSearch.addEventListener('input', () => renderAlunosPanel());
-
-    const turmaAnoFilter = document.getElementById('turma-ano-letivo-filter');
-    if(turmaAnoFilter) turmaAnoFilter.addEventListener('change', renderTurmasPanel);
-
-    const alunoAnoFilter = document.getElementById('aluno-ano-letivo-filter');
-    if(alunoAnoFilter) alunoAnoFilter.addEventListener('change', () => {
-        document.getElementById('aluno-turma-filter').value = '';
-        renderAlunosPanel();
+    // Delegated event listener for dynamic content
+    document.getElementById('admin-content').addEventListener('change', (e) => {
+        if (e.target.matches('#turma-ano-letivo-filter')) {
+            renderTurmasPanel();
+        } else if (e.target.matches('#aluno-ano-letivo-filter')) {
+            const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
+            if (alunoTurmaFilter) alunoTurmaFilter.value = '';
+            renderAlunosPanel();
+        } else if (e.target.matches('#aluno-turma-filter')) {
+            renderAlunosPanel();
+        } else if (e.target.matches('#evento-data-inicio-filter') || e.target.matches('#evento-data-fim-filter')) {
+            renderCalendarioPanel();
+        }
     });
 
-    const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
-    if(alunoTurmaFilter) alunoTurmaFilter.addEventListener('change', () => { renderAlunosPanel(); });
-
-    const promoverTurmasAnoOrigem = document.getElementById('promover-turmas-ano-origem');
-    if(promoverTurmasAnoOrigem) promoverTurmasAnoOrigem.addEventListener('change', renderPromocaoTurmasLista);
-
-    const promoverTurmasConfirmCheckbox = document.getElementById('promover-turmas-confirm-checkbox');
-    if(promoverTurmasConfirmCheckbox) promoverTurmasConfirmCheckbox.addEventListener('change', (e) => {
-        document.getElementById('confirm-promocao-turmas-btn').disabled = !e.target.checked;
+    document.getElementById('admin-content').addEventListener('input', (e) => {
+        if (e.target.matches('#aluno-search-input')) {
+            renderAlunosPanel();
+        }
     });
 
-    const toggleAllCheckbox = document.getElementById('promover-turmas-toggle-all');
-    if (toggleAllCheckbox) {
-        toggleAllCheckbox.addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('.promocao-turma-checkbox');
-            const isTudoMarcado = [...checkboxes].every(cb => cb.checked);
-            checkboxes.forEach(cb => cb.checked = !isTudoMarcado);
-            toggleAllCheckbox.textContent = !isTudoMarcado ? 'Desmarcar Todas' : 'Marcar Todas';
-        });
-    }
-
-    const assiduidadeTabs = document.getElementById('assiduidade-tabs');
-    if (assiduidadeTabs) {
-        assiduidadeTabs.addEventListener('click', (e) => {
-            e.preventDefault();
-            const link = e.target.closest('a');
-            if (!link || link.getAttribute('aria-current') === 'page') return;
-            document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
-                a.removeAttribute('aria-current');
-                a.classList.remove('text-indigo-600', 'border-indigo-500');
-                a.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
-            });
-            link.setAttribute('aria-current', 'page');
-            link.classList.add('text-indigo-600', 'border-indigo-500');
-            link.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
-            document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
-            document.getElementById(link.dataset.target).classList.remove('hidden');
-        });
-    }
-
-    const assiduidadeAlunoAno = document.getElementById('assiduidade-aluno-ano');
-    if (assiduidadeAlunoAno) {
-        assiduidadeAlunoAno.addEventListener('change', e => {
-            const anoLetivo = e.target.value;
-            const alunoSel = document.getElementById('assiduidade-aluno-aluno');
-            alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
-            const turmasDoAnoIds = turmasCache.filter(t => t.ano_letivo == anoLetivo).map(t => t.id);
-            if (anoLetivo) {
-                alunosCache.filter(a => turmasDoAnoIds.includes(a.turma_id)).forEach(a => alunoSel.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
-            }
-        });
-    }
-
-    const assiduidadeTurmaAno = document.getElementById('assiduidade-turma-ano');
-    if (assiduidadeTurmaAno) {
-        assiduidadeTurmaAno.addEventListener('change', e => {
-            const ano = e.target.value;
-            const turmaSel = document.getElementById('assiduidade-turma-turma');
-            turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
-            if (ano) {
-                turmasCache.filter(t => t.ano_letivo == ano)
-                    .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
-            }
-        });
-    }
+    document.getElementById('admin-content').addEventListener('click', (e) => {
+        const target = e.target;
+        const closest = (selector) => target.closest(selector);
+        if (closest('#gerar-assiduidade-btn')) generateAssiduidadeReport();
+        if (closest('#promover-turmas-ano-origem')) renderPromocaoTurmasLista();
+        if (closest('#promover-turmas-confirm-checkbox')) {
+            document.getElementById('confirm-promocao-turmas-btn').disabled = !e.target.checked;
+        }
+        if (closest('#delete-confirm-checkbox')) {
+            document.getElementById('confirm-delete-btn').disabled = !e.target.checked;
+        }
+        if (closest('#toggle-all-turmas-checkbox')) {
+             const checkboxes = document.querySelectorAll('.promocao-turma-checkbox');
+             checkboxes.forEach(cb => cb.checked = e.target.checked);
+        }
+    });
 
     console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
 });
