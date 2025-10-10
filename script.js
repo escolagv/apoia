@@ -1072,6 +1072,7 @@ async function openPromoverTurmasModal() {
     if (anosLetivosCache.length > 0) {
         const ultimoAno = anosLetivosCache[0];
         anoOrigemSel.value = ultimoAno;
+        // CORREÇÃO: Dispara o evento para carregar a lista e o ano de destino automaticamente
         anoOrigemSel.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
@@ -1292,7 +1293,6 @@ function openAssiduidadeModal() {
     if (anosLetivosCache.some(y => y == currentYear)) {
         anoSelAluno.value = currentYear;
         anoSelTurma.value = currentYear;
-        // CORREÇÃO: Adicionado { bubbles: true } para o evento ser capturado
         anoSelAluno.dispatchEvent(new Event('change', { bubbles: true }));
         anoSelTurma.dispatchEvent(new Event('change', { bubbles: true }));
     }
@@ -1766,6 +1766,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closest('#promover-turmas-btn')) handlePromoverTurmas();
         if (closest('#confirm-promocao-turmas-btn')) handleConfirmPromocaoTurmas();
         if (closest('#gerar-assiduidade-btn')) generateAssiduidadeReport();
+
+        // CORREÇÃO: Lógica para o botão de Marcar/Desmarcar Todas
+        if (closest('#promover-turmas-toggle-all')) {
+            const btn = closest('#promover-turmas-toggle-all');
+            const checkboxes = document.querySelectorAll('#promover-turmas-lista .promocao-turma-checkbox');
+            const shouldCheckAll = !Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = shouldCheckAll);
+            btn.textContent = shouldCheckAll ? 'Desmarcar Todas' : 'Marcar Todas';
+        }
 
         if (closest('#mobile-menu-btn')) {
             document.querySelector('aside').classList.remove('-translate-x-full');
