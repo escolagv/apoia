@@ -1072,7 +1072,7 @@ async function openPromoverTurmasModal() {
     if (anosLetivosCache.length > 0) {
         const ultimoAno = anosLetivosCache[0];
         anoOrigemSel.value = ultimoAno;
-        anoOrigemSel.dispatchEvent(new Event('change'));
+        anoOrigemSel.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     promoverTurmasModal.classList.remove('hidden');
@@ -1292,8 +1292,9 @@ function openAssiduidadeModal() {
     if (anosLetivosCache.some(y => y == currentYear)) {
         anoSelAluno.value = currentYear;
         anoSelTurma.value = currentYear;
-        anoSelAluno.dispatchEvent(new Event('change'));
-        anoSelTurma.dispatchEvent(new Event('change'));
+        // CORREÇÃO: Adicionado { bubbles: true } para o evento ser capturado
+        anoSelAluno.dispatchEvent(new Event('change', { bubbles: true }));
+        anoSelTurma.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     document.getElementById('assiduidade-aluno-data-inicio').value = '';
@@ -1655,7 +1656,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const input = document.getElementById(targetId);
             if (input) {
                 input.value = '';
-                input.dispatchEvent(new Event('change')); 
+                input.dispatchEvent(new Event('change', { bubbles: true })); 
             }
         }
         
