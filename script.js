@@ -1891,4 +1891,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
 });
-</script>
