@@ -490,13 +490,13 @@ async function renderAlunosPanel(options = {}) {
         else if (aluno.status === 'transferido') statusClass = 'bg-blue-100 text-blue-800';
         return `
         <tr class="border-b">
-            <td class="p-3">${aluno.nome_completo}</td>
-            <td class="p-3">${aluno.matricula || ''}</td>
-            <td class="p-3">${aluno.turmas ? aluno.turmas.nome_turma : 'Sem turma'}</td>
-            <td class="p-3">${aluno.nome_responsavel || ''}</td>
-            <td class="p-3">${aluno.telefone || ''}</td>
-            <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${aluno.status}</span></td>
-            <td class="p-3">
+            <td class="p-3 whitespace-nowrap">${aluno.nome_completo}</td>
+            <td class="p-3 whitespace-nowrap">${aluno.matricula || ''}</td>
+            <td class="p-3 whitespace-nowrap">${aluno.turmas ? aluno.turmas.nome_turma : 'Sem turma'}</td>
+            <td class="p-3 whitespace-nowrap">${aluno.nome_responsavel || ''}</td>
+            <td class="p-3 whitespace-nowrap">${aluno.telefone || ''}</td>
+            <td class="p-3 whitespace-nowrap"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${aluno.status}</span></td>
+            <td class="p-3 whitespace-nowrap">
                 <button class="text-blue-600 hover:underline edit-aluno-btn" data-id="${aluno.id}">Editar</button>
                 <button class="text-indigo-600 hover:underline ml-2 historico-aluno-btn" data-id="${aluno.id}">Ver Histórico</button>
             </td>
@@ -1658,7 +1658,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const input = document.getElementById(targetId);
             if (input) {
                 input.value = '';
-                input.dispatchEvent(new Event('change')); // Dispara o evento para recarregar a chamada se necessário
+                input.dispatchEvent(new Event('change')); 
             }
         }
         
@@ -1691,7 +1691,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 } 
                 else if (targetPanelId === 'admin-config-panel') renderConfigPanel();
             }
-            // Fecha o menu mobile ao navegar
             document.querySelector('aside').classList.add('-translate-x-full');
             document.getElementById('sidebar-overlay').classList.add('hidden');
         }
@@ -1770,7 +1769,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closest('#confirm-promocao-turmas-btn')) handleConfirmPromocaoTurmas();
         if (closest('#gerar-assiduidade-btn')) generateAssiduidadeReport();
 
-        // Listeners do menu mobile
         if (closest('#mobile-menu-btn')) {
             document.querySelector('aside').classList.remove('-translate-x-full');
             document.getElementById('sidebar-overlay').classList.remove('hidden');
@@ -1893,3 +1891,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log("Sistema de Gestão de Faltas (Supabase) inicializado com todas as funcionalidades.");
 });
+</script>
