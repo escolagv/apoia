@@ -18,6 +18,10 @@ let dashboardSelectedDate = null;
 let inactivityTimer;
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
+// Variáveis do Módulo APOIA (Faltavam estas)
+let apoiaCurrentPage = 1;
+const apoiaItemsPerPage = 10;
+
 // --- FUNÇÕES DE DADOS ---
 
 // Inicializador de Dados para Admin (Alimenta os Caches)
