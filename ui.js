@@ -1,5 +1,5 @@
 // ===============================================================
-// ui.js - GESTÃO DE INTERFACE (VERSÃO REVISADA)
+// ui.js - GESTÃO DE INTERFACE E NAVEGAÇÃO
 // ===============================================================
 
 function showView(viewId) {
@@ -15,6 +15,34 @@ function showView(viewId) {
 
     const target = document.getElementById(viewId);
     if (target) target.classList.remove('hidden');
+}
+
+// FUNÇÃO VITAL: Troca os painéis do Admin (Alunos, Turmas, etc.)
+function switchAdminPanel(targetPanelId) {
+    // 1. Remove o destaque de todos os links do menu
+    document.querySelectorAll('.admin-nav-link').forEach(link => {
+        link.classList.remove('bg-gray-700');
+    });
+
+    // 2. Esconde todos os painéis
+    document.querySelectorAll('.admin-panel').forEach(panel => {
+        panel.classList.add('hidden');
+    });
+
+    // 3. Mostra o painel desejado
+    const targetPanel = document.getElementById(targetPanelId);
+    if (targetPanel) {
+        targetPanel.classList.remove('hidden');
+        // Adiciona destaque ao link clicado
+        const activeLink = document.querySelector(`.admin-nav-link[data-target="${targetPanelId}"]`);
+        if (activeLink) activeLink.classList.add('bg-gray-700');
+    }
+
+    // 4. Fecha o menu mobile se estiver aberto
+    const aside = document.querySelector('aside');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (aside) aside.classList.add('-translate-x-full');
+    if (overlay) overlay.classList.add('hidden');
 }
 
 async function handleAuthChange(event, session) {
@@ -43,12 +71,8 @@ async function handleAuthChange(event, session) {
 
         if (data.papel === 'admin') {
             document.getElementById('admin-info').textContent = data.nome || currentUser.email;
-            
-            // Tenta carregar os dados, mas não trava se o arquivo ainda estiver carregando
             if (typeof loadAdminData === 'function') await loadAdminData();
             if (typeof renderDashboardPanel === 'function') await renderDashboardPanel();
-            if (typeof loadNotifications === 'function') await loadNotifications();
-            
             showView('admin-view');
         } else {
             document.getElementById('professor-info').textContent = data.nome || currentUser.email;
@@ -60,6 +84,10 @@ async function handleAuthChange(event, session) {
         console.error("Erro no AuthChange:", err);
         showView('login-view');
     }
+}
+
+function closeModal(modalElement) {
+    if (modalElement) modalElement.classList.add('hidden');
 }
 
 function closeAllModals() {
