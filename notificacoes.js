@@ -1,10 +1,10 @@
 // ===============================================================
-// notificacoes.js - GESTÃO DE ALERTAS E NOTIFICAÇÕES
+// notificacoes.js - GESTÃO DE ALERTAS
 // ===============================================================
 
 async function loadNotifications() {
-    const notificationBell = document.getElementById('notification-bell');
-    const notificationList = document.getElementById('notification-list');
+    const bell = document.getElementById('notification-bell');
+    const list = document.getElementById('notification-list');
     
     const { data, count, error } = await safeQuery(
         db.from('alertas').select('*', { count: 'exact' }).eq('lido', false).order('created_at', { ascending: false })
@@ -12,33 +12,26 @@ async function loadNotifications() {
 
     if (error) return;
 
-    const clearBtn = document.getElementById('clear-notifications-btn');
-    if (clearBtn) clearBtn.classList.toggle('hidden', count === 0);
-
     if (count > 0) {
-        notificationBell.classList.add('notification-badge');
-        notificationBell.setAttribute('data-count', count);
-    } else {
-        notificationBell.classList.remove('notification-badge');
-        notificationBell.setAttribute('data-count', 0);
-    }
-
-    if (!data || data.length === 0) {
-        notificationList.innerHTML = '<p class="text-sm text-gray-500 p-4 text-center">Nenhuma nova notificação.</p>';
-    } else {
-        notificationList.innerHTML = data.map(alert => `
-            <div class="p-2 border-b hover:bg-gray-100 cursor-pointer text-sm text-gray-700 notification-item" data-id="${alert.id}">
-                ${alert.mensagem}
+        bell.classList.add('notification-badge');
+        bell.setAttribute('data-count', count);
+        list.innerHTML = data.map(a => `
+            <div class="p-3 border-b hover:bg-gray-50 cursor-pointer text-sm notification-item" data-id="${a.id}">
+                <p class="text-gray-800">${a.mensagem}</p>
+                <span class="text-xs text-gray-400">${new Date(a.created_at).toLocaleString()}</span>
             </div>`).join('');
+    } else {
+        bell.classList.remove('notification-badge');
+        list.innerHTML = '<p class="p-8 text-center text-gray-400 text-sm">Nenhuma nova notificação.</p>';
     }
 }
 
-async function markNotificationAsRead(alertId) {
-    const { error } = await safeQuery(db.from('alertas').update({ lido: true }).eq('id', alertId));
-    if (!error) await loadNotifications();
+async function markNotificationAsRead(id) {
+    await safeQuery(db.from('alertas').update({ lido: true }).eq('id', id));
+    loadNotifications();
 }
 
 async function markAllNotificationsAsRead() {
-    const { error } = await safeQuery(db.from('alertas').update({ lido: true }).eq('lido', false));
-    if (!error) await loadNotifications();
+    await safeQuery(db.from('alertas').update({ lido: true }).eq('lido', false));
+    loadNotifications();
 }
