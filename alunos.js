@@ -1,5 +1,5 @@
 // ===============================================================
-// alunos.js - GESTÃO DE ALUNOS E FILTROS INTELIGENTES
+// alunos.js - GESTÃO DE ALUNOS
 // ===============================================================
 
 async function renderAlunosPanel(options = {}) {
@@ -8,14 +8,11 @@ async function renderAlunosPanel(options = {}) {
     const turmaFilter = document.getElementById('aluno-turma-filter');
     const search = document.getElementById('aluno-search-input').value;
 
-    // Preservar seleção atual ou definir padrão
     if (options.defaultToLatestYear && anosLetivosCache.length > 0) {
         anoFilter.value = anosLetivosCache[0];
     }
-    
     const selectedAno = anoFilter.value;
 
-    // Atualiza o seletor de turmas baseado no ano
     turmaFilter.innerHTML = '<option value="">Todas as Turmas</option>';
     if (selectedAno) {
         turmasCache.filter(t => t.ano_letivo == selectedAno).forEach(t => {
@@ -26,64 +23,54 @@ async function renderAlunosPanel(options = {}) {
     tableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Carregando...</td></tr>';
 
     let query = db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`);
+    if (search) query = query.or(`nome_completo.ilike.%${search}%,matricula.ilike.%${search}%`);
 
-    if (search) {
-        query = query.or(`nome_completo.ilike.%${search}%,matricula.ilike.%${search}%`);
-    }
-
-    // CORREÇÃO DO ERRO PGRST100: Filtro Inteligente
     if (selectedAno) {
+        const ids = turmasCache.filter(t => t.ano_letivo == selectedAno).map(t => t.id);
         if (parseInt(selectedAno) >= 2026) {
-            // Pega IDs das turmas do ano selecionado para evitar erro de join no .or()
-            const idsTurmasAno = turmasCache.filter(t => t.ano_letivo == selectedAno).map(t => t.id);
-            if (idsTurmasAno.length > 0) {
-                query = query.or(`turma_id.is.null,turma_id.in.(${idsTurmasAno.join(',')})`);
-            } else {
-                query = query.is('turma_id', null);
-            }
+            if (ids.length > 0) query = query.or(`turma_id.is.null,turma_id.in.(${ids.join(',')})`);
+            else query = query.is('turma_id', null);
         } else {
-            // Anos anteriores: busca apenas quem estava em turmas daquele ano
-            const idsAntigos = turmasCache.filter(t => t.ano_letivo == selectedAno).map(t => t.id);
-            query = query.in('turma_id', idsAntigos);
+            query = query.in('turma_id', ids);
         }
     }
 
-    if (turmaFilter.value) {
-        query = query.eq('turma_id', turmaFilter.value);
-    }
+    if (turmaFilter.value) query = query.eq('turma_id', turmaFilter.value);
 
     const { data, error } = await safeQuery(query.order('nome_completo'));
     if (error || !data) return;
 
-    tableBody.innerHTML = data.map(aluno => {
-        let statusColor = aluno.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-        const isPast = selectedAno && parseInt(selectedAno) < 2026;
-
-        return `
-        <tr class="border-b">
+    tableBody.innerHTML = data.map(aluno => `
+        <tr class="border-b text-sm">
             <td class="p-3">${aluno.nome_completo}</td>
             <td class="p-3">${aluno.matricula || ''}</td>
-            <td class="p-3">${aluno.turmas ? aluno.turmas.nome_turma : '<span class="text-orange-500 font-bold">Sem turma</span>'}</td>
+            <td class="p-3">${aluno.turmas?.nome_turma || 'Sem Turma'}</td>
             <td class="p-3">${aluno.nome_responsavel || ''}</td>
             <td class="p-3">${aluno.telefone || ''}</td>
-            <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColor}">${aluno.status}</span></td>
+            <td class="p-3"><span class="px-2 py-1 rounded-full text-xs ${aluno.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${aluno.status}</span></td>
             <td class="p-3">
-                ${!isPast ? `<button class="text-blue-600 hover:underline edit-aluno-btn" data-id="${aluno.id}">Editar</button>` : ''}
-                <button class="text-indigo-600 hover:underline ml-2 historico-aluno-btn" data-id="${aluno.id}">Histórico</button>
+                <button class="text-blue-600 edit-aluno-btn" data-id="${aluno.id}">Editar</button>
             </td>
-        </tr>`;
-    }).join('');
+        </tr>`).join('');
 }
 
-async function deleteAluno(id) {
-    // Tenta deletar (Hard Delete)
-    const { error } = await db.from('alunos').delete().eq('id', id);
-    
-    // Se der erro de FK (presenças existentes), oferece inativar (Soft Delete)
-    if (error && error.code === '23503') {
-        if (confirm("Este aluno possui histórico e não pode ser apagado. Deseja INATIVAR o registro para manter os relatórios?")) {
-            return await db.from('alunos').update({ status: 'inativo' }).eq('id', id);
-        }
+async function handleAlunoFormSubmit(e) {
+    const id = document.getElementById('aluno-id').value;
+    const alunoData = {
+        nome_completo: document.getElementById('aluno-nome').value,
+        matricula: document.getElementById('aluno-matricula').value,
+        turma_id: document.getElementById('aluno-turma').value || null,
+        status: document.getElementById('aluno-status').value,
+        telefone: document.getElementById('aluno-telefone').value,
+        email: document.getElementById('aluno-email').value,
+        nome_responsavel: document.getElementById('aluno-responsavel').value
+    };
+    const q = id ? db.from('alunos').update(alunoData).eq('id', id) : db.from('alunos').insert(alunoData);
+    const { error } = await safeQuery(q);
+    if (!error) {
+        showToast('Aluno salvo com sucesso!');
+        closeModal(document.getElementById('aluno-modal'));
+        await loadAdminData();
+        renderAlunosPanel();
     }
-    return { error };
 }
