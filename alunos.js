@@ -1,5 +1,5 @@
 // ===============================================================
-// alunos.js - GESTÃO DE ALUNOS
+// alunos.js - GESTÃO COMPLETA DE ALUNOS
 // ===============================================================
 
 async function renderAlunosPanel(options = {}) {
@@ -21,8 +21,8 @@ async function renderAlunosPanel(options = {}) {
     }
 
     tableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Carregando...</td></tr>';
-
     let query = db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`);
+    
     if (search) query = query.or(`nome_completo.ilike.%${search}%,matricula.ilike.%${search}%`);
 
     if (selectedAno) {
@@ -34,7 +34,6 @@ async function renderAlunosPanel(options = {}) {
             query = query.in('turma_id', ids);
         }
     }
-
     if (turmaFilter.value) query = query.eq('turma_id', turmaFilter.value);
 
     const { data, error } = await safeQuery(query.order('nome_completo'));
@@ -50,8 +49,35 @@ async function renderAlunosPanel(options = {}) {
             <td class="p-3"><span class="px-2 py-1 rounded-full text-xs ${aluno.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${aluno.status}</span></td>
             <td class="p-3">
                 <button class="text-blue-600 edit-aluno-btn" data-id="${aluno.id}">Editar</button>
+                <button class="text-indigo-600 ml-2 historico-aluno-btn" data-id="${aluno.id}">Histórico</button>
             </td>
         </tr>`).join('');
+}
+
+async function openAlunoModal(editId = null) {
+    const form = document.getElementById('aluno-form');
+    const sel = document.getElementById('aluno-turma');
+    form.reset();
+    sel.innerHTML = '<option value="">Selecione...</option>';
+    turmasCache.filter(t => t.ano_letivo >= 2026).forEach(t => sel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+    
+    document.getElementById('aluno-delete-container').classList.add('hidden');
+    if (editId) {
+        const { data } = await safeQuery(db.from('alunos').select('*').eq('id', editId).single());
+        if (!data) return;
+        document.getElementById('aluno-modal-title').textContent = 'Editar Aluno';
+        document.getElementById('aluno-id').value = data.id;
+        document.getElementById('aluno-nome').value = data.nome_completo;
+        document.getElementById('aluno-matricula').value = data.matricula;
+        document.getElementById('aluno-turma').value = data.turma_id;
+        document.getElementById('aluno-status').value = data.status;
+        document.getElementById('aluno-responsavel').value = data.nome_responsavel || '';
+        document.getElementById('aluno-delete-container').classList.remove('hidden');
+    } else {
+        document.getElementById('aluno-modal-title').textContent = 'Novo Aluno';
+        document.getElementById('aluno-id').value = '';
+    }
+    document.getElementById('aluno-modal').classList.remove('hidden');
 }
 
 async function handleAlunoFormSubmit(e) {
@@ -61,16 +87,24 @@ async function handleAlunoFormSubmit(e) {
         matricula: document.getElementById('aluno-matricula').value,
         turma_id: document.getElementById('aluno-turma').value || null,
         status: document.getElementById('aluno-status').value,
-        telefone: document.getElementById('aluno-telefone').value,
-        email: document.getElementById('aluno-email').value,
         nome_responsavel: document.getElementById('aluno-responsavel').value
     };
     const q = id ? db.from('alunos').update(alunoData).eq('id', id) : db.from('alunos').insert(alunoData);
     const { error } = await safeQuery(q);
     if (!error) {
-        showToast('Aluno salvo com sucesso!');
+        showToast('Aluno salvo!');
         closeModal(document.getElementById('aluno-modal'));
         await loadAdminData();
         renderAlunosPanel();
     }
+}
+
+async function deleteAluno(id) {
+    const { error } = await db.from('alunos').delete().eq('id', id);
+    if (error && error.code === '23503') {
+        if (confirm("Este aluno possui histórico. Deseja inativá-lo?")) {
+            return await db.from('alunos').update({ status: 'inativo' }).eq('id', id);
+        }
+    }
+    return { error };
 }
