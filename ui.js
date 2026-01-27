@@ -1,5 +1,5 @@
 // ===============================================================
-// ui.js - GESTÃO DE INTERFACE, MODAIS E NAVEGAÇÃO
+// ui.js - GESTÃO DE INTERFACE (VERSÃO REVISADA)
 // ===============================================================
 
 function showView(viewId) {
@@ -17,19 +17,10 @@ function showView(viewId) {
     if (target) target.classList.remove('hidden');
 }
 
-function closeModal(modalElement) {
-    if (modalElement) modalElement.classList.add('hidden');
-}
-
-function closeAllModals() {
-    document.querySelectorAll('[id$="-modal"]').forEach(m => m.classList.add('hidden'));
-}
-
-// Lógica de Autenticação (Redirecionamento de View)
 async function handleAuthChange(event, session) {
     if (event === 'PASSWORD_RECOVERY') {
         showView('login-view');
-        document.getElementById('reset-password-modal').classList.remove('hidden');
+        document.getElementById('reset-password-modal')?.classList.remove('hidden');
         return;
     }
 
@@ -52,51 +43,25 @@ async function handleAuthChange(event, session) {
 
         if (data.papel === 'admin') {
             document.getElementById('admin-info').textContent = data.nome || currentUser.email;
-            await loadAdminData();
-            await renderDashboardPanel(); // Será definido em dashboard.js
+            
+            // Tenta carregar os dados, mas não trava se o arquivo ainda estiver carregando
+            if (typeof loadAdminData === 'function') await loadAdminData();
+            if (typeof renderDashboardPanel === 'function') await renderDashboardPanel();
+            if (typeof loadNotifications === 'function') await loadNotifications();
+            
             showView('admin-view');
         } else {
             document.getElementById('professor-info').textContent = data.nome || currentUser.email;
-            await loadProfessorData(currentUser.id); // Será definido em professor-view.js
+            if (typeof loadProfessorData === 'function') await loadProfessorData(currentUser.id);
             showView('professor-view');
         }
         resetInactivityTimer();
     } catch (err) {
-        showToast('Erro ao carregar perfil.', true);
-        await db.auth.signOut();
+        console.error("Erro no AuthChange:", err);
+        showView('login-view');
     }
 }
 
-// Listeners de UI (Sidebar e Menus)
-document.addEventListener('DOMContentLoaded', () => {
-    // Menu Mobile
-    const btnMobile = document.getElementById('mobile-menu-btn');
-    const overlay = document.getElementById('sidebar-overlay');
-    const aside = document.querySelector('aside');
-
-    if (btnMobile) {
-        btnMobile.addEventListener('click', () => {
-            aside.classList.remove('-translate-x-full');
-            overlay.classList.remove('hidden');
-        });
-    }
-
-    if (overlay) {
-        overlay.addEventListener('click', () => {
-            aside.classList.add('-translate-x-full');
-            overlay.classList.add('hidden');
-        });
-    }
-
-    // Toggle Senha Login
-    const togglePass = document.getElementById('toggle-password-btn');
-    const passInput = document.getElementById('password');
-    if (togglePass && passInput) {
-        togglePass.addEventListener('click', () => {
-            const isPass = passInput.type === 'password';
-            passInput.type = isPass ? 'text' : 'password';
-            document.getElementById('eye-icon').classList.toggle('hidden', isPass);
-            document.getElementById('eye-off-icon').classList.toggle('hidden', !isPass);
-        });
-    }
-});
+function closeAllModals() {
+    document.querySelectorAll('[id$="-modal"]').forEach(m => m.classList.add('hidden'));
+}
