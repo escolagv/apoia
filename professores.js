@@ -1,25 +1,15 @@
 // ===============================================================
-// professores.js - GESTÃO COMPLETA DE PROFESSORES
+// professores.js - GESTÃO DE PROFESSORES
 // ===============================================================
 
 async function renderProfessoresPanel() {
     const tableBody = document.getElementById('professores-table-body');
-    tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando professores...</td></tr>';
-
-    const { data, error } = await safeQuery(
-        db.from('usuarios')
-          .select('id, user_uid, nome, email, status, email_confirmado')
-          .eq('papel', 'professor')
-          .order('nome', { ascending: true })
-    );
-
+    tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
+    
+    const { data, error } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, email, status, email_confirmado').eq('papel', 'professor').order('nome', { ascending: true }));
+    
     if (error || !data) {
         tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
-        return;
-    }
-
-    if (data.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum professor cadastrado.</td></tr>';
         return;
     }
 
@@ -29,18 +19,14 @@ async function renderProfessoresPanel() {
             : `<div class="has-tooltip relative"><div class="w-3 h-3 bg-red-500 rounded-full"></div><div class="tooltip">Confirmação Pendente</div></div>`;
         
         return `
-        <tr class="border-b hover:bg-gray-50">
+        <tr class="border-b">
             <td class="p-3">${p.nome}</td>
             <td class="p-3">${p.email || 'Não informado'}</td>
-            <td class="p-3">
-                <span class="px-2 py-1 text-xs font-semibold rounded-full ${p.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                    ${p.status}
-                </span>
-            </td>
+            <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${p.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.status}</span></td>
             <td class="p-3 flex justify-center items-center">${emailStatus}</td>
-            <td class="p-3 whitespace-nowrap">
+            <td class="p-3">
                 <button class="text-blue-600 hover:underline mr-4 edit-professor-btn" data-id="${p.id}">Editar</button>
-                <button class="text-orange-600 hover:underline mr-4 reset-password-btn" data-email="${p.email}">Resetar Senha</button>
+                <button class="text-orange-600 hover:underline reset-password-btn" data-email="${p.email}">Resetar Senha</button>
                 <button class="text-red-600 hover:underline delete-btn" data-type="professor" data-id="${p.id}">Excluir</button>
             </td>
         </tr>`;
@@ -81,17 +67,13 @@ async function handleProfessorFormSubmit(e) {
     if (id) {
         const status = document.getElementById('professor-status').value;
         const { error } = await safeQuery(db.from('usuarios').update({ nome, email, status }).eq('id', id));
-        if (!error) showToast('Professor atualizado com sucesso!');
+        if (!error) showToast('Professor atualizado!');
     } else {
         const password = document.getElementById('professor-password').value;
         if (password.length < 6) return showToast('A senha deve ter no mínimo 6 caracteres.', true);
-        
         const { data: authData, error: authError } = await db.auth.signUp({ email, password });
-        if (authError) return showToast('Erro no cadastro: ' + authError.message, true);
-
-        await safeQuery(db.from('usuarios').insert({ 
-            user_uid: authData.user.id, nome, email, papel: 'professor', status: 'ativo' 
-        }));
+        if (authError) return showToast('Erro ao criar login: ' + authError.message, true);
+        await safeQuery(db.from('usuarios').insert({ user_uid: authData.user.id, nome, email, papel: 'professor', status: 'ativo' }));
         showToast('Professor criado! E-mail de confirmação enviado.');
     }
     closeModal(document.getElementById('professor-modal'));
@@ -100,21 +82,16 @@ async function handleProfessorFormSubmit(e) {
 }
 
 async function handleResetPassword(email) {
-    if (!email) return showToast('E-mail do professor não encontrado.', true);
-    if (confirm(`Deseja enviar um link de redefinição de senha para ${email}?`)) {
-        const { error } = await db.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.href.split('#')[0]
-        });
-        if (error) showToast('Erro ao enviar e-mail: ' + error.message, true);
-        else showToast('E-mail de redefinição enviado com sucesso!');
+    if (!email) return showToast('E-mail não cadastrado.', true);
+    if (confirm(`Deseja enviar link de redefinição para ${email}?`)) {
+        const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: window.location.href.split('#')[0] });
+        if (error) showToast('Erro: ' + error.message, true);
+        else showToast('E-mail enviado com sucesso!');
     }
 }
 
 async function deleteProfessor(id) {
     const { data: prof } = await safeQuery(db.from('usuarios').select('user_uid').eq('id', id).single());
-    if (prof) {
-        await db.from('professores_turmas').delete().eq('professor_id', prof.user_uid);
-    }
-    const { error } = await db.from('usuarios').delete().eq('id', id);
-    return { error };
+    if (prof) { await db.from('professores_turmas').delete().eq('professor_id', prof.user_uid); }
+    return await db.from('usuarios').delete().eq('id', id);
 }
