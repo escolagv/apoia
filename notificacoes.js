@@ -16,8 +16,8 @@ async function loadNotifications() {
         bell.classList.add('notification-badge');
         bell.setAttribute('data-count', count);
         list.innerHTML = data.map(a => `
-            <div class="p-3 border-b hover:bg-gray-50 cursor-pointer text-sm notification-item" data-id="${a.id}">
-                <p class="text-gray-800">${a.mensagem}</p>
+            <div class="p-3 border-b hover:bg-gray-100 cursor-pointer text-sm notification-item" data-id="${a.id}">
+                <p class="text-gray-800 font-medium">${a.mensagem}</p>
                 <span class="text-xs text-gray-400">${new Date(a.created_at).toLocaleString()}</span>
             </div>`).join('');
     } else {
@@ -28,10 +28,10 @@ async function loadNotifications() {
 
 async function markNotificationAsRead(id) {
     await safeQuery(db.from('alertas').update({ lido: true }).eq('id', id));
-    loadNotifications();
+    await loadNotifications();
 }
 
 async function markAllNotificationsAsRead() {
     await safeQuery(db.from('alertas').update({ lido: true }).eq('lido', false));
-    loadNotifications();
+    await loadNotifications();
 }
