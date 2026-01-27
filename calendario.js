@@ -2,28 +2,37 @@
 // calendario.js - GESTÃO DE EVENTOS
 // ===============================================================
 
-async function renderCalendarioPanel() {
-    const tableBody = document.getElementById('eventos-table-body');
-    const start = document.getElementById('evento-data-inicio-filter').value;
-    const end = document.getElementById('evento-data-fim-filter').value;
-    
-    tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
-    let query = db.from('eventos').select('*').order('data', { ascending: false });
+async function openEventoModal(editId = null) {
+    const modal = document.getElementById('evento-modal');
+    document.getElementById('evento-form').reset();
+    document.getElementById('evento-delete-container').classList.add('hidden');
 
-    if (start) query = query.gte('data', start);
-    if (end) query = query.lte('data', end);
+    if (editId) {
+        const { data } = await safeQuery(db.from('eventos').select('*').eq('id', editId).single());
+        if (data) {
+            document.getElementById('evento-id').value = data.id;
+            document.getElementById('evento-descricao').value = data.descricao;
+            document.getElementById('evento-data-inicio').value = data.data;
+            document.getElementById('evento-data-fim').value = data.data_fim || '';
+            document.getElementById('evento-delete-container').classList.remove('hidden');
+        }
+    } else {
+        document.getElementById('evento-id').value = '';
+    }
+    modal.classList.remove('hidden');
+}
 
-    const { data, error } = await safeQuery(query);
-    if (error || !data) return;
-
-    tableBody.innerHTML = data.map(ev => {
-        const d1 = new Date(ev.data + 'T00:00:00').toLocaleDateString();
-        const d2 = ev.data_fim ? new Date(ev.data_fim + 'T00:00:00').toLocaleDateString() : d1;
-        return `
-        <tr class="border-b">
-            <td class="p-3">${d1 === d2 ? d1 : d1 + ' - ' + d2}</td>
-            <td class="p-3">${ev.descricao}</td>
-            <td class="p-3"><button class="text-blue-600 hover:underline edit-evento-btn" data-id="${ev.id}">Editar</button></td>
-        </tr>`;
-    }).join('');
+async function handleEventoFormSubmit(e) {
+    const id = document.getElementById('evento-id').value;
+    const data = {
+        descricao: document.getElementById('evento-descricao').value,
+        data: document.getElementById('evento-data-inicio').value,
+        data_fim: document.getElementById('evento-data-fim').value || null
+    };
+    const q = id ? db.from('eventos').update(data).eq('id', id) : db.from('eventos').insert(data);
+    await safeQuery(q);
+    showToast('Evento salvo!');
+    closeModal(document.getElementById('evento-modal'));
+    renderCalendarioPanel();
+    renderDashboardCalendar();
 }
