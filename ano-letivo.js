@@ -1,5 +1,5 @@
 // ===============================================================
-// ano-letivo.js - PROMOÇÃO DE TURMAS
+// ano-letivo.js - GESTÃO DO ANO LETIVO (PROMOÇÃO)
 // ===============================================================
 
 async function openPromoverTurmasModal() {
@@ -24,20 +24,20 @@ async function renderPromocaoTurmasLista() {
     container.innerHTML = '<div class="loader mx-auto my-4"></div>';
     btn.disabled = true;
 
-    const { data, error } = await safeQuery(db.from('turmas').select('id, nome_turma').eq('ano_letivo', ano));
+    const { data } = await safeQuery(db.from('turmas').select('id, nome_turma').eq('ano_letivo', ano));
     
-    if (error || !data || data.length === 0) {
-        container.innerHTML = '<p class="text-sm text-center p-4 text-gray-500">Nenhuma turma encontrada para promover neste ano.</p>';
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p class="text-sm text-center p-4 text-gray-500">Nenhuma turma encontrada para promover.</p>';
         return;
     }
 
     container.innerHTML = data.map(t => `
         <label class="flex items-center p-3 bg-white border rounded-md hover:bg-gray-50 cursor-pointer">
             <input type="checkbox" class="form-checkbox h-5 w-5 text-teal-600 promocao-turma-checkbox" value="${t.id}" checked>
-            <span class="ml-3 text-sm font-medium">${t.nome_turma}</span>
+            <span class="ml-3 text-sm font-medium text-gray-700">${t.nome_turma}</span>
         </label>`).join('');
     
-    // HABILITA O BOTÃO POIS ENCONTROU TURMAS
+    // Habilita o botão se houver turmas
     btn.disabled = false;
 }
 
@@ -56,7 +56,7 @@ async function handleConfirmPromocaoTurmas() {
     const anoDestino = document.getElementById('promover-turmas-ano-destino').value;
 
     btn.disabled = true;
-    btn.innerHTML = 'Processando Promoção...';
+    btn.innerHTML = '<div class="loader mx-auto"></div>';
 
     const { error } = await db.rpc('promover_turmas_em_massa', {
         origem_turma_ids: ids,
@@ -64,11 +64,11 @@ async function handleConfirmPromocaoTurmas() {
     });
 
     if (!error) {
-        showToast('Promoção concluída com sucesso!');
+        showToast('Alunos promovidos com sucesso!');
         closeAllModals();
         await loadAdminData();
     } else {
-        showToast('Erro técnico: ' + error.message, true);
+        showToast('Erro técnico na promoção: ' + error.message, true);
     }
     btn.disabled = false;
     btn.innerHTML = 'Executar Promoção';
