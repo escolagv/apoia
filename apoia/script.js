@@ -67,7 +67,7 @@ function resetLoginFormState() {
     if (loginForm) {
         const loginButton = loginForm.querySelector('button[type="submit"]');
         loginForm.reset();
-        document.getElementById('login-error').textContent = '';
+        // Não limpamos o erro aqui para permitir que o usuário o leia antes de tentar novamente
         if (loginButton) {
             loginButton.disabled = false;
             loginButton.innerHTML = 'Entrar';
@@ -232,7 +232,6 @@ async function saveChamada() {
     const salvarChamadaBtn = document.getElementById('salvar-chamada-btn');
     const dataSelect = document.getElementById('professor-data-select');
 
-    // NOVO: BLOQUEIO DE CHAMADA EM FINS DE SEMANA E CALENDÁRIO
     const dataChamadaStr = dataSelect.value;
     const dataObj = new Date(dataChamadaStr + 'T00:00:00');
     const diaSemana = dataObj.getDay();
@@ -384,7 +383,7 @@ async function loadAdminData() {
 async function renderDashboardPanel() {
     await loadDailySummary(dashboardSelectedDate);
     await renderDashboardCalendar();
-    const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento'));
+    const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true head: true head: true head: true head: true }).eq('status', 'Em andamento'));
     document.getElementById('dashboard-acompanhamento').textContent = count === null ? 'N/A' : count;
 }
 
@@ -456,7 +455,6 @@ async function renderDashboardCalendar() {
     calendarGrid.innerHTML = html;
 }
 
-// FIX: ESTRATÉGIA DE SEPARAÇÃO PARA EVITAR ERRO 400
 async function renderAlunosPanel(options = {}) {
     const alunosTableBody = document.getElementById('alunos-table-body');
     const anoLetivoFilter = document.getElementById('aluno-ano-letivo-filter');
@@ -759,6 +757,10 @@ async function openProfessorModal(editId = null) {
     const statusContainer = document.getElementById('status-field-container');
     professorForm.reset();
     document.getElementById('professor-delete-container').classList.add('hidden');
+    
+    // O professor define a própria senha via confirmação de e-mail/reset
+    if (passwordContainer) passwordContainer.classList.add('hidden');
+
     if (editId) {
         const { data } = await safeQuery(db.from('usuarios').select('*').eq('id', editId).single());
         if(!data) { showToast('Professor não encontrado.', true); return; }
@@ -767,13 +769,11 @@ async function openProfessorModal(editId = null) {
         document.getElementById('professor-nome').value = data.nome;
         document.getElementById('professor-email').value = data.email;
         document.getElementById('professor-status').value = data.status;
-        passwordContainer.classList.add('hidden');
         statusContainer.classList.remove('hidden');
         document.getElementById('professor-delete-container').classList.remove('hidden');
     } else {
         document.getElementById('professor-modal-title').textContent = 'Adicionar Professor';
         document.getElementById('professor-id').value = '';
-        passwordContainer.classList.remove('hidden');
         statusContainer.classList.add('hidden');
     }
     professorModal.classList.remove('hidden');
@@ -793,12 +793,11 @@ async function handleProfessorFormSubmit(e) {
             showToast('Professor atualizado com sucesso!');
         }
     } else {
-        const password = document.getElementById('professor-password').value;
-        if (password.length < 6) {
-            showToast('A senha temporária deve ter no mínimo 6 caracteres.', true);
-            return;
-        }
-        const { data: authData, error: authError } = await db.auth.signUp({ email, password });
+        // Geramos uma senha aleatória para o primeiro cadastro. 
+        // O professor deverá usar o fluxo de "Esqueci minha senha" para definir a dele após confirmar o e-mail.
+        const randomPassword = Math.random().toString(36).slice(-10) + "A1!"; 
+        
+        const { data: authData, error: authError } = await db.auth.signUp({ email, password: randomPassword });
         if (authError) {
             showToast('Erro ao criar login do professor: ' + authError.message, true);
             return;
@@ -807,7 +806,7 @@ async function handleProfessorFormSubmit(e) {
         if (profileError) {
             showToast('Login criado, mas falha ao criar perfil.', true);
         } else {
-            showToast('Professor criado! E-mail de confirmação enviado.');
+            showToast('Professor cadastrado! Ele receberá um e-mail. Peça para que ele utilize a opção "Esqueci minha senha" para definir sua senha pessoal.');
         }
     }
     closeModal(document.getElementById('professor-modal'));
@@ -1597,7 +1596,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
     db.auth.onAuthStateChange((event, session) => { handleAuthChange(event, session); });
 
-    // NOVO: MÁSCARA DE TELEFONE AUTOMÁTICA
     const phoneInput = document.getElementById('aluno-telefone');
     if (phoneInput) {
         phoneInput.addEventListener('input', (e) => {
@@ -1641,14 +1639,16 @@ document.addEventListener('DOMContentLoaded', () => {
             loginButton.disabled = true;
             loginButton.innerHTML = `<div class="loader mx-auto"></div>`;
             loginError.textContent = '';
+            
             try {
                 const { error } = await db.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value });
                 if (error) {
-                    loginError.textContent = "Email ou senha inválidos.";
+                    // Feedback melhorado para erro de senha/email
+                    loginError.textContent = "E-mail ou senha incorretos. Verifique os dados e tente novamente.";
                     resetLoginFormState();
                 }
             } catch (err) {
-                loginError.textContent = "Ocorreu um erro de conexão.";
+                loginError.textContent = "Ocorreu um erro de conexão inesperado.";
                 resetLoginFormState();
             }
         }
