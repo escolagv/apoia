@@ -64,7 +64,7 @@ function openAssiduidadeModal() {
     const modal = document.getElementById('assiduidade-modal');
     const anoSelAluno = document.getElementById('assiduidade-aluno-ano');
     const anoSelTurma = document.getElementById('assiduidade-turma-ano');
-    const anoSelProf = document.getElementById('assiduidade-prof-ano'); // FIX: Captura seletor de ano para profs
+    const anoSelProf = document.getElementById('assiduidade-prof-ano'); 
     const profSel = document.getElementById('assiduidade-prof-professor');
     
     // Preenche todos os selects de anos letivos
