@@ -294,7 +294,7 @@
                 </div>
                 <div id="assiduidade-professores" class="assiduidade-panel hidden">
                     <h4 class="font-semibold mb-3">Filtros para Relatório de Professores</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="relative">
                             <label for="assiduidade-prof-data-inicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
                             <input type="date" id="assiduidade-prof-data-inicio" class="w-full mt-1 p-2 border rounded-md pr-8">
@@ -305,7 +305,11 @@
                             <input type="date" id="assiduidade-prof-data-fim" class="w-full mt-1 p-2 border rounded-md pr-8">
                             <span class="absolute inset-y-0 right-0 top-6 flex items-center pr-2 cursor-pointer text-gray-400 hover:text-gray-600 date-clear-btn" data-target="assiduidade-prof-data-fim">&times;</span>
                         </div>
-                        <div class="md:col-span-2">
+                        <div>
+                            <label for="assiduidade-prof-ano" class="block text-sm font-medium text-gray-700">Ano Letivo</label>
+                            <select id="assiduidade-prof-ano" class="w-full mt-1 p-2 border rounded-md"></select>
+                        </div>
+                        <div class="md:col-span-3">
                             <label for="assiduidade-prof-professor" class="block text-sm font-medium">Professor Específico (Opcional)</label>
                             <select id="assiduidade-prof-professor" class="w-full mt-1 p-2 border rounded-md"></select>
                         </div>
