@@ -10,8 +10,12 @@ async function renderCalendarioPanel() {
     tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando eventos...</td></tr>';
     let query = db.from('eventos').select('*').order('data', { ascending: false });
 
-    if (start) query = query.gte('data', start);
-    if (end) query = query.lte('data', end);
+    // APLICAÇÃO DA REGRA DE OURO DAS DATAS
+    if (start && end) {
+        query = query.gte('data', start).lte('data', end);
+    } else if (start) {
+        query = query.eq('data', start);
+    }
 
     const { data, error } = await safeQuery(query);
     if (error || !data) return;
