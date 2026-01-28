@@ -2,100 +2,68 @@
 // ui.js - GESTÃO DE INTERFACE E NAVEGAÇÃO
 // ===============================================================
 
-/**
- * Esconde o Loader e mostra a tela desejada
- */
 function showView(viewId) {
-    console.log(`Trocando visualização para: ${viewId}`);
-    const loading = document.getElementById('loading-view');
-    const app = document.getElementById('app-container');
-    
-    if (loading) loading.classList.add('hidden');
-    if (app) app.classList.remove('hidden');
-
+    document.getElementById('loading-view').classList.add('hidden');
+    document.getElementById('app-container').classList.remove('hidden');
     ['login-view', 'professor-view', 'admin-view'].forEach(id => {
-        const v = document.getElementById(id);
-        if (v) v.classList.add('hidden');
+        const view = document.getElementById(id);
+        if (view) view.classList.add('hidden');
     });
-
-    const target = document.getElementById(viewId);
-    if (target) target.classList.remove('hidden');
+    const viewToShow = document.getElementById(viewId);
+    if (viewToShow) viewToShow.classList.remove('hidden');
 }
 
-/**
- * Troca de painéis internos do Admin
- */
 function switchAdminPanel(targetPanelId) {
-    document.querySelectorAll('.admin-nav-link').forEach(link => link.classList.remove('bg-gray-700'));
-    document.querySelectorAll('.admin-panel').forEach(panel => panel.classList.add('hidden'));
-
-    const targetPanel = document.getElementById(targetPanelId);
-    if (targetPanel) {
-        targetPanel.classList.remove('hidden');
+    document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('bg-gray-700'));
+    document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+    const panel = document.getElementById(targetPanelId);
+    if (panel) {
+        panel.classList.remove('hidden');
         const activeLink = document.querySelector(`.admin-nav-link[data-target="${targetPanelId}"]`);
         if (activeLink) activeLink.classList.add('bg-gray-700');
     }
-
-    // Fecha sidebar mobile
-    const aside = document.querySelector('aside');
-    const overlay = document.getElementById('sidebar-overlay');
-    if (aside) aside.classList.add('-translate-x-full');
-    if (overlay) overlay.classList.add('hidden');
+    document.querySelector('aside').classList.add('-translate-x-full');
+    document.getElementById('sidebar-overlay').classList.add('hidden');
 }
 
-/**
- * Gerenciador de Autenticação
- */
 async function handleAuthChange(event, session) {
-    console.log("Evento de Autenticação:", event);
-
     if (event === 'PASSWORD_RECOVERY') {
         showView('login-view');
-        document.getElementById('reset-password-modal')?.classList.remove('hidden');
+        document.getElementById('reset-password-modal').classList.remove('hidden');
         return;
     }
-
     if (!session) {
+        resetApplicationState();
+        clearTimeout(inactivityTimer);
         showView('login-view');
         return;
     }
-
     try {
         currentUser = session.user;
-        const { data, error } = await safeQuery(
-            db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single()
-        );
-
+        const { data, error } = await safeQuery(db.from('usuarios').select('papel, nome, status').eq('user_uid', currentUser.id).single());
         if (error || !data || data.status !== 'ativo') {
-            showToast('Acesso negado ou perfil inativo.', true);
+            const errorMessage = !data ? 'Usuário sem perfil. Contate o suporte.' : 'Perfil inativo. Contate o suporte.';
+            showToast(errorMessage, true);
             await db.auth.signOut();
             return;
         }
-
         if (data.papel === 'admin') {
             document.getElementById('admin-info').textContent = data.nome || currentUser.email;
-            
-            // Tenta carregar os dados, mas não deixa o loader infinito se falhar
-            try {
-                if (typeof loadAdminData === 'function') await loadAdminData();
-                if (typeof renderDashboardPanel === 'function') await renderDashboardPanel();
-                if (typeof loadNotifications === 'function') await loadNotifications();
-            } catch (initErr) {
-                console.error("Erro parcial na inicialização do Admin:", initErr);
-            }
-            
+            await loadAdminData();
+            if (typeof renderDashboardPanel === 'function') await renderDashboardPanel();
+            if (typeof loadNotifications === 'function') await loadNotifications();
             showView('admin-view');
-        } else {
+        } else if (data.papel === 'professor') {
             document.getElementById('professor-info').textContent = data.nome || currentUser.email;
-            if (typeof loadProfessorData === 'function') await loadProfessorData(currentUser.id);
+            await loadProfessorData(currentUser.id);
             showView('professor-view');
         }
         resetInactivityTimer();
     } catch (err) {
-        console.error("Erro fatal no handleAuthChange:", err);
-        showView('login-view');
+        showToast(err.message || 'Erro ao carregar perfil.', true);
+        await signOutUser();
     }
 }
 
 function closeModal(modalElement) { if (modalElement) modalElement.classList.add('hidden'); }
-function closeAllModals() { document.querySelectorAll('[id$="-modal"]').forEach(m => m.classList.add('hidden')); }
+function closeAllModals() { document.querySelectorAll('[id$="-modal"]').forEach(modal => modal.classList.add('hidden')); }
