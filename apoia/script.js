@@ -1,11 +1,11 @@
 // ===============================================================
-// CONFIGURAÇÃO E VARIÁVEIS GLOBAIS
+// CONFIGURAÇÃO E INICIALIZAÇÃO DO SUPABASE
 // ===============================================================
 const { createClient } = supabase;
 const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnaXZtcmh3eXRuZnByc2pzdnB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTQ3ODgsImV4cCI6MjA3MTgzMDc4OH0.1yL3PaS_anO76q3CUdLkdpNc72EDPYVG5F4cYy6ySS0';
 
-if (SUPABASE_URL === 'SUA_URL_DO_PROJETO') throw new Error("Credenciais da Supabase não configuradas.");
+// Inicializa o cliente usando as definições seguras
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Estado da aplicação
