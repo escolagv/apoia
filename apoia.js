@@ -87,13 +87,14 @@ async function handleGerarApoiaRelatorio() {
     const body = document.getElementById('apoia-relatorio-table-body');
     body.innerHTML = '<tr><td colspan="5" class="text-center p-4">Gerando relatório...</td></tr>';
     
+    // CAPTURA DE DATAS PARA REGRA DE OURO
     const dataInicio = document.getElementById('apoia-relatorio-data-inicio').value;
     const dataFim = document.getElementById('apoia-relatorio-data-fim').value;
     const statusFiltro = document.getElementById('apoia-relatorio-status').value;
 
     let queryBuilder = db.from('apoia_encaminhamentos').select('*, alunos(nome_completo)').order('data_encaminhamento', { ascending: false });
 
-    // APLICAÇÃO DA REGRA DE OURO DAS DATAS
+    // APLICAÇÃO DA REGRA: Vazio=Tudo, Início=Dia, Início+Fim=Período
     if (dataInicio && dataFim) {
         queryBuilder = queryBuilder.gte('data_encaminhamento', dataInicio).lte('data_encaminhamento', dataFim);
     } else if (dataInicio) {
