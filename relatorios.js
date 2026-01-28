@@ -117,7 +117,17 @@ async function generateAssiduidadeReport() {
             if (alunoId) query = query.eq('aluno_id', alunoId);
             if (ini && fim) query = query.gte('data', ini).lte('data', fim);
             else if (ini) query = query.eq('data', ini);
-        } 
+        } else if (activeTab === 'assiduidade-turmas') {
+            reportTitle = "Assiduidade por Turma";
+            const ano = document.getElementById('assiduidade-turma-ano').value;
+            const turmaId = document.getElementById('assiduidade-turma-turma').value;
+            const ini = document.getElementById('assiduidade-turma-data-inicio').value;
+            const fim = document.getElementById('assiduidade-turma-data-fim').value;
+            if (ano) query = query.eq('turmas.ano_letivo', ano);
+            if (turmaId) query = query.eq('turma_id', turmaId);
+            if (ini && fim) query = query.gte('data', ini).lte('data', fim);
+            else if (ini) query = query.eq('data', ini);
+        }
         else if (activeTab === 'assiduidade-professores') {
             reportTitle = "Assiduidade de Professores (Lançamentos)";
             const profId = document.getElementById('assiduidade-prof-professor').value;
@@ -135,7 +145,7 @@ async function generateAssiduidadeReport() {
             const pendentes = profData.length - lancados;
             
             const html = `
-                <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
+                <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md text-left">
                     <div class="print-header"><h2>${reportTitle}</h2></div>
                     <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">${reportTitle}</h1><button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded">Imprimir</button></div>
                     <div class="grid grid-cols-2 gap-8 mb-8"><div class="h-64"><canvas id="assiduidadeChart"></canvas></div><div class="flex flex-col justify-center">
@@ -161,7 +171,7 @@ async function generateAssiduidadeReport() {
         });
 
         const reportHTML = `
-            <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
+            <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md text-left">
                 <div class="print-header"><h2>${reportTitle}</h2></div>
                 <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">${reportTitle}</h1><button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded">Imprimir</button></div>
                 <div class="grid grid-cols-2 gap-8"><div class="h-64"><canvas id="assiduidadeChart"></canvas></div><div class="flex flex-col justify-center">
