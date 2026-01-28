@@ -1,5 +1,5 @@
 // ===============================================================
-// relatorios.js - RELATÓRIOS E ASSIDUIDADE (VERSÃO COMPLETA)
+// relatorios.js - RELATÓRIOS E ASSIDUIDADE (VERSÃO INTEGRAL)
 // ===============================================================
 
 async function renderRelatoriosPanel() {
@@ -29,7 +29,6 @@ async function handleGerarRelatorio() {
     const pId = document.getElementById('relatorio-professor-select').value;
     const status = document.getElementById('relatorio-status-select').value;
 
-    // APLICAÇÃO DA REGRA DE OURO DAS DATAS
     if (dataInicio && dataFim) {
         queryBuilder = queryBuilder.gte('data', dataInicio).lte('data', dataFim);
     } else if (dataInicio) {
@@ -67,7 +66,6 @@ function openAssiduidadeModal() {
     const anoSelProf = document.getElementById('assiduidade-prof-ano'); 
     const profSel = document.getElementById('assiduidade-prof-professor');
     
-    // Preenche todos os selects de anos letivos
     [anoSelAluno, anoSelTurma, anoSelProf].forEach(el => {
         if (el) {
             el.innerHTML = '<option value="">Todos os Anos</option>';
@@ -75,20 +73,17 @@ function openAssiduidadeModal() {
         }
     });
 
-    // Alimenta o seletor de professores no modal de assiduidade
     profSel.innerHTML = '<option value="">Todos os Professores</option>';
     usuariosCache.filter(u => u.papel === 'professor').forEach(p => {
         profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`;
     });
 
-    // Seleciona o ano atual por padrão
     const currentYear = new Date().getFullYear();
     if (anosLetivosCache.includes(currentYear)) {
         if (anoSelAluno) anoSelAluno.value = currentYear;
         if (anoSelTurma) anoSelTurma.value = currentYear;
         if (anoSelProf) anoSelProf.value = currentYear;
         
-        // Dispara o evento para atualizar cascatas
         if (anoSelAluno) anoSelAluno.dispatchEvent(new Event('change', { bubbles: true }));
         if (anoSelTurma) anoSelTurma.dispatchEvent(new Event('change', { bubbles: true }));
         if (anoSelProf) anoSelProf.dispatchEvent(new Event('change', { bubbles: true }));
@@ -117,7 +112,8 @@ async function generateAssiduidadeReport() {
             if (alunoId) query = query.eq('aluno_id', alunoId);
             if (ini && fim) query = query.gte('data', ini).lte('data', fim);
             else if (ini) query = query.eq('data', ini);
-        } else if (activeTab === 'assiduidade-turmas') {
+        } 
+        else if (activeTab === 'assiduidade-turmas') {
             reportTitle = "Assiduidade por Turma";
             const ano = document.getElementById('assiduidade-turma-ano').value;
             const turmaId = document.getElementById('assiduidade-turma-turma').value;
@@ -144,16 +140,7 @@ async function generateAssiduidadeReport() {
             const lancados = profData.filter(d => d.status === 'Lançado').length;
             const pendentes = profData.length - lancados;
             
-            const html = `
-                <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md text-left">
-                    <div class="print-header"><h2>${reportTitle}</h2></div>
-                    <div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">${reportTitle}</h1><button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded">Imprimir</button></div>
-                    <div class="grid grid-cols-2 gap-8 mb-8"><div class="h-64"><canvas id="assiduidadeChart"></canvas></div><div class="flex flex-col justify-center">
-                        <p class="text-lg">Total de Dias: <strong>${profData.length}</strong></p>
-                        <p class="text-lg text-green-600">Lançados: <strong>${lancados}</strong></p>
-                        <p class="text-lg text-red-600">Pendentes: <strong>${pendentes}</strong></p>
-                    </div></div>
-                </div>`;
+            const html = `<div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md text-left"><div class="print-header"><h2>${reportTitle}</h2></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">${reportTitle}</h1><button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded">Imprimir</button></div><div class="grid grid-cols-2 gap-8 mb-8"><div class="h-64"><canvas id="assiduidadeChart"></canvas></div><div class="flex flex-col justify-center"><p class="text-lg">Total de Dias: <strong>${profData.length}</strong></p><p class="text-lg text-green-600">Lançados: <strong>${lancados}</strong></p><p class="text-lg text-red-600">Pendentes: <strong>${pendentes}</strong></p></div></div></div>`;
             newWindow.document.getElementById('report-content').innerHTML = html;
             const script = newWindow.document.createElement('script');
             script.textContent = `new Chart(document.getElementById('assiduidadeChart'), { type: 'pie', data: { labels: ['Lançado', 'Pendente'], datasets: [{ data: [${lancados}, ${pendentes}], backgroundColor: ['#10B981', '#EF4444'] }] }, options: { responsive: true, maintainAspectRatio: false } });`;
@@ -161,6 +148,7 @@ async function generateAssiduidadeReport() {
             return;
         }
 
+        // PROCESSAMENTO DE ALUNOS E TURMAS (O que eu tinha "comido")
         const { data, error } = await safeQuery(query);
         if (error) throw error;
 
