@@ -437,7 +437,7 @@ async function renderDashboardCalendar() {
     calendarGrid.innerHTML = html;
 }
 
-// FIX: ESTRATÉGIA DE SEPARAÇÃO PARA EVITAR ERRO 400
+// FIX: SEPARAÇÃO DA CONSULTA PARA EVITAR ERRO 400 NO BANCO
 async function renderAlunosPanel(options = {}) {
     const alunosTableBody = document.getElementById('alunos-table-body');
     const anoLetivoFilter = document.getElementById('aluno-ano-letivo-filter');
@@ -469,7 +469,7 @@ async function renderAlunosPanel(options = {}) {
     
     let studentsData = [];
 
-    // SEPARAÇÃO DA LÓGICA DE CONSULTA PARA EVITAR CONFLITO DE TABELAS NO "OR"
+    // LÓGICA DE SEPARAÇÃO CIRÚRGICA
     if (currentAnoVal && parseInt(currentAnoVal) >= 2026) {
         const [resSemTurma, resComTurma] = await Promise.all([
             safeQuery(db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`).is('turma_id', null)),
@@ -484,7 +484,6 @@ async function renderAlunosPanel(options = {}) {
         studentsData = data || [];
     }
 
-    // Filtro manual de busca para manter performance e evitar erros de lógica complexa no banco
     if (searchTerm) {
         const term = searchTerm.toLowerCase();
         studentsData = studentsData.filter(a => 
@@ -498,7 +497,6 @@ async function renderAlunosPanel(options = {}) {
         studentsData = studentsData.filter(a => a.turma_id == alunoTurmaFilter.value);
     }
 
-    // Limpeza de duplicados e ordenação
     const uniqueStudents = Array.from(new Map(studentsData.map(s => [s.id, s])).values());
     uniqueStudents.sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
 
@@ -679,7 +677,8 @@ async function handleGerarApoiaRelatorio() {
     const tableBody = document.getElementById('apoia-relatorio-table-body');
     const imprimirApoiaRelatorioBtn = document.getElementById('imprimir-apoia-relatorio-btn');
     tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Gerando relatório...</td></tr>';
-    imprimirRelatorioBtn.classList.add('hidden');
+    if (imprimirApoiaRelatorioBtn) imprimirApoiaRelatorioBtn.classList.add('hidden');
+    
     let queryBuilder = db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('data_encaminhamento');
     const dataInicio = document.getElementById('apoia-relatorio-data-inicio').value;
     const dataFim = document.getElementById('apoia-relatorio-data-fim').value;
@@ -704,7 +703,7 @@ async function handleGerarApoiaRelatorio() {
             <td class="p-3">${item.status}</td>
             <td class="p-3">${item.observacoes || ''}</td>
         </tr>`).join('');
-    imprimirApoiaRelatorioBtn.classList.remove('hidden');
+    if (imprimirApoiaRelatorioBtn) imprimirApoiaRelatorioBtn.classList.remove('hidden');
 }
 
 async function renderProfessoresPanel() {
@@ -923,7 +922,7 @@ async function handleTurmaFormSubmit(e) {
         if (rels.length > 0) await safeQuery(db.from('professores_turmas').insert(rels));
     }
     showToast('Turma salva com sucesso!');
-    closeModal(document.getElementById('turma-modal'));
+    closeAllModals();
     await loadAdminData();
     await renderTurmasPanel();
 }
@@ -1352,40 +1351,37 @@ function openAssiduidadeModal() {
     const alunoSel = document.getElementById('assiduidade-aluno-aluno');
     const anoSelTurma = document.getElementById('assiduidade-turma-ano');
     const turmaSelTurma = document.getElementById('assiduidade-turma-turma');
-    const anoSelProf = document.getElementById('assiduidade-prof-ano'); // NOVO
+    const anoSelProf = document.getElementById('assiduidade-prof-ano');
     const profSel = document.getElementById('assiduidade-prof-professor');
     
-    anoSelAluno.innerHTML = '<option value="">Todos os Anos</option>';
-    anosLetivosCache.forEach(ano => anoSelAluno.innerHTML += `<option value="${ano}">${ano}</option>`);
-    alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
+    // FIX: ADICIONADAS VERIFICAÇÕES DE NULL PARA EVITAR TYPEERROR
+    if (anoSelAluno) {
+        anoSelAluno.innerHTML = '<option value="">Todos os Anos</option>';
+        anosLetivosCache.forEach(ano => anoSelAluno.innerHTML += `<option value="${ano}">${ano}</option>`);
+    }
+    if (alunoSel) alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
 
-    anoSelTurma.innerHTML = '<option value="">Todos os Anos</option>';
-    anosLetivosCache.forEach(ano => anoSelTurma.innerHTML += `<option value="${ano}">${ano}</option>`);
-    turmaSelTurma.innerHTML = '<option value="">Todas as Turmas</option>';
+    if (anoSelTurma) {
+        anoSelTurma.innerHTML = '<option value="">Todos os Anos</option>';
+        anosLetivosCache.forEach(ano => anoSelTurma.innerHTML += `<option value="${ano}">${ano}</option>`);
+    }
+    if (turmaSelTurma) turmaSelTurma.innerHTML = '<option value="">Todas as Turmas</option>';
 
-    // FIX: POPULAR ANO LETIVO DOS PROFESSORES
-    anoSelProf.innerHTML = '<option value="">Todos os Anos</option>';
-    anosLetivosCache.forEach(ano => anoSelProf.innerHTML += `<option value="${ano}">${ano}</option>`);
-
-    profSel.innerHTML = '<option value="">Todos os Professores</option>';
-    usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
+    if (anoSelProf) {
+        anoSelProf.innerHTML = '<option value="">Todos os Anos</option>';
+        anosLetivosCache.forEach(ano => anoSelProf.innerHTML += `<option value="${ano}">${ano}</option>`);
+    }
+    if (profSel) {
+        profSel.innerHTML = '<option value="">Todos os Professores</option>';
+        usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
+    }
 
     const currentYear = new Date().getFullYear();
     if (anosLetivosCache.some(y => y == currentYear)) {
-        anoSelAluno.value = currentYear;
-        anoSelTurma.value = currentYear;
-        anoSelProf.value = currentYear; // NOVO
-        anoSelAluno.dispatchEvent(new Event('change', { bubbles: true }));
-        anoSelTurma.dispatchEvent(new Event('change', { bubbles: true }));
-        anoSelProf.dispatchEvent(new Event('change', { bubbles: true })); // NOVO
+        if (anoSelAluno) { anoSelAluno.value = currentYear; anoSelAluno.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (anoSelTurma) { anoSelTurma.value = currentYear; anoSelTurma.dispatchEvent(new Event('change', { bubbles: true })); }
+        if (anoSelProf) { anoSelProf.value = currentYear; anoSelProf.dispatchEvent(new Event('change', { bubbles: true })); }
     }
-
-    document.getElementById('assiduidade-aluno-data-inicio').value = '';
-    document.getElementById('assiduidade-aluno-data-fim').value = '';
-    document.getElementById('assiduidade-turma-data-inicio').value = '';
-    document.getElementById('assiduidade-turma-data-fim').value = '';
-    document.getElementById('assiduidade-prof-data-inicio').value = '';
-    document.getElementById('assiduidade-prof-data-fim').value = '';
 
     assiduidadeModal.classList.remove('hidden');
 }
@@ -1760,6 +1756,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
                 else if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
                 else if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
+                else if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
                 else if (targetPanelId === 'admin-relatorios-panel') {
                     renderRelatoriosPanel();
                     document.getElementById('relatorio-data-inicio').value = '';
@@ -1801,6 +1798,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closest('.delete-turma-btn')) openDeleteConfirmModal('turma', closest('.delete-turma-btn').dataset.id);
         if (closest('#add-evento-btn')) openEventoModal();
         if (closest('.edit-evento-btn')) openEventoModal(closest('.edit-evento-btn').dataset.id);
+        
+        // FIX: BOTÃO ADICIONAR ALUNO MANUALMENTE (APOIA) REPARADO
+        if (closest('#add-acompanhamento-btn')) {
+            openAcompanhamentoModal();
+        }
+
         if (closest('.edit-acompanhamento-btn')) openAcompanhamentoModal(closest('.edit-acompanhamento-btn').dataset.id);
         if (closest('.cancel-modal-btn')) closeAllModals();
         if (closest('.delete-btn')) {
@@ -1913,13 +1916,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // FIX: ATIVAÇÃO DO BOTÃO DE EXCLUIR
+    // FIX: ATIVAÇÃO DO BOTÃO DE EXCLUIR REPARADA
     const deleteCheckbox = document.getElementById('delete-confirm-checkbox');
-    if(deleteCheckbox) {
-        deleteCheckbox.addEventListener('change', (e) => { 
-            document.getElementById('confirm-delete-btn').disabled = !e.target.checked; 
-        });
-    }
+    if(deleteCheckbox) deleteCheckbox.addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
     
     document.body.addEventListener('change', async (e) => {
         if (e.target.matches('#turma-ano-letivo-filter')) renderTurmasPanel();
@@ -1952,11 +1951,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
             }
         } 
-        // FIX: CASCATA HISTÓRICA DE PROFESSORES (BUSCA INATIVOS DO PASSADO)
+        // FIX: CASCATA HISTÓRICA DE PROFESSORES (SEM ERRO 400)
         else if (e.target.matches('#assiduidade-prof-ano')) {
             const ano = e.target.value;
             const profSel = document.getElementById('assiduidade-prof-professor');
-            profSel.innerHTML = '<option value="">Carregando...</option>';
+            if (profSel) profSel.innerHTML = '<option value="">Carregando...</option>';
             
             if (ano) {
                 const turmasIds = turmasCache.filter(t => String(t.ano_letivo) === String(ano)).map(t => t.id);
@@ -1970,12 +1969,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             uniqueProfs.push({ id: d.professor_id, nome: d.usuarios.nome });
                         }
                     });
-                    profSel.innerHTML = '<option value="">Todos os Professores</option>';
-                    uniqueProfs.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(p => profSel.innerHTML += `<option value="${p.id}">${p.nome}</option>`);
-                } else { profSel.innerHTML = '<option value="">Nenhum professor vinculado</option>'; }
+                    if (profSel) {
+                        profSel.innerHTML = '<option value="">Todos os Professores</option>';
+                        uniqueProfs.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(p => profSel.innerHTML += `<option value="${p.id}">${p.nome}</option>`);
+                    }
+                } else { if (profSel) profSel.innerHTML = '<option value="">Nenhum professor vinculado</option>'; }
             } else {
-                profSel.innerHTML = '<option value="">Todos os Professores</option>';
-                usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
+                if (profSel) {
+                    profSel.innerHTML = '<option value="">Todos os Professores</option>';
+                    usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
+                }
             }
         }
     });
@@ -2001,7 +2004,8 @@ document.addEventListener('DOMContentLoaded', () => {
             link.classList.add('text-indigo-600', 'border-indigo-500');
             link.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent');
             document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
-            document.getElementById(link.dataset.target).classList.remove('hidden');
+            const target = document.getElementById(link.dataset.target);
+            if (target) target.classList.remove('hidden');
         });
     }
 
