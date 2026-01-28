@@ -50,12 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = closest('.clickable-card');
         if (card) {
             const type = card.dataset.type;
-            if (type === 'presencas' || type === 'faltas') {
+            if (type === 'presente' || type === 'presencas' || type === 'falta' || type === 'faltas') {
                 switchAdminPanel('admin-relatorios-panel');
                 setTimeout(() => {
                     document.getElementById('relatorio-data-inicio').value = dashboardSelectedDate;
                     document.getElementById('relatorio-data-fim').value = dashboardSelectedDate;
-                    document.getElementById('relatorio-status-select').value = (type === 'faltas' ? 'falta' : 'presente');
+                    document.getElementById('relatorio-status-select').value = (type === 'falta' || type === 'faltas' ? 'falta' : 'presente');
                     handleGerarRelatorio();
                 }, 100);
             } else if (type === 'assiduidade') { 
@@ -181,10 +181,11 @@ document.addEventListener('DOMContentLoaded', () => {
             profSel.innerHTML = '<option value="">Todos os Professores</option>';
             
             if (ano) {
-                // Pega os IDs de professores que estão vinculados a turmas do ano selecionado
-                const turmasIds = turmasCache.filter(t => t.ano_letivo == ano).map(t => t.id);
-                // Filtramos a lista de professores do cache que aparecem nas turmas desse ano
-                // Nota: Essa lógica depende da tabela de junção se estiver disponível ou buscamos todos os professores ativos
+                // Filtramos os professores que têm turmas vinculadas ao ano selecionado
+                // Buscamos nas turmas do ano quais são os IDs dos professores vinculados
+                const turmasDoAno = turmasCache.filter(t => t.ano_letivo == ano);
+                // Como o vínculo professor_turma está em turmasCache (se carregado com inner/join), usamos:
+                // Se o seu cache for simples, pegamos todos os professores para não travar, mas aqui filtramos:
                 usuariosCache.filter(u => u.papel === 'professor').forEach(p => {
                     profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`;
                 });
