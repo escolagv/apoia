@@ -1,10 +1,10 @@
 // ===============================================================
-// listeners.js - EVENT LISTENERS (CÓPIA FIEL DO ORIGINAL)
+// listeners.js - EVENT LISTENERS (CÓPIA FIEL COM FIX DE ASSIDUIDADE)
 // ===============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Suporte via WhatsApp
+    // 1. Suporte via WhatsApp
     const setupSupportLinks = () => {
         const url = `https://wa.me/5548991004780?text=${encodeURIComponent("Olá! Preciso de suporte no Sistema de Chamadas.")}`;
         if (document.getElementById('support-link-prof')) document.getElementById('support-link-prof').href = url;
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setupSupportLinks();
 
-    // Toggle Password
+    // 2. Toggle Password
     const toggleBtn = document.getElementById('toggle-password-btn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Delegação de Cliques
+    // 3. Delegação de Cliques
     document.body.addEventListener('click', (e) => {
         const target = e.target;
         const closest = (selector) => target.closest(selector);
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (panelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
             else if (panelId === 'admin-professores-panel') renderProfessoresPanel();
             else if (panelId === 'admin-turmas-panel') renderTurmasPanel();
-            else if (panelId === 'admin-apoia-panel') renderApoiaPanel();
+            else if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
             else if (panelId === 'admin-calendario-panel') renderCalendarioPanel();
             else if (panelId === 'admin-relatorios-panel') renderRelatoriosPanel();
             else if (panelId === 'admin-config-panel') renderConfigPanel();
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closest('#sidebar-overlay')) { document.querySelector('aside').classList.add('-translate-x-full'); document.getElementById('sidebar-overlay').classList.add('hidden'); }
     });
 
-    // Submits
+    // 4. Submits
     document.body.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = e.target.id;
@@ -137,16 +137,69 @@ document.addEventListener('DOMContentLoaded', () => {
         if (id === 'config-form') handleConfigFormSubmit(e);
     });
 
-    // Filtros (Change)
+    // 5. Filtros (Change) e Cascatas de Assiduidade
     document.body.addEventListener('change', (e) => {
         const id = e.target.id;
         if (id === 'aluno-ano-letivo-filter' || id === 'aluno-turma-filter') renderAlunosPanel();
         if (id === 'turma-ano-letivo-filter') renderTurmasPanel();
         if (id === 'promover-turmas-ano-origem') renderPromocaoTurmasLista();
+
+        // FIX: Cascata de Alunos por Ano no Modal de Assiduidade
+        if (id === 'assiduidade-aluno-ano') {
+            const ano = e.target.value;
+            const alunoSel = document.getElementById('assiduidade-aluno-aluno');
+            alunoSel.innerHTML = '<option value="">Todos os Alunos</option>';
+            if (ano) {
+                const turmasDoAnoIds = turmasCache.filter(t => t.ano_letivo == ano).map(t => t.id);
+                alunosCache.filter(a => turmasDoAnoIds.includes(a.turma_id)).forEach(a => {
+                    alunoSel.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`;
+                });
+            }
+        }
+        
+        // FIX: Cascata de Turmas por Ano no Modal de Assiduidade
+        if (id === 'assiduidade-turma-ano') {
+            const ano = e.target.value;
+            const turmaSel = document.getElementById('assiduidade-turma-turma');
+            turmaSel.innerHTML = '<option value="">Todas as Turmas</option>';
+            if (ano) {
+                turmasCache.filter(t => t.ano_letivo == ano).forEach(t => {
+                    turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`;
+                });
+            }
+        }
     });
 
-    // Busca (Input)
+    // 6. Troca de Abas no Modal de Assiduidade
+    const assiduidadeTabs = document.getElementById('assiduidade-tabs');
+    if (assiduidadeTabs) {
+        assiduidadeTabs.addEventListener('click', (e) => {
+            e.preventDefault();
+            const link = e.target.closest('a');
+            if (!link || link.getAttribute('aria-current') === 'page') return;
+            
+            // Remove destaque de todas as abas
+            document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
+                a.removeAttribute('aria-current');
+                a.classList.replace('text-indigo-600', 'text-gray-500');
+                a.classList.replace('border-indigo-500', 'border-transparent');
+            });
+
+            // Adiciona destaque na clicada
+            link.setAttribute('aria-current', 'page');
+            link.classList.replace('text-gray-500', 'text-indigo-600');
+            link.classList.replace('border-transparent', 'border-indigo-500');
+
+            // Troca o painel visível
+            document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById(link.dataset.target).classList.remove('hidden');
+        });
+    }
+
+    // 7. Busca Dinâmica (Input)
     document.body.addEventListener('input', (e) => {
         if (e.target.id === 'aluno-search-input') renderAlunosPanel();
     });
+
+    console.log("Listeners de assiduidade e filtros carregados.");
 });
