@@ -10,7 +10,7 @@ async function renderCalendarioPanel() {
     tableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando eventos...</td></tr>';
     let query = db.from('eventos').select('*').order('data', { ascending: false });
 
-    // APLICAÇÃO DA REGRA DE OURO DAS DATAS
+    // APLICAÇÃO DA REGRA: Vazio=Tudo, Início=Dia, Início+Fim=Período
     if (start && end) {
         query = query.gte('data', start).lte('data', end);
     } else if (start) {
