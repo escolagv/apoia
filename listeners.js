@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 5. Filtros (Change) e Cascatas de Assiduidade
-    document.body.addEventListener('change', (e) => {
+    document.body.addEventListener('change', async (e) => {
         const id = e.target.id;
         if (id === 'aluno-ano-letivo-filter' || id === 'aluno-turma-filter') renderAlunosPanel();
         if (id === 'turma-ano-letivo-filter') renderTurmasPanel();
@@ -174,22 +174,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // FIX: CASCATA DE PROFESSORES POR ANO NO MODAL DE ASSIDUIDADE
+        // FIX: CASCATA HISTÓRICA DE PROFESSORES POR ANO NO MODAL DE ASSIDUIDADE
         if (id === 'assiduidade-prof-ano') {
             const ano = e.target.value;
             const profSel = document.getElementById('assiduidade-prof-professor');
-            profSel.innerHTML = '<option value="">Todos os Professores</option>';
+            profSel.innerHTML = '<option value="">Carregando...</option>';
             
             if (ano) {
-                // Filtramos os professores que têm turmas vinculadas ao ano selecionado
-                // Buscamos nas turmas do ano quais são os IDs dos professores vinculados
-                const turmasDoAno = turmasCache.filter(t => t.ano_letivo == ano);
-                // Como o vínculo professor_turma está em turmasCache (se carregado com inner/join), usamos:
-                // Se o seu cache for simples, pegamos todos os professores para não travar, mas aqui filtramos:
-                usuariosCache.filter(u => u.papel === 'professor').forEach(p => {
-                    profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`;
+                // LÓGICA DE GENTE GRANDE: Busca no banco quem eram os profs do ano X, ignorando status atual
+                const { data, error } = await db.from('professores_turmas')
+                    .select('professor_id, usuarios(nome)')
+                    .eq('turmas.ano_letivo', ano);
+                
+                if (error) {
+                    showToast('Erro ao buscar professores do ano.', true);
+                    return;
+                }
+
+                // Remove duplicados e popula o seletor
+                const uniqueProfs = [];
+                const seenIds = new Set();
+                data.forEach(d => {
+                    if (d.usuarios && !seenIds.has(d.professor_id)) {
+                        seenIds.add(d.professor_id);
+                        uniqueProfs.push({ id: d.professor_id, nome: d.usuarios.nome });
+                    }
+                });
+
+                profSel.innerHTML = '<option value="">Todos os Professores</option>';
+                uniqueProfs.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(p => {
+                    profSel.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
                 });
             } else {
+                // Se não tiver ano, mostra apenas os ativos do cache como fallback
+                profSel.innerHTML = '<option value="">Todos os Professores</option>';
                 usuariosCache.filter(u => u.papel === 'professor').forEach(p => {
                     profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`;
                 });
