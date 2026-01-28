@@ -3,56 +3,48 @@
 // ===============================================================
 
 function openDeleteConfirmModal(type, id) {
-    const deleteConfirmModal = document.getElementById('delete-confirm-modal');
-    const messageEl = document.getElementById('delete-confirm-message');
-    const confirmBtn = document.getElementById('confirm-delete-btn');
-    const checkbox = document.getElementById('delete-confirm-checkbox');
+    const modal = document.getElementById('delete-confirm-modal');
+    const msg = document.getElementById('delete-confirm-message');
+    const btn = document.getElementById('confirm-delete-btn');
+    const check = document.getElementById('delete-confirm-checkbox');
 
-    messageEl.textContent = `Você tem certeza que deseja excluir este ${type}? Esta ação é irreversível.`;
-    checkbox.checked = false;
-    confirmBtn.disabled = true;
-    confirmBtn.dataset.type = type;
-    confirmBtn.dataset.id = id;
-    deleteConfirmModal.classList.remove('hidden');
+    msg.textContent = `Tem certeza que deseja excluir este ${type}? Esta ação é irreversível.`;
+    check.checked = false;
+    btn.disabled = true;
+    btn.dataset.type = type;
+    btn.dataset.id = id;
+    modal.classList.remove('hidden');
 }
 
 async function handleConfirmDelete() {
-    const confirmBtn = document.getElementById('confirm-delete-btn');
-    const type = confirmBtn.dataset.type;
-    const id = confirmBtn.dataset.id;
-    let result;
+    const btn = document.getElementById('confirm-delete-btn');
+    const type = btn.dataset.type;
+    const id = btn.dataset.id;
+    let query;
 
     try {
-        if (type === 'aluno') {
-            const { error } = await db.from('alunos').delete().eq('id', id);
-            if (error && error.code === '23503') {
-                if (confirm("Aluno possui histórico. Deseja inativar o registro?")) {
-                    await db.from('alunos').update({ status: 'inativo' }).eq('id', id);
-                }
-            }
-        } else if (type === 'turma') {
-            result = await deleteTurma(id);
-        } else if (type === 'professor') {
-            result = await deleteProfessor(id);
-        } else if (type === 'evento') {
-            await safeQuery(db.from('eventos').delete().eq('id', id));
-        } else if (type === 'acompanhamento') {
-            await safeQuery(db.from('apoia_encaminhamentos').delete().eq('id', id));
-        }
+        if (type === 'aluno') query = db.from('alunos').delete().eq('id', id);
+        else if (type === 'turma') {
+            await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
+            query = db.from('turmas').delete().eq('id', id);
+        } else if (type === 'professor') query = db.from('usuarios').delete().eq('id', id);
+        else if (type === 'evento') query = db.from('eventos').delete().eq('id', id);
+        else if (type === 'acompanhamento') query = db.from('apoia_encaminhamentos').delete().eq('id', id);
 
-        showToast('Excluído com sucesso!');
+        const { error } = await safeQuery(query);
+        if (error) throw error;
+
+        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} excluído com sucesso!`);
         closeAllModals();
         await loadAdminData();
         
-        // Atualiza a tela visível
+        // Refresh da tela atual
         const active = document.querySelector('.admin-panel:not(.hidden)');
         if (active.id === 'admin-alunos-panel') renderAlunosPanel();
         if (active.id === 'admin-turmas-panel') renderTurmasPanel();
         if (active.id === 'admin-professores-panel') renderProfessoresPanel();
-        if (active.id === 'admin-apoia-panel') renderApoiaPanel();
-        if (active.id === 'admin-calendario-panel') renderCalendarioPanel();
 
     } catch (err) {
-        showToast("Erro: " + err.message, true);
+        showToast(`Erro ao excluir: ${err.message}`, true);
     }
 }
