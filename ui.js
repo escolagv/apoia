@@ -58,6 +58,7 @@ async function handleAuthChange(event, session) {
         }
         resetInactivityTimer();
     } catch (err) {
+        showToast('Erro ao carregar seu perfil.', true);
         showView('login-view');
     }
 }
