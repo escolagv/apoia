@@ -230,12 +230,35 @@ async function loadChamada() {
 
 async function saveChamada() {
     const salvarChamadaBtn = document.getElementById('salvar-chamada-btn');
-    const listaAlunosContainer = document.getElementById('chamada-lista-alunos');
-    const turmaSelect = document.getElementById('professor-turma-select');
     const dataSelect = document.getElementById('professor-data-select');
+
+    // NOVO: BLOQUEIO DE CHAMADA EM FINS DE SEMANA E CALENDÁRIO
+    const dataChamadaStr = dataSelect.value;
+    const dataObj = new Date(dataChamadaStr + 'T00:00:00');
+    const diaSemana = dataObj.getDay();
+
+    if (diaSemana === 0 || diaSemana === 6) {
+        showToast('Não é permitido realizar chamadas nos fins de semana.', true);
+        return;
+    }
+
+    const { data: eventosConflito } = await safeQuery(db.from('eventos').select('*'));
+    const dataProibida = eventosConflito.find(e => {
+        const inicio = e.data;
+        const fim = e.data_fim || e.data;
+        return dataChamadaStr >= inicio && dataChamadaStr <= fim;
+    });
+
+    if (dataProibida) {
+        showToast(`Chamada bloqueada: Data registrada no calendário como "${dataProibida.descricao}".`, true);
+        return;
+    }
 
     salvarChamadaBtn.disabled = true;
     salvarChamadaBtn.innerHTML = '<div class="loader mx-auto"></div>';
+    
+    const listaAlunosContainer = document.getElementById('chamada-lista-alunos');
+    const turmaSelect = document.getElementById('professor-turma-select');
     const registros = Array.from(listaAlunosContainer.querySelectorAll('[data-aluno-id]')).map(row => {
         const status = row.querySelector('.status-radio:checked').value;
         let justificativa = null;
@@ -246,20 +269,16 @@ async function saveChamada() {
         return {
             aluno_id: parseInt(row.dataset.alunoId),
             turma_id: parseInt(turmaSelect.value),
-            data: dataSelect.value,
+            data: dataChamadaStr,
             status: status,
             justificativa: justificativa,
             registrado_por_uid: currentUser.id
         };
     });
+
     const { error } = await safeQuery(db.from('presencas').upsert(registros, { onConflict: 'aluno_id, data' }));
     if (error) {
-        console.error("Erro detalhado ao salvar chamada:", error);
-        let userMessage = 'Erro ao salvar chamada: ' + error.message;
-        if (error.message.includes('security policy')) {
-            userMessage = "Falha de permissão ao salvar. Verifique no painel de admin se este professor está corretamente associado à turma.";
-        }
-        showToast(userMessage, true);
+        showToast('Erro ao salvar chamada: ' + error.message, true);
     } else {
         showToast('Chamada salva com sucesso!');
     }
@@ -437,7 +456,7 @@ async function renderDashboardCalendar() {
     calendarGrid.innerHTML = html;
 }
 
-// FIX: SEPARAÇÃO DA CONSULTA PARA EVITAR ERRO 400 NO BANCO
+// FIX: ESTRATÉGIA DE SEPARAÇÃO PARA EVITAR ERRO 400
 async function renderAlunosPanel(options = {}) {
     const alunosTableBody = document.getElementById('alunos-table-body');
     const anoLetivoFilter = document.getElementById('aluno-ano-letivo-filter');
@@ -469,7 +488,6 @@ async function renderAlunosPanel(options = {}) {
     
     let studentsData = [];
 
-    // LÓGICA DE SEPARAÇÃO CIRÚRGICA
     if (currentAnoVal && parseInt(currentAnoVal) >= 2026) {
         const [resSemTurma, resComTurma] = await Promise.all([
             safeQuery(db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`).is('turma_id', null)),
@@ -675,9 +693,9 @@ async function handleAcompanhamentoFormSubmit(e) {
 
 async function handleGerarApoiaRelatorio() {
     const tableBody = document.getElementById('apoia-relatorio-table-body');
-    const imprimirApoiaRelatorioBtn = document.getElementById('imprimir-apoia-relatorio-btn');
+    const imprimirRelatorioBtn = document.getElementById('imprimir-apoia-relatorio-btn');
     tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Gerando relatório...</td></tr>';
-    if (imprimirApoiaRelatorioBtn) imprimirApoiaRelatorioBtn.classList.add('hidden');
+    if (imprimirRelatorioBtn) imprimirRelatorioBtn.classList.add('hidden');
     
     let queryBuilder = db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('data_encaminhamento');
     const dataInicio = document.getElementById('apoia-relatorio-data-inicio').value;
@@ -703,7 +721,7 @@ async function handleGerarApoiaRelatorio() {
             <td class="p-3">${item.status}</td>
             <td class="p-3">${item.observacoes || ''}</td>
         </tr>`).join('');
-    if (imprimirApoiaRelatorioBtn) imprimirApoiaRelatorioBtn.classList.remove('hidden');
+    if (imprimirRelatorioBtn) imprimirRelatorioBtn.classList.remove('hidden');
 }
 
 async function renderProfessoresPanel() {
@@ -1078,30 +1096,6 @@ async function openEventoModal(editId = null) {
     eventoModal.classList.remove('hidden');
 }
 
-async function handleEventoFormSubmit(e) {
-    e.preventDefault();
-    const id = document.getElementById('evento-id').value;
-    const eventoData = {
-        descricao: document.getElementById('evento-descricao').value,
-        data: document.getElementById('evento-data-inicio').value,
-        data_fim: document.getElementById('evento-data-fim').value || null
-    };
-    if (!eventoData.data) {
-        showToast('A data de início é obrigatória.', true);
-        return;
-    }
-    const queryBuilder = id ? db.from('eventos').update(eventoData).eq('id', id) : db.from('eventos').insert(eventoData);
-    const { error } = await safeQuery(queryBuilder);
-    if (error) {
-        showToast('Erro ao salvar o evento: ' + error.message, true);
-    } else {
-        showToast('Evento salvo com sucesso!');
-        closeModal(document.getElementById('evento-modal'));
-        await renderCalendarioPanel();
-        await renderDashboardCalendar();
-    }
-}
-
 function renderAnoLetivoPanel() {
 }
 
@@ -1351,10 +1345,9 @@ function openAssiduidadeModal() {
     const alunoSel = document.getElementById('assiduidade-aluno-aluno');
     const anoSelTurma = document.getElementById('assiduidade-turma-ano');
     const turmaSelTurma = document.getElementById('assiduidade-turma-turma');
-    const anoSelProf = document.getElementById('assiduidade-prof-ano');
+    const anoSelProf = document.getElementById('assiduidade-prof-ano'); 
     const profSel = document.getElementById('assiduidade-prof-professor');
     
-    // FIX: ADICIONADAS VERIFICAÇÕES DE NULL PARA EVITAR TYPEERROR
     if (anoSelAluno) {
         anoSelAluno.innerHTML = '<option value="">Todos os Anos</option>';
         anosLetivosCache.forEach(ano => anoSelAluno.innerHTML += `<option value="${ano}">${ano}</option>`);
@@ -1604,6 +1597,15 @@ document.addEventListener('DOMContentLoaded', () => {
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
     db.auth.onAuthStateChange((event, session) => { handleAuthChange(event, session); });
 
+    // NOVO: MÁSCARA DE TELEFONE AUTOMÁTICA
+    const phoneInput = document.getElementById('aluno-telefone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', (e) => {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+    }
+
     const setupSupportLinks = () => {
         const numero = "5548991004780";
         const mensagem = "Olá! Mensagem enviada do Sistema de chamadas da EEB Getúlio Vargas. Preciso de suporte.";
@@ -1799,7 +1801,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closest('#add-evento-btn')) openEventoModal();
         if (closest('.edit-evento-btn')) openEventoModal(closest('.edit-evento-btn').dataset.id);
         
-        // FIX: BOTÃO ADICIONAR ALUNO MANUALMENTE (APOIA) REPARADO
         if (closest('#add-acompanhamento-btn')) {
             openAcompanhamentoModal();
         }
@@ -1916,9 +1917,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // FIX: ATIVAÇÃO DO BOTÃO DE EXCLUIR REPARADA
     const deleteCheckbox = document.getElementById('delete-confirm-checkbox');
-    if(deleteCheckbox) deleteCheckbox.addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
+    if(deleteCheckbox) {
+        deleteCheckbox.addEventListener('change', (e) => { 
+            document.getElementById('confirm-delete-btn').disabled = !e.target.checked; 
+        });
+    }
     
     document.body.addEventListener('change', async (e) => {
         if (e.target.matches('#turma-ano-letivo-filter')) renderTurmasPanel();
@@ -1951,7 +1955,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
             }
         } 
-        // FIX: CASCATA HISTÓRICA DE PROFESSORES (SEM ERRO 400)
         else if (e.target.matches('#assiduidade-prof-ano')) {
             const ano = e.target.value;
             const profSel = document.getElementById('assiduidade-prof-professor');
