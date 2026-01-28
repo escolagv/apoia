@@ -354,7 +354,7 @@ async function markAllNotificationsAsRead() {
 async function loadAdminData() {
     const { data: turmas } = await safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo'));
     turmasCache = (turmas || []).sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true }));
-    const { data: users } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, papel, email_confirmado').in('papel', ['professor', 'admin']).eq('status', 'ativo'));
+    const { data: users } = await safeQuery(db.from('usuarios').select('id, user_uid, nome, papel, email_confirmado, status').in('papel', ['professor', 'admin']));
     usuariosCache = (users || []).sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
     const { data: allAlunos } = await safeQuery(db.from('alunos').select('id, nome_completo, turma_id').eq('status', 'ativo'));
     alunosCache = (allAlunos || []).sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
@@ -437,6 +437,7 @@ async function renderDashboardCalendar() {
     calendarGrid.innerHTML = html;
 }
 
+// FIX: ESTRATÉGIA DE SEPARAÇÃO PARA EVITAR ERRO 400
 async function renderAlunosPanel(options = {}) {
     const alunosTableBody = document.getElementById('alunos-table-body');
     const anoLetivoFilter = document.getElementById('aluno-ano-letivo-filter');
@@ -466,51 +467,52 @@ async function renderAlunosPanel(options = {}) {
 
     alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Carregando...</td></tr>';
     
-    // Lógica inteligente de filtro por ano
-    let queryBuilder = db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`);
-    
-    if (searchTerm) {
-        queryBuilder = queryBuilder.or(`nome_completo.ilike.%${searchTerm}%,matricula.ilike.%${searchTerm}%,nome_responsavel.ilike.%${searchTerm}%`);
+    let studentsData = [];
+
+    // SEPARAÇÃO DA LÓGICA DE CONSULTA PARA EVITAR CONFLITO DE TABELAS NO "OR"
+    if (currentAnoVal && parseInt(currentAnoVal) >= 2026) {
+        const [resSemTurma, resComTurma] = await Promise.all([
+            safeQuery(db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`).is('turma_id', null)),
+            safeQuery(db.from('alunos').select(`*, turmas!inner ( nome_turma, ano_letivo )`).eq('turmas.ano_letivo', currentAnoVal))
+        ]);
+        studentsData = [...(resSemTurma.data || []), ...(resComTurma.data || [])];
+    } else if (currentAnoVal) {
+        const { data } = await safeQuery(db.from('alunos').select(`*, turmas!inner ( nome_turma, ano_letivo )`).eq('turmas.ano_letivo', currentAnoVal));
+        studentsData = data || [];
+    } else {
+        const { data } = await safeQuery(db.from('alunos').select(`*, turmas ( nome_turma, ano_letivo )`));
+        studentsData = data || [];
     }
 
-    if (currentAnoVal) {
-        if (parseInt(currentAnoVal) >= 2026) {
-            // Em 2026+ mostramos quem é da turma OU quem está sem turma (novos)
-            queryBuilder = queryBuilder.or(`turma_id.is.null,turmas.ano_letivo.eq.${currentAnoVal}`);
-        } else {
-            // Anos anteriores mostramos apenas quem tinha turma naquele ano
-            queryBuilder = queryBuilder.eq('turmas.ano_letivo', currentAnoVal);
-        }
+    // Filtro manual de busca para manter performance e evitar erros de lógica complexa no banco
+    if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        studentsData = studentsData.filter(a => 
+            a.nome_completo?.toLowerCase().includes(term) || 
+            a.matricula?.toLowerCase().includes(term) || 
+            a.nome_responsavel?.toLowerCase().includes(term)
+        );
     }
 
     if (alunoTurmaFilter.value) {
-        queryBuilder = queryBuilder.eq('turma_id', alunoTurmaFilter.value);
+        studentsData = studentsData.filter(a => a.turma_id == alunoTurmaFilter.value);
     }
 
-    const { data, error } = await safeQuery(queryBuilder.order('nome_completo'));
-    
-    if (error) {
-        alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
-        return;
-    }
+    // Limpeza de duplicados e ordenação
+    const uniqueStudents = Array.from(new Map(studentsData.map(s => [s.id, s])).values());
+    uniqueStudents.sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
 
-    if (!data || data.length === 0) {
+    if (uniqueStudents.length === 0) {
         alunosTableBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center">Nenhum aluno encontrado.</td></tr>';
         return;
     }
 
-    alunosTableBody.innerHTML = data.map(aluno => {
-        let statusClass = 'bg-gray-100 text-gray-800';
-        if (aluno.status === 'ativo') statusClass = 'bg-green-100 text-green-800';
-        else if (aluno.status === 'inativo') statusClass = 'bg-red-100 text-red-800';
-        else if (aluno.status === 'transferido') statusClass = 'bg-blue-100 text-blue-800';
-
-        // Desativa edição se for ano passado (exemplo: 2025)
+    alunosTableBody.innerHTML = uniqueStudents.map(aluno => {
+        let statusClass = aluno.status === 'ativo' ? 'bg-green-100 text-green-800' : aluno.status === 'inativo' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800';
         const isHistory = currentAnoVal && parseInt(currentAnoVal) < 2026;
         const actionBtns = isHistory 
             ? `<button class="text-indigo-600 hover:underline historico-aluno-btn" data-id="${aluno.id}">Histórico</button>`
-            : `<button class="text-blue-600 hover:underline edit-aluno-btn" data-id="${aluno.id}">Editar</button>
-               <button class="text-indigo-600 hover:underline ml-2 historico-aluno-btn" data-id="${aluno.id}">Histórico</button>`;
+            : `<button class="text-blue-600 hover:underline edit-aluno-btn" data-id="${aluno.id}">Editar</button><button class="text-indigo-600 hover:underline ml-2 historico-aluno-btn" data-id="${aluno.id}">Histórico</button>`;
 
         return `
         <tr class="border-b">
@@ -531,7 +533,6 @@ async function openAlunoModal(editId = null) {
     const alunoModal = document.getElementById('aluno-modal');
     alunoForm.reset();
     
-    // Mostra turmas apenas de 2026 em diante para novos cadastros
     alunoTurmaSelect.innerHTML = '<option value="">Selecione...</option>';
     turmasCache.filter(t => t.ano_letivo >= 2026).forEach(t => {
         alunoTurmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma} (${t.ano_letivo})</option>`;
@@ -620,6 +621,7 @@ function renderApoiaPagination(totalPages, currentPage) {
         pageButton.textContent = i;
         pageButton.dataset.page = i;
         pageButton.className = `px-3 py-1 rounded-md text-sm font-medium ${ i === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-200'}`;
+        pageButton.onclick = () => renderApoiaPanel(i);
         paginationContainer.appendChild(pageButton);
     }
 }
@@ -677,7 +679,7 @@ async function handleGerarApoiaRelatorio() {
     const tableBody = document.getElementById('apoia-relatorio-table-body');
     const imprimirApoiaRelatorioBtn = document.getElementById('imprimir-apoia-relatorio-btn');
     tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Gerando relatório...</td></tr>';
-    imprimirApoiaRelatorioBtn.classList.add('hidden');
+    imprimirRelatorioBtn.classList.add('hidden');
     let queryBuilder = db.from('apoia_encaminhamentos').select(`*, alunos(nome_completo)`).order('data_encaminhamento');
     const dataInicio = document.getElementById('apoia-relatorio-data-inicio').value;
     const dataFim = document.getElementById('apoia-relatorio-data-fim').value;
@@ -817,7 +819,6 @@ async function renderTurmasPanel() {
     const turmasTableBody = document.getElementById('turmas-table-body');
     const anoLetivoFilter = document.getElementById('turma-ano-letivo-filter');
     
-    // Preservar valor do filtro se possível
     const savedFilter = anoLetivoFilter.value;
     anoLetivoFilter.innerHTML = '<option value="">Todos os Anos</option>';
     anosLetivosCache.forEach(ano => anoLetivoFilter.innerHTML += `<option value="${ano}">${ano}</option>`);
@@ -862,7 +863,6 @@ async function openTurmaModal(editId = null) {
     turmaForm.reset();
     turmaProfessoresList.innerHTML = '';
     
-    // Desbloquear campos para nova turma
     inputNome.disabled = false;
     inputAno.disabled = false;
     inputNome.classList.remove('bg-gray-100');
@@ -878,7 +878,6 @@ async function openTurmaModal(editId = null) {
         const { data } = await safeQuery(db.from('turmas').select('*').eq('id', editId).single());
         if (!data) { showToast('Turma não encontrada.', true); return; }
         
-        // Bloquear campos críticos na edição (Imutabilidade)
         inputNome.disabled = true;
         inputAno.disabled = true;
         inputNome.classList.add('bg-gray-100');
@@ -913,12 +912,10 @@ async function handleTurmaFormSubmit(e) {
     const selectedProfIds = Array.from(document.getElementById('turma-professores-list').querySelectorAll('input:checked')).map(input => input.value);
     
     if (id) {
-        // Na edição, alteramos apenas os professores (devido à imutabilidade)
         await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
         const rels = selectedProfIds.map(profId => ({ turma_id: id, professor_id: profId }));
         if (rels.length > 0) await safeQuery(db.from('professores_turmas').insert(rels));
     } else {
-        // Cadastro de nova turma
         const { data, error: insertError } = await safeQuery(db.from('turmas').insert({ nome_turma: nome, ano_letivo: ano_letivo }).select().single());
         if (insertError) { showToast('Erro ao criar turma.', true); return; }
         const newTurmaId = data.id;
@@ -944,19 +941,6 @@ async function renderRelatoriosPanel() {
     
     profFilter.innerHTML = '<option value="">Todos</option>';
     usuariosCache.forEach(u => profFilter.innerHTML += `<option value="${u.user_uid}">${u.nome} (${u.papel})</option>`);
-
-    // Listener para o filtro cascata Turma -> Aluno
-    turmaFilter.addEventListener('change', () => {
-        const selectedTurmaId = turmaFilter.value;
-        alunoFilter.innerHTML = '<option value="">Todos</option>';
-        if (selectedTurmaId) {
-            alunosCache.filter(a => a.turma_id == selectedTurmaId).forEach(a => {
-                alunoFilter.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`;
-            });
-        } else {
-            alunosCache.forEach(a => alunoFilter.innerHTML += `<option value="${a.id}">${a.nome_completo}</option>`);
-        }
-    });
 }
 
 async function handleGerarRelatorio() {
@@ -1120,7 +1104,6 @@ async function handleEventoFormSubmit(e) {
 }
 
 function renderAnoLetivoPanel() {
-    // A lógica está nos botões de clique
 }
 
 async function openPromoverTurmasModal() {
@@ -1245,14 +1228,11 @@ async function handleConfirmDelete() {
     const confirmBtn = document.getElementById('confirm-delete-btn');
     const type = confirmBtn.dataset.type;
     const id = confirmBtn.dataset.id;
-    let queryBuilder;
 
     try {
         if (type === 'aluno') {
-            // Tenta deletar permanentemente
             const { error: delError } = await db.from('alunos').delete().eq('id', id);
             if (delError && delError.code === '23503') {
-                // Se falhar por FK, pergunta se quer inativar
                 if (confirm("Este aluno possui histórico e não pode ser apagado. Deseja marcá-lo como INATIVO?")) {
                     await db.from('alunos').update({ status: 'inativo' }).eq('id', id);
                     showToast('Aluno inativado com sucesso.');
@@ -1262,14 +1242,12 @@ async function handleConfirmDelete() {
             }
         } 
         else if (type === 'turma') {
-            // Limpa dependências antes de apagar a turma
             await safeQuery(db.from('professores_turmas').delete().eq('turma_id', id));
             await db.from('alunos').update({ turma_id: null }).eq('turma_id', id);
             await safeQuery(db.from('turmas').delete().eq('id', id));
             showToast('Turma excluída com sucesso.');
         } 
         else if (type === 'professor') {
-            // Busca o user_uid primeiro para limpar as associações
             const { data: prof } = await db.from('usuarios').select('user_uid').eq('id', id).single();
             if (prof) {
                 await safeQuery(db.from('professores_turmas').delete().eq('professor_id', prof.user_uid));
@@ -1286,7 +1264,6 @@ async function handleConfirmDelete() {
             showToast('Registro do APOIA excluído.');
         }
 
-        // Atualiza as views após qualquer exclusão
         await loadAdminData();
         if (type === 'aluno') await renderAlunosPanel();
         if (type === 'turma') await renderTurmasPanel();
@@ -1375,6 +1352,7 @@ function openAssiduidadeModal() {
     const alunoSel = document.getElementById('assiduidade-aluno-aluno');
     const anoSelTurma = document.getElementById('assiduidade-turma-ano');
     const turmaSelTurma = document.getElementById('assiduidade-turma-turma');
+    const anoSelProf = document.getElementById('assiduidade-prof-ano'); // NOVO
     const profSel = document.getElementById('assiduidade-prof-professor');
     
     anoSelAluno.innerHTML = '<option value="">Todos os Anos</option>';
@@ -1385,6 +1363,10 @@ function openAssiduidadeModal() {
     anosLetivosCache.forEach(ano => anoSelTurma.innerHTML += `<option value="${ano}">${ano}</option>`);
     turmaSelTurma.innerHTML = '<option value="">Todas as Turmas</option>';
 
+    // FIX: POPULAR ANO LETIVO DOS PROFESSORES
+    anoSelProf.innerHTML = '<option value="">Todos os Anos</option>';
+    anosLetivosCache.forEach(ano => anoSelProf.innerHTML += `<option value="${ano}">${ano}</option>`);
+
     profSel.innerHTML = '<option value="">Todos os Professores</option>';
     usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
 
@@ -1392,8 +1374,10 @@ function openAssiduidadeModal() {
     if (anosLetivosCache.some(y => y == currentYear)) {
         anoSelAluno.value = currentYear;
         anoSelTurma.value = currentYear;
+        anoSelProf.value = currentYear; // NOVO
         anoSelAluno.dispatchEvent(new Event('change', { bubbles: true }));
         anoSelTurma.dispatchEvent(new Event('change', { bubbles: true }));
+        anoSelProf.dispatchEvent(new Event('change', { bubbles: true })); // NOVO
     }
 
     document.getElementById('assiduidade-aluno-data-inicio').value = '';
@@ -1736,7 +1720,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorEl.textContent = 'Erro ao atualizar a senha: ' + error.message;
             } else {
                 showToast('Senha atualizada com sucesso! Por favor, faça o login com sua nova senha.');
-                closeModal(document.getElementById('reset-password-modal'));
+                closeAllModals();
                 await signOutUser();
             }
         }
@@ -1776,7 +1760,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (targetPanelId === 'admin-turmas-panel') renderTurmasPanel();
                 else if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
                 else if (targetPanelId === 'admin-calendario-panel') renderCalendarioPanel();
-                else if (targetPanelId === 'admin-ano-letivo-panel') renderAnoLetivoPanel();
                 else if (targetPanelId === 'admin-relatorios-panel') {
                     renderRelatoriosPanel();
                     document.getElementById('relatorio-data-inicio').value = '';
@@ -1930,10 +1913,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // FIX: ATIVAÇÃO DO BOTÃO DE EXCLUIR
     const deleteCheckbox = document.getElementById('delete-confirm-checkbox');
-    if(deleteCheckbox) deleteCheckbox.addEventListener('change', (e) => { document.getElementById('confirm-delete-btn').disabled = !e.target.checked; });
+    if(deleteCheckbox) {
+        deleteCheckbox.addEventListener('change', (e) => { 
+            document.getElementById('confirm-delete-btn').disabled = !e.target.checked; 
+        });
+    }
     
-    document.body.addEventListener('change', (e) => {
+    document.body.addEventListener('change', async (e) => {
         if (e.target.matches('#turma-ano-letivo-filter')) renderTurmasPanel();
         else if (e.target.matches('#aluno-ano-letivo-filter')) {
             const alunoTurmaFilter = document.getElementById('aluno-turma-filter');
@@ -1962,6 +1950,32 @@ document.addEventListener('DOMContentLoaded', () => {
             if (ano) {
                 turmasCache.filter(t => t.ano_letivo == ano)
                     .forEach(t => turmaSel.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+            }
+        } 
+        // FIX: CASCATA HISTÓRICA DE PROFESSORES (BUSCA INATIVOS DO PASSADO)
+        else if (e.target.matches('#assiduidade-prof-ano')) {
+            const ano = e.target.value;
+            const profSel = document.getElementById('assiduidade-prof-professor');
+            profSel.innerHTML = '<option value="">Carregando...</option>';
+            
+            if (ano) {
+                const turmasIds = turmasCache.filter(t => String(t.ano_letivo) === String(ano)).map(t => t.id);
+                if (turmasIds.length > 0) {
+                    const { data } = await db.from('professores_turmas').select('professor_id, usuarios(nome)').in('turma_id', turmasIds);
+                    const uniqueProfs = [];
+                    const seen = new Set();
+                    data?.forEach(d => {
+                        if (d.usuarios && !seen.has(d.professor_id)) {
+                            seen.add(d.professor_id);
+                            uniqueProfs.push({ id: d.professor_id, nome: d.usuarios.nome });
+                        }
+                    });
+                    profSel.innerHTML = '<option value="">Todos os Professores</option>';
+                    uniqueProfs.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(p => profSel.innerHTML += `<option value="${p.id}">${p.nome}</option>`);
+                } else { profSel.innerHTML = '<option value="">Nenhum professor vinculado</option>'; }
+            } else {
+                profSel.innerHTML = '<option value="">Todos os Professores</option>';
+                usuariosCache.filter(u => u.papel === 'professor').forEach(p => profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`);
             }
         }
     });
