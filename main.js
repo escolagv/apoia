@@ -1,5 +1,5 @@
 // ===============================================================
-// main.js - CONFIGURAÇÃO, ESTADO GLOBAL E MOTOR
+// main.js - MOTOR, CONFIGURAÇÃO E ESTADO GLOBAL
 // ===============================================================
 const { createClient } = supabase;
 const SUPABASE_URL = 'https://agivmrhwytnfprsjsvpy.supabase.co';
@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Estado Global (Cópia fiel do original)
+// Estado da aplicação (Cópia fiel do seu original)
 let currentUser = null;
 let turmasCache = [];
 let usuariosCache = [];
@@ -20,7 +20,6 @@ let dashboardSelectedDate;
 let inactivityTimer;
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
-// Utilitários de Data
 function getLocalDateString() {
     const date = new Date();
     const year = date.getFullYear();
@@ -29,7 +28,6 @@ function getLocalDateString() {
     return `${year}-${month}-${day}`;
 }
 
-// Executor Seguro de Queries (Tratamento de JWT e Erros)
 async function safeQuery(queryBuilder) {
     const { data, error, count } = await queryBuilder;
     if (error) {
@@ -43,7 +41,6 @@ async function safeQuery(queryBuilder) {
     return { data, error, count };
 }
 
-// Toast Notifications
 function showToast(message, isError = false) {
     const toastContainer = document.getElementById('toast-container');
     const toast = document.createElement('div');
@@ -56,7 +53,6 @@ function showToast(message, isError = false) {
     }, 5000);
 }
 
-// Gestão de Sessão
 function resetInactivityTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(() => {
@@ -68,7 +64,6 @@ async function signOutUser(message) {
     resetLoginFormState();
     if (message) showToast(message, true);
     await db.auth.signOut();
-    window.location.reload();
 }
 
 function resetApplicationState() {
@@ -94,7 +89,6 @@ function resetLoginFormState() {
     }
 }
 
-// Carga de Dados (Data Loaders)
 async function loadAdminData() {
     const { data: turmas } = await safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo'));
     turmasCache = (turmas || []).sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true }));
@@ -106,20 +100,8 @@ async function loadAdminData() {
     anosLetivosCache = anos ? anos.sort((a, b) => b - a) : [];
 }
 
-async function loadProfessorData(professorUid) {
-    const turmaSelect = document.getElementById('professor-turma-select');
-    const { data: rels } = await safeQuery(db.from('professores_turmas').select('turma_id').eq('professor_id', professorUid));
-    if (!rels || rels.length === 0) return;
-    const turmaIds = rels.map(r => r.turma_id);
-    const { data } = await safeQuery(db.from('turmas').select('id, nome_turma').in('id', turmaIds));
-    if (!data) return;
-    turmaSelect.innerHTML = '<option value="">Selecione uma turma</option>';
-    data.sort((a, b) => a.nome_turma.localeCompare(b.nome_turma, undefined, { numeric: true })).forEach(t => turmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
-}
-
-// Inicialização Global
 document.addEventListener('DOMContentLoaded', () => {
     dashboardSelectedDate = getLocalDateString();
     ['click', 'mousemove', 'keypress', 'scroll'].forEach(event => document.addEventListener(event, resetInactivityTimer));
-    db.auth.onAuthStateChange(handleAuthChange);
+    db.auth.onAuthStateChange((event, session) => { handleAuthChange(event, session); });
 });
