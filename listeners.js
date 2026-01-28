@@ -35,11 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const panelId = navLink.dataset.target;
             switchAdminPanel(panelId);
+            
+            // Correção de variáveis para evitar ReferenceError
             if (panelId === 'admin-dashboard-panel') renderDashboardPanel();
             else if (panelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
             else if (panelId === 'admin-professores-panel') renderProfessoresPanel();
             else if (panelId === 'admin-turmas-panel') renderTurmasPanel();
-            else if (targetPanelId === 'admin-apoia-panel') renderApoiaPanel();
+            else if (panelId === 'admin-apoia-panel') renderApoiaPanel();
             else if (panelId === 'admin-calendario-panel') renderCalendarioPanel();
             else if (panelId === 'admin-relatorios-panel') renderRelatoriosPanel();
             else if (panelId === 'admin-config-panel') renderConfigPanel();
@@ -57,8 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('relatorio-status-select').value = (type === 'faltas' ? 'falta' : 'presente');
                     handleGerarRelatorio();
                 }, 100);
-            } else if (type === 'assiduidade') { openAssiduidadeModal(); }
-            else if (type === 'acompanhamento') { switchAdminPanel('admin-apoia-panel'); }
+            } else if (type === 'assiduidade') { 
+                openAssiduidadeModal(); 
+            } else if (type === 'acompanhamento') { 
+                switchAdminPanel('admin-apoia-panel'); 
+                renderApoiaPanel();
+            }
         }
 
         // Alunos / Profs / Turmas / APOIA
@@ -170,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 6. Troca de Abas no Modal de Assiduidade
+    // 6. Troca de Abas no Modal de Assiduidade (CORRIGIDO PARA PROFESSORES)
     const assiduidadeTabs = document.getElementById('assiduidade-tabs');
     if (assiduidadeTabs) {
         assiduidadeTabs.addEventListener('click', (e) => {
@@ -181,18 +187,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // Remove destaque de todas as abas
             document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
                 a.removeAttribute('aria-current');
-                a.classList.replace('text-indigo-600', 'text-gray-500');
-                a.classList.replace('border-indigo-500', 'border-transparent');
+                a.className = "whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent";
             });
 
             // Adiciona destaque na clicada
             link.setAttribute('aria-current', 'page');
-            link.classList.replace('text-gray-500', 'text-indigo-600');
-            link.classList.replace('border-transparent', 'border-indigo-500');
+            link.className = "whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500";
 
             // Troca o painel visível
             document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
-            document.getElementById(link.dataset.target).classList.remove('hidden');
+            const targetPanel = document.getElementById(link.dataset.target);
+            if (targetPanel) targetPanel.classList.remove('hidden');
         });
     }
 
