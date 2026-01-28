@@ -174,24 +174,33 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // FIX: CASCATA HISTÓRICA DE PROFESSORES POR ANO NO MODAL DE ASSIDUIDADE
+        // FIX DEFINITIVO: CASCATA HISTÓRICA DE PROFESSORES (SEM ERRO 400)
         if (id === 'assiduidade-prof-ano') {
             const ano = e.target.value;
             const profSel = document.getElementById('assiduidade-prof-professor');
             profSel.innerHTML = '<option value="">Carregando...</option>';
             
             if (ano) {
-                // LÓGICA DE GENTE GRANDE: Busca no banco quem eram os profs do ano X, ignorando status atual
-                const { data, error } = await db.from('professores_turmas')
-                    .select('professor_id, usuarios(nome)')
-                    .eq('turmas.ano_letivo', ano);
+                // Passo 1: Pegar IDs das turmas do ano (do cache local para ser rápido)
+                const turmasIds = turmasCache.filter(t => String(t.ano_letivo) === String(ano)).map(t => t.id);
                 
-                if (error) {
-                    showToast('Erro ao buscar professores do ano.', true);
+                if (turmasIds.length === 0) {
+                    profSel.innerHTML = '<option value="">Nenhum professor vinculado</option>';
                     return;
                 }
 
-                // Remove duplicados e popula o seletor
+                // Passo 2: Buscar na tabela de junção usando os IDs das turmas (evita o filtro complexo que deu erro 400)
+                const { data, error } = await db.from('professores_turmas')
+                    .select('professor_id, usuarios(nome)')
+                    .in('turma_id', turmasIds);
+                
+                if (error) {
+                    console.error("Erro ao buscar professores históricos:", error);
+                    profSel.innerHTML = '<option value="">Erro ao carregar</option>';
+                    return;
+                }
+
+                // Passo 3: Limpar duplicados e popular
                 const uniqueProfs = [];
                 const seenIds = new Set();
                 data.forEach(d => {
@@ -206,7 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     profSel.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
                 });
             } else {
-                // Se não tiver ano, mostra apenas os ativos do cache como fallback
                 profSel.innerHTML = '<option value="">Todos os Professores</option>';
                 usuariosCache.filter(u => u.papel === 'professor').forEach(p => {
                     profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`;
