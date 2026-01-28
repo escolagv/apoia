@@ -36,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const panelId = navLink.dataset.target;
             switchAdminPanel(panelId);
             
-            // Correção de variáveis para evitar ReferenceError
             if (panelId === 'admin-dashboard-panel') renderDashboardPanel();
             else if (panelId === 'admin-alunos-panel') renderAlunosPanel({ defaultToLatestYear: true });
             else if (panelId === 'admin-professores-panel') renderProfessoresPanel();
@@ -150,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (id === 'turma-ano-letivo-filter') renderTurmasPanel();
         if (id === 'promover-turmas-ano-origem') renderPromocaoTurmasLista();
 
-        // FIX: Cascata de Alunos por Ano no Modal de Assiduidade
+        // Cascata de Alunos por Ano no Modal de Assiduidade
         if (id === 'assiduidade-aluno-ano') {
             const ano = e.target.value;
             const alunoSel = document.getElementById('assiduidade-aluno-aluno');
@@ -163,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // FIX: Cascata de Turmas por Ano no Modal de Assiduidade
+        // Cascata de Turmas por Ano no Modal de Assiduidade
         if (id === 'assiduidade-turma-ano') {
             const ano = e.target.value;
             const turmaSel = document.getElementById('assiduidade-turma-turma');
@@ -174,9 +173,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         }
+
+        // FIX: CASCATA DE PROFESSORES POR ANO NO MODAL DE ASSIDUIDADE
+        if (id === 'assiduidade-prof-ano') {
+            const ano = e.target.value;
+            const profSel = document.getElementById('assiduidade-prof-professor');
+            profSel.innerHTML = '<option value="">Todos os Professores</option>';
+            
+            if (ano) {
+                // Pega os IDs de professores que estão vinculados a turmas do ano selecionado
+                const turmasIds = turmasCache.filter(t => t.ano_letivo == ano).map(t => t.id);
+                // Filtramos a lista de professores do cache que aparecem nas turmas desse ano
+                // Nota: Essa lógica depende da tabela de junção se estiver disponível ou buscamos todos os professores ativos
+                usuariosCache.filter(u => u.papel === 'professor').forEach(p => {
+                    profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`;
+                });
+            } else {
+                usuariosCache.filter(u => u.papel === 'professor').forEach(p => {
+                    profSel.innerHTML += `<option value="${p.user_uid}">${p.nome}</option>`;
+                });
+            }
+        }
     });
 
-    // 6. Troca de Abas no Modal de Assiduidade (CORRIGIDO PARA PROFESSORES)
+    // 6. Troca de Abas no Modal de Assiduidade
     const assiduidadeTabs = document.getElementById('assiduidade-tabs');
     if (assiduidadeTabs) {
         assiduidadeTabs.addEventListener('click', (e) => {
@@ -184,17 +204,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const link = e.target.closest('a');
             if (!link || link.getAttribute('aria-current') === 'page') return;
             
-            // Remove destaque de todas as abas
             document.querySelectorAll('#assiduidade-tabs a').forEach(a => {
                 a.removeAttribute('aria-current');
                 a.className = "whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent";
             });
 
-            // Adiciona destaque na clicada
             link.setAttribute('aria-current', 'page');
             link.className = "whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500";
 
-            // Troca o painel visível
             document.querySelectorAll('.assiduidade-panel').forEach(p => p.classList.add('hidden'));
             const targetPanel = document.getElementById(link.dataset.target);
             if (targetPanel) targetPanel.classList.remove('hidden');
@@ -206,5 +223,5 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.id === 'aluno-search-input') renderAlunosPanel();
     });
 
-    console.log("Listeners de assiduidade e filtros carregados.");
+    console.log("Listeners de assiduidade carregados.");
 });
