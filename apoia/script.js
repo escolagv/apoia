@@ -383,7 +383,7 @@ async function loadAdminData() {
 async function renderDashboardPanel() {
     await loadDailySummary(dashboardSelectedDate);
     await renderDashboardCalendar();
-    const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true head: true head: true head: true head: true }).eq('status', 'Em andamento'));
+    const { count } = await safeQuery(db.from('apoia_encaminhamentos').select('*', { count: 'exact', head: true }).eq('status', 'Em andamento'));
     document.getElementById('dashboard-acompanhamento').textContent = count === null ? 'N/A' : count;
 }
 
