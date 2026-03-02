@@ -133,6 +133,25 @@ function Ensure-Command {
     return $true
 }
 
+function Update-AndroidVersion {
+    param(
+        [string]$GradlePath,
+        [string]$AppVersion
+    )
+    if (-not (Test-Path $GradlePath)) { return }
+    if ([string]::IsNullOrWhiteSpace($AppVersion)) { return }
+    $parts = $AppVersion -split '\.' | ForEach-Object { [int]($_) }
+    $major = if ($parts.Length -gt 0) { $parts[0] } else { 1 }
+    $minor = if ($parts.Length -gt 1) { $parts[1] } else { 0 }
+    $patch = if ($parts.Length -gt 2) { $parts[2] } else { 0 }
+    $versionCode = ($major * 10000) + ($minor * 100) + $patch
+    $content = Get-Content $GradlePath -Raw
+    $content = [regex]::Replace($content, 'versionName\s+"[^"]+"', "versionName ""$AppVersion""")
+    $content = [regex]::Replace($content, 'versionCode\s+\d+', "versionCode $versionCode")
+    Set-Content -Path $GradlePath -Value $content -Encoding UTF8
+    Write-Host "Android versionName atualizado: $AppVersion (versionCode $versionCode)" -ForegroundColor Green
+}
+
 function Copy-Artifact {
     param(
         [string]$SourcePath,
@@ -198,6 +217,7 @@ function Build-AndroidApk {
 
 if ($BuildAndroid) {
     Write-Host "Gerando APK (Android)..." -ForegroundColor Cyan
+    Update-AndroidVersion -GradlePath (Join-Path $mobileRoot "android\\app\\build.gradle") -AppVersion $AppVersion
     $apkBuilt = Build-AndroidApk -MobileRoot $mobileRoot
     if ($apkBuilt) { $ApkPath = $apkBuilt }
 }
