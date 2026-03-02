@@ -28,6 +28,7 @@
             border-radius: 16px;
             padding: 28px;
             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            position: relative;
         }
         .title {
             font-size: 1.75rem;
@@ -53,15 +54,13 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            padding-right: 72px;
         }
         .badge-row {
             display: inline-flex;
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
-        }
-        .header-row .close-btn {
-            margin-left: auto;
         }
         .close-btn {
             border: 0;
@@ -72,6 +71,9 @@
             cursor: pointer;
             padding: 0;
             white-space: nowrap;
+            position: absolute;
+            top: 28px;
+            right: 28px;
         }
         .close-btn:hover { text-decoration: underline; }
         .grid {
@@ -149,7 +151,7 @@
         <div class="card">
             <div class="header-row">
                 <div class="badge-row">
-                    <div class="badge">App do Professor · Versão <strong>1.2.6</strong></div>
+                    <div class="badge">App do Professor · Versão <strong>1.2.7</strong></div>
                 </div>
                 <button class="close-btn" id="close-embedded">Voltar</button>
             </div>
@@ -196,7 +198,13 @@
             } catch (err) {
                 // ignore
             }
-            const opened = window.open(url, '_blank');
+            const isAndroid = /Android/i.test(navigator.userAgent || '');
+            if (isAndroid && url.startsWith('https://')) {
+                const intentUrl = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+                window.location.href = intentUrl;
+                return true;
+            }
+            const opened = window.open(url, '_blank', 'noopener');
             if (!opened) {
                 window.location.href = url;
             }
@@ -289,6 +297,7 @@
     </script>
 </body>
 </html>
+
 
 
 
