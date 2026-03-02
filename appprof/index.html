@@ -96,6 +96,12 @@
             color: #6b7280 !important;
             cursor: not-allowed;
         }
+        .btn-muted {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+        .btn-muted:hover { background: #e5e7eb; }
         .badge-soon {
             font-size: 0.7rem;
             background: #fef3c7;
@@ -109,6 +115,12 @@
             font-size: 0.9rem;
             color: #4b5563;
             line-height: 1.5;
+        }
+        .actions-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
         }
         .footer {
             margin-top: 28px;
@@ -131,7 +143,7 @@
         <div class="card">
             <div class="header-row">
                 <div>
-                    <div class="badge">App do Professor · Versão <strong>1.2.0</strong></div>
+                    <div class="badge">App do Professor · Versão <strong>1.2.1</strong></div>
                     <h1 class="title">APOIA · Área do Professor</h1>
                     <p class="subtitle">Escolha como acessar: abrir no navegador ou instalar o aplicativo.</p>
                 </div>
@@ -142,6 +154,9 @@
                 <button class="btn btn-primary" id="copy-browser-link" data-url="https://eebgv.vercel.app/apoia/professor.html">Abrir no navegador</button>
                 <button class="btn btn-android" id="download-apk" data-url="https://eebgv.vercel.app/appprof/downloads/appprof.apk" type="button">Baixar APK Android</button>
                 <button class="btn btn-ios btn-disabled" type="button" disabled>Instalar iOS <span class="badge-soon">Em breve</span></button>
+            </div>
+            <div class="actions-row">
+                <button class="btn btn-muted" id="copy-apk-link" type="button">Copiar link do APK</button>
             </div>
             <p id="copy-feedback" class="note muted" aria-live="polite"></p>
 
@@ -157,12 +172,30 @@
     <script>
         const copyBtn = document.getElementById('copy-browser-link');
         const apkBtn = document.getElementById('download-apk');
+        const copyApkBtn = document.getElementById('copy-apk-link');
         const feedback = document.getElementById('copy-feedback');
         const params = new URLSearchParams(window.location.search);
         const apkParam = params.get('apk_url');
         if (apkBtn && apkParam && /^https?:\/\//i.test(apkParam)) {
             apkBtn.dataset.url = apkParam;
         }
+
+        const getApkUrl = () => (apkBtn && apkBtn.dataset.url) ? apkBtn.dataset.url : '';
+        const openExternal = (url) => {
+            try {
+                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+                    window.Capacitor.Plugins.Browser.open({ url });
+                    return true;
+                }
+            } catch (err) {
+                // ignore
+            }
+            const opened = window.open(url, '_blank');
+            if (!opened) {
+                window.location.href = url;
+            }
+            return true;
+        };
         if (copyBtn) {
             copyBtn.addEventListener('click', async () => {
                 const url = copyBtn.dataset.url;
@@ -177,11 +210,17 @@
         if (apkBtn) {
             apkBtn.addEventListener('click', async (event) => {
                 event.preventDefault();
-                const url = apkBtn.dataset.url;
+                const url = getApkUrl();
                 if (!url) return;
                 if (apkBtn.disabled) return;
                 apkBtn.disabled = true;
                 if (feedback) feedback.textContent = 'Preparando download do APK...';
+                if (window.Capacitor) {
+                    openExternal(url);
+                    if (feedback) feedback.textContent = 'Abrimos o navegador para baixar o APK.';
+                    apkBtn.disabled = false;
+                    return;
+                }
                 try {
                     const response = await fetch(url, { cache: 'no-store' });
                     if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -207,6 +246,18 @@
                 }
             });
         }
+        if (copyApkBtn) {
+            copyApkBtn.addEventListener('click', async () => {
+                const url = getApkUrl();
+                if (!url) return;
+                try {
+                    await navigator.clipboard.writeText(url);
+                    if (feedback) feedback.textContent = 'Link do APK copiado.';
+                } catch (err) {
+                    if (feedback) feedback.textContent = 'Não foi possível copiar. Copie este link: ' + url;
+                }
+            });
+        }
         const closeBtn = document.getElementById('close-embedded');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
@@ -221,7 +272,9 @@
                     // ignore cross-origin
                 }
                 const fallback = 'https://eebgv.vercel.app/apoia/professor.html';
-                if (document.referrer) {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else if (document.referrer) {
                     window.location.href = document.referrer;
                 } else {
                     window.location.href = fallback;
@@ -231,6 +284,7 @@
     </script>
 </body>
 </html>
+
 
 
 
