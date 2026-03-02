@@ -65,6 +65,25 @@ export async function checkProfessorAppUpdate() {
     const linkEl = document.getElementById('professor-update-link');
     if (!banner || !textEl || !linkEl) return;
 
+    const params = new URLSearchParams(window.location.search);
+    let isAppContext = false;
+    if (params.get('app_version')) {
+        isAppContext = true;
+    } else {
+        try {
+            isAppContext = !!localStorage.getItem('appprof_version');
+        } catch (err) {
+            isAppContext = false;
+        }
+        if (!isAppContext && window.Capacitor) {
+            isAppContext = true;
+        }
+    }
+    if (!isAppContext) {
+        banner.classList.add('hidden');
+        return;
+    }
+
     const currentVersion = getProfessorAppVersion();
     if (!currentVersion) {
         banner.classList.add('hidden');
