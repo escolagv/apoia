@@ -96,14 +96,19 @@ function Update-CapacitorServerUrl {
     if ([string]::IsNullOrWhiteSpace($AppVersion)) { return }
     $config = Get-Content $ConfigPath -Raw | ConvertFrom-Json
     if (-not $config.server) { $config.server = @{} }
-    $currentUrl = $config.server.url
     $baseUrl = ""
-    if (-not [string]::IsNullOrWhiteSpace($currentUrl) -and $currentUrl -match '^https?://') {
-        $baseUrl = $currentUrl.Split('?')[0]
-    } elseif (-not [string]::IsNullOrWhiteSpace($ProfessorUrl)) {
+    if (-not [string]::IsNullOrWhiteSpace($ProfessorUrl)) {
         $baseUrl = $ProfessorUrl.Split('?')[0]
+    } else {
+        $currentUrl = $config.server.url
+        if (-not [string]::IsNullOrWhiteSpace($currentUrl) -and $currentUrl -match '^https?://') {
+            $baseUrl = $currentUrl.Split('?')[0]
+        }
     }
-    if ([string]::IsNullOrWhiteSpace($baseUrl)) { return }
+    if ([string]::IsNullOrWhiteSpace($baseUrl)) {
+        Write-Host "Capacitor URL não atualizado: ProfessorUrl vazio e URL atual inválida." -ForegroundColor Yellow
+        return
+    }
     $config.server.url = "$baseUrl?app_version=$AppVersion"
     $config | ConvertTo-Json -Depth 10 | Set-Content -Path $ConfigPath -Encoding UTF8
     Write-Host "Capacitor URL atualizado: $($config.server.url)" -ForegroundColor Green
