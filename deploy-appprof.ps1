@@ -109,7 +109,7 @@ function Update-CapacitorServerUrl {
         Write-Host "Capacitor URL não atualizado: ProfessorUrl vazio e URL atual inválida." -ForegroundColor Yellow
         return
     }
-    $config.server.url = "$baseUrl?app_version=$AppVersion"
+    $config.server.url = "${baseUrl}?app_version=$AppVersion"
     $config | ConvertTo-Json -Depth 10 | Set-Content -Path $ConfigPath -Encoding UTF8
     Write-Host "Capacitor URL atualizado: $($config.server.url)" -ForegroundColor Green
 }
