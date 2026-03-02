@@ -143,7 +143,7 @@
         <div class="card">
             <div class="header-row">
                 <div>
-                    <div class="badge">App do Professor · Versão <strong>1.2.2</strong></div>
+                    <div class="badge">App do Professor · Versão <strong>1.2.3</strong></div>
                     <h1 class="title">APOIA · Área do Professor</h1>
                     <p class="subtitle">Escolha como acessar: abrir no navegador ou instalar o aplicativo.</p>
                 </div>
@@ -215,8 +215,7 @@
                 if (apkBtn.disabled) return;
                 apkBtn.disabled = true;
                 if (feedback) feedback.textContent = 'Preparando download do APK...';
-                if (window.Capacitor) {
-                    openExternal(url);
+                if (openExternal(url)) {
                     if (feedback) feedback.textContent = 'Abrimos o navegador para baixar o APK.';
                     apkBtn.disabled = false;
                     return;
@@ -284,6 +283,7 @@
     </script>
 </body>
 </html>
+
 
 
 
