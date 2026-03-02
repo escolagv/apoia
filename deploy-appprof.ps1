@@ -198,9 +198,17 @@ function Build-AndroidApk {
         Write-Host "Gradle wrapper nao encontrado. Abra o projeto no Android Studio e gere o APK." -ForegroundColor Red
         return $null
     }
+    $buildDir = Join-Path $MobileRoot "android\\app\\build"
+    if (Test-Path $buildDir) {
+        Write-Host "Limpando build anterior..." -ForegroundColor Yellow
+        Remove-Item -Recurse -Force $buildDir
+    }
     Push-Location (Join-Path $MobileRoot "android")
     try {
         $null = & $gradle assembleRelease
+        if ($LASTEXITCODE -ne 0) {
+            throw "Gradle build falhou (exit $LASTEXITCODE)."
+        }
     } finally {
         Pop-Location
     }
