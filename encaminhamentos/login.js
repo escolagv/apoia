@@ -3,7 +3,7 @@ import { signIn, signOut, requireAdminSession } from './js/auth.js';
 document.addEventListener('DOMContentLoaded', async () => {
     const { session, profile } = await requireAdminSession();
     if (session && profile) {
-        window.location.href = 'app.html';
+        window.location.href = 'dashboard.html';
         return;
     }
 
@@ -31,5 +31,5 @@ async function handleLogin(e) {
         return;
     }
 
-    window.location.href = 'app.html';
+    window.location.href = 'dashboard.html';
 }

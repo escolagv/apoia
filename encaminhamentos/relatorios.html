@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Encaminhamentos</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+</head>
+<body>
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <strong>Usuário:</strong> <span id="user-name">-</span>
+        </div>
+        <nav class="top-bar-center nav-links">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="encaminhamento.html" class="nav-link">Registrar</a>
+            <a href="consulta.html" class="nav-link">Consultar</a>
+            <a href="relatorios.html" class="nav-link active">Relatórios</a>
+        </nav>
+        <div class="top-bar-right">
+            <button type="button" id="logout-btn" class="secondary-btn">Sair</button>
+        </div>
+    </header>
+
+    <div class="container-consulta">
+        <h1>Relatórios</h1>
+
+        <a href="consulta.html" class="back-button">Nova Busca / Voltar</a>
+
+        <div id="results-summary" class="results-summary"></div>
+        <div id="results-area">
+            <p id="loading-message" style="text-align:center;">Carregando...</p>
+            <div id="results-table"></div>
+        </div>
+        <div id="pagination-container" class="pagination-container"></div>
+        <div class="report-buttons">
+            <button id="simple-report-button">Gerar Relatório Simples</button>
+            <button id="complete-report-button">Gerar Relatório Completo</button>
+        </div>
+    </div>
+
+    <script type="module" src="results.js"></script>
+</body>
+</html>

@@ -144,7 +144,7 @@ function generateReport(reportType) {
 }
 
 window.redirectToEdit = function redirectToEdit(recordId) {
-    window.location.href = `app.html?editId=${recordId}`;
+    window.location.href = `encaminhamento.html?editId=${recordId}`;
 };
 window.renderPage = renderPage;
 

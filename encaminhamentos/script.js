@@ -27,7 +27,6 @@ const state = {
 // ===================================================================
 document.addEventListener('DOMContentLoaded', async () => {
     const encaminhamentoForm = document.getElementById('encaminhamentoForm');
-    const searchButton = document.getElementById('search-button');
     const salvarEdicaoButton = document.getElementById('btnSalvarEdicao');
     const cancelarEdicaoButton = document.getElementById('btnCancelarEdicao');
     const logoutBtn = document.getElementById('logout-btn');
@@ -37,7 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     createCheckboxes('providencias-container', providenciasOptions, 'providencia');
 
     encaminhamentoForm.addEventListener('submit', saveRecord);
-    searchButton.addEventListener('click', redirectToSearchResults);
     salvarEdicaoButton.addEventListener('click', updateRecord);
     cancelarEdicaoButton.addEventListener('click', resetForm);
 
@@ -200,21 +198,6 @@ function createCheckboxes(containerId, options, groupName) {
         divOutros.appendChild(checkboxOutros); divOutros.appendChild(labelOutros); divOutros.appendChild(textOutros);
         container.appendChild(divOutros);
     }
-}
-
-function redirectToSearchResults() {
-    const params = new URLSearchParams();
-    const estudante = document.getElementById('search-estudante').value;
-    const professor = document.getElementById('search-professor').value;
-    const data = document.getElementById('search-data').value;
-    const registradoPor = document.getElementById('search-registrado').value;
-
-    if (estudante) params.append('estudante', estudante);
-    if (professor) params.append('professor', professor);
-    if (data) params.append('data', data);
-    if (registradoPor) params.append('registradoPor', registradoPor);
-
-    window.location.href = `results.html?${params.toString()}`;
 }
 
 async function saveRecord(e) {

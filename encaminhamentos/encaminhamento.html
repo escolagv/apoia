@@ -3,24 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Encaminhamentos</title>
+    <title>Registrar Encaminhamento</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 </head>
 <body>
-    <div class="top-bar">
+    <header class="top-bar">
         <div class="top-bar-left">
             <strong>Usuário:</strong> <span id="user-name">-</span>
         </div>
-        <div class="top-bar-center">
-            <strong>Sync:</strong> <span id="sync-status">-</span>
-        </div>
+        <nav class="top-bar-center nav-links">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="encaminhamento.html" class="nav-link active">Registrar</a>
+            <a href="consulta.html" class="nav-link">Consultar</a>
+            <a href="relatorios.html" class="nav-link">Relatórios</a>
+        </nav>
         <div class="top-bar-right">
             <button type="button" id="logout-btn" class="secondary-btn">Sair</button>
         </div>
-    </div>
+    </header>
 
     <div class="container">
+        <div class="sync-row">
+            <span class="muted-text">Sync:</span>
+            <strong id="sync-status">-</strong>
+        </div>
         <h1 id="form-title">Registrar Encaminhamento</h1>
         <form id="encaminhamentoForm">
             <input type="hidden" id="editId" name="editId">
@@ -62,13 +72,6 @@
             <div class="edit-buttons-container" id="editButtons"><button type="button" id="btnSalvarEdicao">Salvar Alterações</button><button type="button" id="btnCancelarEdicao">Cancelar Edição</button></div>
         </form>
         <div id="status-message"></div>
-    </div>
-
-    <div class="container-consulta">
-        <h1>Consultar Encaminhamentos</h1>
-        <div class="grid-2-col"><div class="form-group"><label for="search-estudante">Buscar por Estudante</label><input type="text" id="search-estudante" placeholder="Parte do nome..."></div><div class="form-group"><label for="search-professor">Buscar por Professor(a)</label><input type="text" id="search-professor" placeholder="Parte do nome..."></div></div>
-        <div class="grid-2-col"><div class="form-group"><label for="search-data">Buscar por Data</label><input type="date" id="search-data"></div><div class="form-group"><label for="search-registrado">Buscar por Quem Registrou</label><input type="text" id="search-registrado" placeholder="Parte do nome..."></div></div>
-        <button type="button" id="search-button">Buscar Encaminhamentos</button>
     </div>
 
     <script type="module" src="script.js"></script>
