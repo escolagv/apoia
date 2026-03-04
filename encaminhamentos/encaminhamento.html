@@ -133,22 +133,22 @@
                                     <label for="recadoCom" class="text-sm font-medium text-gray-700">Deixou recado com:</label>
                                     <input type="text" id="recadoCom" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 </div>
-                            </div>
-                            <div class="mt-4">
-                                <label class="text-sm font-medium text-gray-700">Mensagem via WhatsApp</label>
-                                <div class="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-700">
-                                    <label class="inline-flex items-center gap-2">
-                                        <input type="checkbox" id="whatsapp-enviado" class="h-4 w-4">
-                                        Enviado
-                                    </label>
-                                    <label class="inline-flex items-center gap-2">
-                                        <input type="radio" name="whatsapp-status" value="Respondeu" class="h-4 w-4" disabled>
-                                        Respondeu
-                                    </label>
-                                    <label class="inline-flex items-center gap-2">
-                                        <input type="radio" name="whatsapp-status" value="Não respondeu" class="h-4 w-4" disabled>
-                                        Não respondeu
-                                    </label>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Mensagem via WhatsApp</label>
+                                    <div class="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-700">
+                                        <label class="inline-flex items-center gap-2">
+                                            <input type="checkbox" id="whatsapp-enviado" class="h-4 w-4">
+                                            Enviado
+                                        </label>
+                                        <label class="inline-flex items-center gap-2">
+                                            <input type="radio" name="whatsapp-status" value="Respondeu" class="h-4 w-4" disabled>
+                                            Respondeu
+                                        </label>
+                                        <label class="inline-flex items-center gap-2">
+                                            <input type="radio" name="whatsapp-status" value="Não respondeu" class="h-4 w-4" disabled>
+                                            Não respondeu
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="mt-4">
@@ -190,8 +190,8 @@
                         </div>
 
                         <div class="pt-2">
-                            <button type="submit" id="btnRegistrar" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Registrar Encaminhamento</button>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3" id="editButtons">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <button type="submit" id="btnRegistrar" class="w-full py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Registrar Encaminhamento</button>
                                 <button type="button" id="btnSalvarEdicao" class="w-full py-2 px-4 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">Salvar Alterações</button>
                                 <button type="button" id="btnCancelarEdicao" class="w-full py-2 px-4 font-semibold text-white bg-amber-500 rounded-md hover:bg-amber-600">Cancelar Edição</button>
                             </div>

@@ -168,7 +168,7 @@ async function syncEncCache() {
 // ===================================================================
 async function loadCaches() {
     const [alunosRes, professoresRes, turmasRes] = await Promise.all([
-        safeQuery(db.from('enc_alunos').select('id, nome_completo, matricula, turma_id, status').order('nome_completo')),
+        safeQuery(db.from('enc_alunos').select('id, nome_completo, matricula, turma_id, nome_responsavel, telefone, status').order('nome_completo')),
         safeQuery(db.from('enc_professores').select('user_uid, nome, status').order('nome')),
         safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo'))
     ]);
@@ -432,8 +432,20 @@ function resetForm() {
 }
 
 function switchToEditMode(isEditing) {
-    document.getElementById('btnRegistrar').style.display = isEditing ? 'none' : 'block';
-    document.getElementById('editButtons').style.display = isEditing ? 'grid' : 'none';
+    const btnRegistrar = document.getElementById('btnRegistrar');
+    const btnSalvar = document.getElementById('btnSalvarEdicao');
+    const btnCancelar = document.getElementById('btnCancelarEdicao');
+
+    btnRegistrar.disabled = isEditing;
+    btnSalvar.disabled = !isEditing;
+    btnCancelar.disabled = !isEditing;
+
+    btnRegistrar.classList.toggle('opacity-50', isEditing);
+    btnRegistrar.classList.toggle('cursor-not-allowed', isEditing);
+    btnSalvar.classList.toggle('opacity-50', !isEditing);
+    btnSalvar.classList.toggle('cursor-not-allowed', !isEditing);
+    btnCancelar.classList.toggle('opacity-50', !isEditing);
+    btnCancelar.classList.toggle('cursor-not-allowed', !isEditing);
 }
 
 function showStatusMessage(message, isSuccess) {
