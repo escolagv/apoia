@@ -78,6 +78,8 @@ async function loadApp(user, profile) {
     state.profile = profile;
     document.getElementById('user-name').textContent = profile.nome || user.email || '-';
     document.getElementById('registradoPor').value = profile.nome || user.email || '';
+    const registradoLabel = document.getElementById('registradoPorLabel');
+    if (registradoLabel) registradoLabel.textContent = profile.nome || user.email || '';
     document.getElementById('dataEncaminhamento').value = getLocalDateString();
 
     await syncEncCache();
@@ -346,6 +348,8 @@ function resetForm() {
     document.getElementById('form-title').textContent = 'Registrar Encaminhamento';
     document.getElementById('dataEncaminhamento').value = getLocalDateString();
     document.getElementById('registradoPor').value = state.profile?.nome || state.currentUser?.email || '';
+    const registradoLabel = document.getElementById('registradoPorLabel');
+    if (registradoLabel) registradoLabel.textContent = state.profile?.nome || state.currentUser?.email || '';
     document.getElementById('turma').value = '';
     switchToEditMode(false);
     window.history.pushState({}, document.title, window.location.pathname);
