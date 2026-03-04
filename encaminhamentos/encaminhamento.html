@@ -110,6 +110,10 @@
                             <h3 class="text-base font-semibold text-gray-900 border-b border-gray-200 pb-2 mt-6">Contato com Responsáveis</h3>
                             <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
+                                    <label for="responsavelNome" class="text-sm font-medium text-gray-700">Responsável</label>
+                                    <input type="text" id="responsavelNome" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
                                     <label for="numeroTelefone" class="text-sm font-medium text-gray-700">Número de telefone</label>
                                     <input type="tel" id="numeroTelefone" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 </div>
@@ -147,11 +151,18 @@
                                     </label>
                                 </div>
                             </div>
+                            <div class="mt-4">
+                                <label for="contatoResumo" class="text-sm font-medium text-gray-700">Resumo do contato</label>
+                                <input type="text" id="contatoResumo" readonly class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm bg-gray-50">
+                            </div>
                             <h3 class="text-base font-semibold text-gray-900 border-b border-gray-200 pb-2 mt-6">Providências Adicionais</h3>
                             <div class="mt-4 bg-gray-50 border border-gray-200 rounded-md p-3 grid grid-cols-1 md:grid-cols-2 gap-2" id="providencias-container"></div>
                             <div class="mt-4">
-                                <label for="solicitacaoComparecimento" class="text-sm font-medium text-gray-700">Data e hora para comparecimento</label>
-                                <input type="text" id="solicitacaoComparecimento" placeholder="Ex: 25/08/2025 às 14h30" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <label class="text-sm font-medium text-gray-700">Data e hora para comparecimento</label>
+                                <div class="mt-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <input type="date" id="solicitacaoComparecimentoData" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <input type="time" id="solicitacaoComparecimentoHora" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
                             </div>
                         </div>
 

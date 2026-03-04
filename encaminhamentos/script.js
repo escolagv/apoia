@@ -68,6 +68,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.getElementById('estudante').addEventListener('change', handleAlunoChange);
+    document.getElementById('numeroTelefone').addEventListener('input', updateContatoResumo);
+    document.getElementById('horarioLigacao').addEventListener('input', updateContatoResumo);
+    document.getElementById('statusLigacao').addEventListener('change', updateContatoResumo);
+    document.getElementById('recadoCom').addEventListener('input', updateContatoResumo);
+    document.getElementById('responsavelNome').addEventListener('input', updateContatoResumo);
+    document.getElementById('solicitacaoComparecimentoData').addEventListener('change', updateSolicitacaoComparecimento);
+    document.getElementById('solicitacaoComparecimentoHora').addEventListener('change', updateSolicitacaoComparecimento);
 
     const whatsappCheckbox = document.getElementById('whatsapp-enviado');
     if (whatsappCheckbox) {
@@ -79,6 +86,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         };
         whatsappCheckbox.addEventListener('change', toggleWhatsapp);
+        document.querySelectorAll('input[name="whatsapp-status"]').forEach(radio => {
+            radio.addEventListener('change', updateContatoResumo);
+        });
         toggleWhatsapp();
     }
 
@@ -121,6 +131,7 @@ async function loadApp(user, profile) {
     await loadCaches();
     checkEditMode();
     startSyncTimer();
+    updateContatoResumo();
 }
 
 // ===================================================================
@@ -198,9 +209,15 @@ function populateSelects() {
 function handleAlunoChange() {
     const alunoId = Number(document.getElementById('estudante').value);
     const turmaInput = document.getElementById('turma');
+    const telefoneInput = document.getElementById('numeroTelefone');
+    const responsavelInput = document.getElementById('responsavelNome');
     const aluno = state.alunosById.get(alunoId);
     const turma = aluno ? state.turmasById.get(Number(aluno.turma_id)) : null;
     turmaInput.value = turma ? turma.nome_turma : '';
+    telefoneInput.value = aluno?.telefone || '';
+    responsavelInput.value = aluno?.nome_responsavel || '';
+    updateContatoResumo();
+    updateSolicitacaoComparecimento();
 }
 
 // ===================================================================
@@ -332,6 +349,7 @@ function getFormData() {
         detalhes_motivo: document.getElementById('detalhesMotivo').value,
         acoes_tomadas: getCheckboxValues('acao'),
         detalhes_acao: document.getElementById('detalhesAcao').value,
+        responsavel_nome: document.getElementById('responsavelNome').value,
         numero_telefone: document.getElementById('numeroTelefone').value,
         horario_ligacao: document.getElementById('horarioLigacao').value || null,
         status_ligacao: document.getElementById('statusLigacao').value,
@@ -339,7 +357,7 @@ function getFormData() {
         whatsapp_status: document.querySelector('input[name="whatsapp-status"]:checked')?.value || null,
         recado_com: document.getElementById('recadoCom').value,
         providencias: getCheckboxValues('providencia'),
-        solicitacao_comparecimento: document.getElementById('solicitacaoComparecimento').value,
+        solicitacao_comparecimento: buildSolicitacaoComparecimento(),
         status: document.getElementById('status').value,
         outras_informacoes: document.getElementById('outrasInformacoes').value,
         registrado_por_uid: state.currentUser?.id || null,
@@ -358,6 +376,7 @@ function populateForm(data) {
     document.getElementById('detalhesMotivo').value = data.detalhes_motivo || '';
     setCheckboxValues('acao', data.acoes_tomadas);
     document.getElementById('detalhesAcao').value = data.detalhes_acao || '';
+    document.getElementById('responsavelNome').value = data.responsavel_nome || '';
     document.getElementById('numeroTelefone').value = data.numero_telefone || '';
     document.getElementById('horarioLigacao').value = data.horario_ligacao || '';
     document.getElementById('statusLigacao').value = data.status_ligacao || '';
@@ -369,6 +388,8 @@ function populateForm(data) {
         });
     }
     document.getElementById('recadoCom').value = data.recado_com || '';
+    setSolicitacaoComparecimentoFields(data.solicitacao_comparecimento || '');
+    updateContatoResumo();
     setCheckboxValues('providencia', data.providencias);
     document.getElementById('solicitacaoComparecimento').value = data.solicitacao_comparecimento || '';
     document.getElementById('status').value = data.status || '';
@@ -402,6 +423,10 @@ function resetForm() {
         });
     }
     document.getElementById('turma').value = '';
+    document.getElementById('responsavelNome').value = '';
+    document.getElementById('solicitacaoComparecimentoData').value = '';
+    document.getElementById('solicitacaoComparecimentoHora').value = '';
+    updateContatoResumo();
     switchToEditMode(false);
     window.history.pushState({}, document.title, window.location.pathname);
 }
@@ -464,4 +489,75 @@ function setCheckboxValues(name, valuesString) {
             }
         }
     });
+}
+
+function updateContatoResumo() {
+    const telefone = document.getElementById('numeroTelefone').value.trim();
+    const horario = document.getElementById('horarioLigacao').value.trim();
+    const statusLigacao = document.getElementById('statusLigacao').value.trim();
+    const whatsappEnviado = document.getElementById('whatsapp-enviado')?.checked;
+    const whatsappStatus = document.querySelector('input[name="whatsapp-status"]:checked')?.value || '';
+    const recadoCom = document.getElementById('recadoCom').value.trim();
+    const responsavel = document.getElementById('responsavelNome').value.trim();
+
+    const partes = [];
+    if (responsavel) partes.push(`Responsável: ${responsavel}`);
+    if (telefone) partes.push(`Telefone: ${telefone}`);
+    if (statusLigacao) {
+        const horarioLabel = horario ? ` às ${horario}` : '';
+        partes.push(`Ligação: ${statusLigacao}${horarioLabel}`);
+    } else if (horario) {
+        partes.push(`Ligação: ${horario}`);
+    }
+    if (recadoCom) partes.push(`Recado com ${recadoCom}`);
+
+    if (whatsappEnviado) {
+        if (whatsappStatus) {
+            partes.push(`WhatsApp: ${whatsappStatus}`);
+        } else {
+            partes.push('WhatsApp: enviado');
+        }
+    }
+
+    const resumoEl = document.getElementById('contatoResumo');
+    if (resumoEl) resumoEl.value = partes.join(' | ');
+}
+
+function buildSolicitacaoComparecimento() {
+    const data = document.getElementById('solicitacaoComparecimentoData')?.value || '';
+    const hora = document.getElementById('solicitacaoComparecimentoHora')?.value || '';
+    if (!data && !hora) return '';
+    if (data) {
+        const [yyyy, mm, dd] = data.split('-');
+        const dataBR = dd && mm && yyyy ? `${dd}/${mm}/${yyyy}` : data;
+        return hora ? `${dataBR} às ${hora}` : dataBR;
+    }
+    return hora;
+}
+
+function setSolicitacaoComparecimentoFields(value) {
+    if (!value) return;
+    const dataEl = document.getElementById('solicitacaoComparecimentoData');
+    const horaEl = document.getElementById('solicitacaoComparecimentoHora');
+    if (!dataEl || !horaEl) return;
+
+    const text = value.trim();
+    const brMatch = text.match(/(\d{2})\/(\d{2})\/(\d{4})(?:\s*(?:às|as)\s*(\d{2}:\d{2}))?/i);
+    if (brMatch) {
+        const [, dd, mm, yyyy, hhmm] = brMatch;
+        dataEl.value = `${yyyy}-${mm}-${dd}`;
+        horaEl.value = hhmm || '';
+        return;
+    }
+
+    const isoMatch = text.match(/(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}:\d{2}))?/);
+    if (isoMatch) {
+        const [, yyyy, mm, dd, hhmm] = isoMatch;
+        dataEl.value = `${yyyy}-${mm}-${dd}`;
+        horaEl.value = hhmm || '';
+    }
+}
+
+function updateSolicitacaoComparecimento() {
+    buildSolicitacaoComparecimento();
 }
