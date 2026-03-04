@@ -34,6 +34,8 @@ const state = {
     alunosById: new Map(),
     professoresById: new Map(),
     turmasById: new Map(),
+    turmasAnoAtual: new Set(),
+    anoLetivoAtual: null,
     syncTimer: null
 };
 
@@ -193,6 +195,12 @@ async function loadCaches() {
     state.alunos = alunosRes.data || [];
     state.professores = professoresRes.data || [];
     state.turmas = turmasRes.data || [];
+    state.anoLetivoAtual = getAnoLetivoAtual(state.turmas);
+    state.turmasAnoAtual = new Set(
+        state.turmas
+            .filter(t => state.anoLetivoAtual && String(t.ano_letivo) === String(state.anoLetivoAtual))
+            .map(t => Number(t.id))
+    );
     state.alunosById = new Map(state.alunos.map(a => [Number(a.id), a]));
     state.professoresById = new Map(state.professores.map(p => [p.user_uid, p]));
     state.turmasById = new Map(state.turmas.map(t => [Number(t.id), t]));
@@ -216,6 +224,10 @@ function populateSelects() {
     alunoSelect.innerHTML = '<option value="">Selecione...</option>';
     state.alunos
         .filter(a => a.status !== 'inativo')
+        .filter(a => {
+            if (!state.anoLetivoAtual) return true;
+            return state.turmasAnoAtual.has(Number(a.turma_id));
+        })
         .forEach(a => {
             const option = document.createElement('option');
             option.value = a.id;
@@ -302,7 +314,10 @@ function renderSearchList(type, query) {
 
     const q = (query || '').trim().toLowerCase();
     const items = type === 'aluno'
-        ? state.alunos.filter(a => a.status !== 'inativo')
+        ? state.alunos.filter(a => a.status !== 'inativo').filter(a => {
+            if (!state.anoLetivoAtual) return true;
+            return state.turmasAnoAtual.has(Number(a.turma_id));
+        })
         : state.professores.filter(p => p.status !== 'inativo');
 
     const filtered = !q ? items : items.filter(item => {
@@ -346,6 +361,14 @@ function renderSearchList(type, query) {
         });
         list.appendChild(row);
     });
+}
+
+function getAnoLetivoAtual(turmas) {
+    const anos = (turmas || [])
+        .map(t => parseInt(t.ano_letivo, 10))
+        .filter(Number.isFinite);
+    if (anos.length === 0) return null;
+    return Math.max(...anos);
 }
 
 function handleAlunoChange() {

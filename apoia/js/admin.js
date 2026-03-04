@@ -460,7 +460,11 @@ export async function openAlunoModal(editId = null) {
     document.getElementById('aluno-delete-container').classList.toggle('hidden', !editId);
     const alunoTurmaSelect = document.getElementById('aluno-turma');
     alunoTurmaSelect.innerHTML = '<option value="">Selecione...</option>';
-    state.turmasCache.forEach(t => alunoTurmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
+    const anoLetivoFilter = document.getElementById('aluno-ano-letivo-filter');
+    const anoAtual = anoLetivoFilter?.value || state.anosLetivosCache?.[0] || '';
+    state.turmasCache
+        .filter(t => !anoAtual || String(t.ano_letivo) === String(anoAtual))
+        .forEach(t => alunoTurmaSelect.innerHTML += `<option value="${t.id}">${t.nome_turma}</option>`);
 
     if (editId) {
         const { data } = await safeQuery(db.from('alunos').select('*').eq('id', editId).single());
@@ -468,6 +472,14 @@ export async function openAlunoModal(editId = null) {
             document.getElementById('aluno-id').value = data.id;
             document.getElementById('aluno-nome').value = data.nome_completo;
             document.getElementById('aluno-matricula').value = data.matricula || '';
+            if (data.turma_id && !Array.from(alunoTurmaSelect.options).some(opt => opt.value === String(data.turma_id))) {
+                const turmaRef = state.turmasCache.find(t => String(t.id) === String(data.turma_id));
+                const label = turmaRef ? turmaRef.nome_turma : `ID ${data.turma_id}`;
+                const opt = document.createElement('option');
+                opt.value = data.turma_id;
+                opt.textContent = label;
+                alunoTurmaSelect.appendChild(opt);
+            }
             document.getElementById('aluno-turma').value = data.turma_id || '';
             document.getElementById('aluno-responsavel').value = data.nome_responsavel || '';
             document.getElementById('aluno-telefone').value = data.telefone || '';
