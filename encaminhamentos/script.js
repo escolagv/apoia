@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 radio.disabled = !enabled;
                 if (!enabled) radio.checked = false;
             });
+            updateContatoResumo();
         };
         whatsappCheckbox.addEventListener('change', toggleWhatsapp);
         document.querySelectorAll('input[name="whatsapp-status"]').forEach(radio => {
@@ -212,14 +213,12 @@ function populateSelects() {
 // ===================================================================
 const searchPanels = {
     aluno: {
-        toggleId: 'toggle-aluno-search',
         panelId: 'aluno-search-panel',
         inputId: 'aluno-search-input',
         listId: 'aluno-search-list',
         selectId: 'estudante'
     },
     professor: {
-        toggleId: 'toggle-professor-search',
         panelId: 'professor-search-panel',
         inputId: 'professor-search-input',
         listId: 'professor-search-list',
@@ -229,26 +228,32 @@ const searchPanels = {
 
 function initSearchPanels() {
     Object.entries(searchPanels).forEach(([type, cfg]) => {
-        const toggle = document.getElementById(cfg.toggleId);
         const panel = document.getElementById(cfg.panelId);
         const input = document.getElementById(cfg.inputId);
         const list = document.getElementById(cfg.listId);
-        if (!toggle || !panel || !input || !list) return;
+        const select = document.getElementById(cfg.selectId);
+        if (!panel || !input || !list || !select) return;
 
-        toggle.addEventListener('click', () => {
-            const isHidden = panel.classList.contains('hidden');
-            if (isHidden) {
+        const openPanel = () => {
+            if (panel.classList.contains('hidden')) {
                 panel.classList.remove('hidden');
                 input.value = '';
                 renderSearchList(type, '');
-                input.focus();
-            } else {
-                panel.classList.add('hidden');
             }
-        });
+            input.focus();
+        };
+
+        select.addEventListener('focus', openPanel);
+        select.addEventListener('click', openPanel);
 
         input.addEventListener('input', () => {
             renderSearchList(type, input.value);
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!panel.contains(event.target) && event.target !== select) {
+                panel.classList.add('hidden');
+            }
         });
     });
 }
