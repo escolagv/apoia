@@ -1,4 +1,4 @@
-import { db, state, getLocalDateString, safeQuery, showToast, closeModal, closeAllModals, logAudit } from './core.js';
+import { db, state, getLocalDateString, safeQuery, showToast, closeModal, closeAllModals, logAudit, SUPABASE_URL, SUPABASE_ANON_KEY } from './core.js';
 
 const APOIA_ITEMS_PER_PAGE = 10;
 let apoiaCurrentPage = 1;
@@ -27,6 +27,33 @@ async function upsertProfessorProfile(userUid, payload) {
             .select()
             .single()
     );
+}
+
+async function updateAuthEmail(userUid, newEmail) {
+    const { data: sessionData, error: sessionError } = await db.auth.getSession();
+    if (sessionError || !sessionData?.session?.access_token) {
+        throw new Error('Sessao expirada. Faça login novamente.');
+    }
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/update-auth-email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+            apikey: SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ user_uid: userUid, new_email: newEmail })
+    });
+    let payload = null;
+    try {
+        payload = await response.json();
+    } catch (err) {
+        payload = null;
+    }
+    if (!response.ok) {
+        const message = payload?.error || `Erro ao atualizar email no login (HTTP ${response.status}).`;
+        throw new Error(message);
+    }
+    return payload;
 }
 
 function normalizePhoneDigits(value) {
@@ -904,6 +931,8 @@ export async function openProfessorModal(editId = null) {
     const passwordToggle = document.getElementById('professor-password-show');
     const telefoneInput = document.getElementById('professor-telefone');
     form.reset();
+    form.dataset.originalEmail = '';
+    form.dataset.userUid = '';
     document.getElementById('professor-id').value = '';
     document.getElementById('professor-modal-title').textContent = editId ? 'Editar Professor' : 'Adicionar Professor';
     document.getElementById('professor-delete-container').classList.toggle('hidden', !editId);
@@ -922,6 +951,8 @@ export async function openProfessorModal(editId = null) {
             document.getElementById('professor-status').value = data.status || 'ativo';
             if (telefoneInput) telefoneInput.value = formatPhoneDisplay(data.telefone) || '';
             if (vinculoSelect) vinculoSelect.value = data.vinculo || 'efetivo';
+            form.dataset.originalEmail = data.email || '';
+            form.dataset.userUid = data.user_uid || '';
         }
     }
     modal.classList.remove('hidden');
@@ -935,7 +966,27 @@ export async function handleProfessorFormSubmit(e) {
     const vinculo = document.getElementById('professor-vinculo')?.value || 'efetivo';
     const telefoneRaw = document.getElementById('professor-telefone')?.value || '';
     const telefone = normalizePhoneDigits(telefoneRaw);
+    const form = document.getElementById('professor-form');
     if (id) {
+        const originalEmail = (form?.dataset?.originalEmail || '').trim().toLowerCase();
+        const nextEmail = (email || '').trim().toLowerCase();
+        let authUserUid = form?.dataset?.userUid || '';
+        if (!authUserUid && originalEmail) {
+            authUserUid = await fetchAuthUserUidByEmail(originalEmail);
+        }
+        const shouldUpdateAuthEmail = nextEmail && originalEmail && nextEmail !== originalEmail;
+        if (shouldUpdateAuthEmail && !authUserUid) {
+            showToast('Nao foi possivel localizar o usuario de login para atualizar o email.', true);
+            return;
+        }
+        if (shouldUpdateAuthEmail && authUserUid) {
+            try {
+                await updateAuthEmail(authUserUid, nextEmail);
+            } catch (err) {
+                showToast(`Erro ao atualizar email do login: ${err?.message || err}`, true);
+                return;
+            }
+        }
         const { error } = await safeQuery(db.from('usuarios').update({ nome, email, status, vinculo, telefone }).eq('id', id));
         if (error) showToast('Erro ao salvar professor: ' + error.message, true);
         else {
