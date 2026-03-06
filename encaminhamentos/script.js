@@ -522,9 +522,9 @@ async function loadScanJobFromParams() {
     if (!scanId || editId) return;
 
     try {
-        const { data: job } = await safeQuery(
-            db.from('enc_scan_jobs')
-                .select('id, status, storage_path, mime_type, created_at, device_id')
+    const { data: job } = await safeQuery(
+        db.from('enc_scan_jobs')
+                .select('id, status, storage_path, mime_type, created_at, device_id, aluno_matricula')
                 .eq('id', scanId)
                 .single()
         );
@@ -542,9 +542,27 @@ async function loadScanJobFromParams() {
             }
         }
         showScanPreview(job, state.scanUrl);
+        const matriculaParam = params.get('matricula');
+        const matricula = (job.aluno_matricula || matriculaParam || '').toString().trim();
+        if (matricula) {
+            prefillAlunoByMatricula(matricula);
+        }
     } catch (err) {
         console.warn('Falha ao carregar scan:', err?.message || err);
     }
+}
+
+function prefillAlunoByMatricula(matricula) {
+    if (!matricula) return;
+    const aluno = state.alunos.find(a => String(a.matricula || '').trim() === matricula);
+    if (!aluno) {
+        showStatusMessage('Matrícula não encontrada no cadastro.', false);
+        return;
+    }
+    ensureSelectOption('estudante', aluno.id, aluno.nome_completo || `Aluno ${aluno.id}`);
+    const select = document.getElementById('estudante');
+    if (select) select.value = String(aluno.id);
+    handleAlunoChange();
 }
 
 function showScanPreview(job, url) {
