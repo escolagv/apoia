@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastros - Encaminhamentos</title>
+    <link rel="icon" type="image/x-icon" href="../apoia/favicon.ico">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+    <link rel="manifest" href="../apoia/site.webmanifest">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+</head>
+<body class="bg-gray-200 text-gray-800">
+    <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"></div>
+    <div class="flex h-screen bg-gray-200">
+        <aside class="w-64 bg-gray-800 text-white flex flex-col fixed inset-y-0 left-0 z-30 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+            <div class="p-4 border-b border-gray-700 flex flex-col items-center gap-3">
+                <img src="../apoia/logo_admin.png" alt="Logo da Escola" class="h-16">
+                <div>
+                    <h1 class="text-xl font-bold text-center">Encaminhamentos</h1>
+                    <p id="user-name" class="text-sm text-gray-400 text-center">-</p>
+                </div>
+            </div>
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="dashboard.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Dashboard</a>
+                <a href="encaminhamento.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Registrar</a>
+                <a href="consulta.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Consultar</a>
+                <a href="relatorios.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Relatórios</a>
+                <a href="cadastros.html" class="block px-4 py-2 rounded-md bg-gray-700">Cadastros</a>
+            </nav>
+            <div class="p-4 border-t border-gray-700 space-y-4">
+                <div class="text-xs text-center text-gray-400">
+                    <img src="../apoia/qr_code_altnix.png" alt="QR Code Altnix" class="h-16 mx-auto mb-2">
+                    <p>Desenvolvido por:</p>
+                    <p>Altnix Tecnologia</p>
+                    <p>WhatsApp: (48) 99100-4780</p>
+                    <a href="#" id="support-link-enc" class="text-blue-400 hover:underline">Suporte Técnico</a>
+                </div>
+                <div id="enc-app-version" class="text-xs text-center text-gray-400" data-version="1.0.5">V1.0.5</div>
+                <button id="logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <button id="mobile-menu-btn" class="text-gray-600 hover:text-gray-800 md:hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </button>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <div class="flex flex-wrap gap-2">
+                            <button id="tab-alunos" class="px-4 py-2 rounded-md bg-slate-800 text-white text-sm font-semibold">Alunos</button>
+                            <button id="tab-professores" class="px-4 py-2 rounded-md bg-gray-200 text-gray-700 text-sm font-semibold">Professores</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="add-aluno-btn" class="px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold">Novo Aluno</button>
+                            <button id="add-professor-btn" class="px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hidden">Novo Professor</button>
+                        </div>
+                    </div>
+
+                    <div id="cadastros-message" class="hidden mb-4 text-sm"></div>
+
+                    <div id="alunos-panel">
+                        <div class="flex flex-col gap-3 mb-4">
+                            <input type="text" id="aluno-search" placeholder="Buscar aluno por nome ou matrícula..." class="w-full md:max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            <div class="flex flex-wrap gap-2">
+                                <select id="aluno-filtro-turma" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    <option value="">Todas as turmas</option>
+                                </select>
+                                <select id="aluno-filtro-status" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    <option value="">Todos os status</option>
+                                    <option value="ativo">Ativo</option>
+                                    <option value="inativo">Inativo</option>
+                                </select>
+                                <select id="aluno-filtro-origem" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    <option value="">Todas as origens</option>
+                                    <option value="apoia">APOIA</option>
+                                    <option value="manual">Manual</option>
+                                </select>
+                                <select id="aluno-ordenacao" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    <option value="turma">Ordenar por Turma</option>
+                                    <option value="nome">Ordenar por Nome</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left border-b">
+                                        <th class="py-2">Aluno</th>
+                                        <th class="py-2">Matrícula</th>
+                                        <th class="py-2">Turma</th>
+                                        <th class="py-2">Status</th>
+                                        <th class="py-2">Origem</th>
+                                        <th class="py-2">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="alunos-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="professores-panel" class="hidden">
+                        <div class="flex flex-col gap-3 mb-4">
+                            <input type="text" id="professor-search" placeholder="Buscar professor por nome ou email..." class="w-full md:max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            <div class="flex flex-wrap gap-2">
+                                <select id="professor-filtro-status" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    <option value="">Todos os status</option>
+                                    <option value="ativo">Ativo</option>
+                                    <option value="inativo">Inativo</option>
+                                </select>
+                                <select id="professor-filtro-origem" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    <option value="">Todas as origens</option>
+                                    <option value="apoia">APOIA</option>
+                                    <option value="manual">Manual</option>
+                                </select>
+                                <select id="professor-filtro-vinculo" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    <option value="">Todos os vínculos</option>
+                                    <option value="efetivo">Efetivo</option>
+                                    <option value="act">ACT</option>
+                                </select>
+                                <select id="professor-ordenacao" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    <option value="nome">Ordenar por Nome</option>
+                                    <option value="vinculo">Ordenar por Vínculo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left border-b">
+                                        <th class="py-2">Professor</th>
+                                        <th class="py-2">Email</th>
+                                        <th class="py-2">Vínculo</th>
+                                        <th class="py-2">Status</th>
+                                        <th class="py-2">Origem</th>
+                                        <th class="py-2">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="professores-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Aluno -->
+    <div id="aluno-modal" class="hidden fixed inset-0 z-40 bg-black/50 flex items-center justify-center px-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+            <h3 id="aluno-modal-title" class="text-lg font-semibold mb-4">Aluno</h3>
+            <input type="hidden" id="aluno-id">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="md:col-span-2">
+                    <label class="text-sm font-medium text-gray-700">Nome Completo</label>
+                    <input type="text" id="aluno-nome" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Matrícula</label>
+                    <input type="text" id="aluno-matricula" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Turma</label>
+                    <select id="aluno-turma" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md"></select>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Responsável</label>
+                    <input type="text" id="aluno-responsavel" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Telefone</label>
+                    <input type="text" id="aluno-telefone" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Status</label>
+                    <select id="aluno-status" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex justify-end gap-2">
+                <button type="button" id="aluno-cancel" class="px-4 py-2 border border-gray-300 rounded-md">Cancelar</button>
+                <button type="button" id="aluno-save" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Professor -->
+    <div id="professor-modal" class="hidden fixed inset-0 z-40 bg-black/50 flex items-center justify-center px-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+            <h3 id="professor-modal-title" class="text-lg font-semibold mb-4">Professor</h3>
+            <input type="hidden" id="professor-id">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="md:col-span-2">
+                    <label class="text-sm font-medium text-gray-700">Nome</label>
+                    <input type="text" id="professor-nome" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="professor-email" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Telefone</label>
+                    <input type="text" id="professor-telefone" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Vínculo</label>
+                    <select id="professor-vinculo" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                        <option value="efetivo">Efetivo</option>
+                        <option value="act">ACT</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Status</label>
+                    <select id="professor-status" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md">
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex justify-end gap-2">
+                <button type="button" id="professor-cancel" class="px-4 py-2 border border-gray-300 rounded-md">Cancelar</button>
+                <button type="button" id="professor-save" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/sidebar.js"></script>
+    <script type="module" src="cadastros.js"></script>
+</body>
+</html>

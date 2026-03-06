@@ -1,4 +1,4 @@
-import { db, safeQuery, getLocalDateString } from './js/core.js';
+import { db, safeQuery, getLocalDateString, getYearFromDateString, getEncaminhamentosTableName, ensureEncaminhamentosYear, SUPABASE_URL, SUPABASE_ANON_KEY } from './js/core.js';
 import { requireAdminSession, signOut } from './js/auth.js';
 
 const motivosOptions = [
@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     initDashboard();
+    initQrModal();
 });
 
 function initDashboard() {
@@ -104,6 +105,75 @@ function initDashboard() {
 
     renderCalendar();
     loadDashboardData();
+}
+
+function initQrModal() {
+    const openBtn = document.getElementById('qr-open-btn');
+    const modal = document.getElementById('qr-modal');
+    const closeBtn = document.getElementById('qr-close-btn');
+    if (!openBtn || !modal) return;
+
+    openBtn.addEventListener('click', async () => {
+        modal.classList.remove('hidden');
+        await loadQrCode();
+    });
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    }
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) modal.classList.add('hidden');
+    });
+}
+
+async function loadQrCode() {
+    const qrEl = document.getElementById('qr-code');
+    const statusEl = document.getElementById('qr-status');
+    if (!qrEl || !statusEl) return;
+    statusEl.textContent = 'Gerando...';
+    try {
+        const { data: sessionData, error: sessionError } = await db.auth.getSession();
+        if (sessionError || !sessionData?.session?.access_token) {
+            statusEl.textContent = 'Sessão expirada. Faça login novamente.';
+            return;
+        }
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/enc_qr_issue`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${sessionData.session.access_token}`,
+                apikey: SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({})
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+            statusEl.textContent = payload?.error || 'Falha ao gerar QR.';
+            return;
+        }
+        const token = payload?.token;
+        const expiresAt = payload?.expires_at;
+        const usedAt = payload?.used_at;
+        if (!token) {
+            statusEl.textContent = 'Token não encontrado.';
+            return;
+        }
+        const pwaUrl = new URL('/encaminhamentos/pwa.html', window.location.origin);
+        pwaUrl.searchParams.set('token', token);
+        qrEl.innerHTML = '';
+        if (window.QRCode) {
+            // qrcodejs
+            new QRCode(qrEl, {
+                text: pwaUrl.toString(),
+                width: 220,
+                height: 220
+            });
+        }
+        const usedLabel = usedAt ? ' (já usado)' : '';
+        statusEl.textContent = expiresAt ? `Expira às 18h${usedLabel}` : `QR pronto${usedLabel}`;
+    } catch (err) {
+        statusEl.textContent = 'Erro ao gerar QR.';
+        console.error(err);
+    }
 }
 
 function changeMonth(delta) {
@@ -168,8 +238,11 @@ async function loadDashboardData() {
     }
 
     try {
+        const year = getYearFromDateString(range.start);
+        await ensureEncaminhamentosYear(year);
+        const tableName = getEncaminhamentosTableName(year);
         const { data } = await safeQuery(
-            db.from('enc_encaminhamentos')
+            db.from(tableName)
                 .select('id, data_encaminhamento, aluno_id, aluno_nome, professor_uid, professor_nome, motivos, acoes_tomadas, providencias, status, status_ligacao, whatsapp_enviado, whatsapp_status')
                 .gte('data_encaminhamento', range.start)
                 .lte('data_encaminhamento', range.end)

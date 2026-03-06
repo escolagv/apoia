@@ -1,4 +1,4 @@
-import { db, safeQuery } from './js/core.js';
+import { db, safeQuery, getYearFromDateString, getEncaminhamentosTableName, ensureEncaminhamentosYear, getCurrentYear } from './js/core.js';
 import { requireAdminSession, signOut } from './js/auth.js';
 
 // ===================================================================
@@ -10,6 +10,8 @@ const simpleReportButton = document.getElementById("simple-report-button");
 const completeReportButton = document.getElementById("complete-report-button");
 const resultsSummary = document.getElementById("results-summary");
 const paginationContainer = document.getElementById("pagination-container");
+const reportLayoutModal = document.getElementById('report-layout-modal');
+const reportLayoutCancel = document.getElementById('report-layout-cancel');
 
 let allResults = [];
 let currentPage = 1;
@@ -32,7 +34,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await handleSearch();
     simpleReportButton.addEventListener('click', () => generateReport('simple'));
-    completeReportButton.addEventListener('click', () => generateReport('complete'));
+    completeReportButton.addEventListener('click', () => openLayoutModal());
+
+    if (reportLayoutCancel && reportLayoutModal) {
+        reportLayoutCancel.addEventListener('click', () => reportLayoutModal.classList.add('hidden'));
+    }
+    if (reportLayoutModal) {
+        reportLayoutModal.addEventListener('click', (event) => {
+            if (event.target === reportLayoutModal) reportLayoutModal.classList.add('hidden');
+        });
+        reportLayoutModal.querySelectorAll('button[data-layout]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const layout = btn.dataset.layout || 'single';
+                reportLayoutModal.classList.add('hidden');
+                generateReport('complete', layout);
+            });
+        });
+    }
 });
 
 // ===================================================================
@@ -48,12 +66,19 @@ async function handleSearch() {
         estudante: (params.get('estudante') || '').toLowerCase(),
         professor: (params.get('professor') || '').toLowerCase(),
         data: params.get('data') || '',
-        registradoPor: (params.get('registradoPor') || '').toLowerCase()
+        registradoPor: (params.get('registradoPor') || '').toLowerCase(),
+        ano: params.get('ano') || '',
+        codigo: (params.get('codigo') || '').toLowerCase()
     };
 
     try {
+        const targetYear = filters.data
+            ? getYearFromDateString(filters.data)
+            : (Number(filters.ano) || getCurrentYear());
+        await ensureEncaminhamentosYear(targetYear);
+        const tableName = getEncaminhamentosTableName(targetYear);
         let query = db
-            .from('enc_encaminhamentos')
+            .from(tableName)
             .select('*')
             .order('data_encaminhamento', { ascending: false });
 
@@ -61,6 +86,7 @@ async function handleSearch() {
         if (filters.professor) query = query.ilike('professor_nome', `%${filters.professor}%`);
         if (filters.data) query = query.eq('data_encaminhamento', filters.data);
         if (filters.registradoPor) query = query.ilike('registrado_por_nome', `%${filters.registradoPor}%`);
+        if (filters.codigo) query = query.ilike('codigo', `%${filters.codigo}%`);
 
         const { data } = await safeQuery(query);
         allResults = data || [];
@@ -93,14 +119,15 @@ function displayResults(results, startIndex) {
         return;
     }
     resultsSummary.textContent = `Mostrando registros ${startIndex + 1} a ${startIndex + results.length} de ${allResults.length} encontrado(s).`;
-    let tableHTML = `<table><thead><tr><th>Data</th><th>Estudante</th><th>Professor</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
+    let tableHTML = `<table><thead><tr><th>Código</th><th>Data</th><th>Estudante</th><th>Professor</th><th>Status</th><th>Ações</th></tr></thead><tbody>`;
     results.forEach(item => {
         tableHTML += `<tr>
+                        <td>${item.codigo || ''}</td>
                         <td>${item.data_encaminhamento || ''}</td>
                         <td>${item.aluno_nome || ''}</td>
                         <td>${item.professor_nome || ''}</td>
                         <td>${item.status || ''}</td>
-                        <td><button class="pagination-btn" onclick="redirectToEdit('${item.id}')">Ver/Editar</button></td>
+                        <td><button class="pagination-btn" onclick="redirectToEdit('${item.id}', '${item.data_encaminhamento || ''}')">Ver/Editar</button></td>
                       </tr>`;
     });
     tableHTML += '</tbody></table>';
@@ -132,19 +159,29 @@ function renderPaginationControls(totalPages) {
     paginationContainer.innerHTML += `<button class="pagination-btn" onclick="renderPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Último</button>`;
 }
 
-function generateReport(reportType) {
+function openLayoutModal() {
+    if (reportLayoutModal) {
+        reportLayoutModal.classList.remove('hidden');
+    } else {
+        generateReport('complete', 'single');
+    }
+}
+
+function generateReport(reportType, layout = 'single') {
     if (allResults.length === 0) { alert("Não há resultados para gerar um relatório."); return; }
     try {
         localStorage.setItem('searchResults', JSON.stringify(allResults));
         localStorage.setItem('searchSummary', resultsSummary.textContent || '');
         localStorage.setItem('reportType', reportType);
+        localStorage.setItem('reportLayout', layout);
         const reportWindow = window.open('report.html', '_blank');
         if (!reportWindow) { alert('Seu navegador bloqueou a abertura da nova janela. Por favor, desative o bloqueador de pop-ups para este site.'); }
     } catch (e) { alert("Ocorreu um erro: " + e.message); }
 }
 
-window.redirectToEdit = function redirectToEdit(recordId) {
-    window.location.href = `encaminhamento.html?editId=${recordId}`;
+window.redirectToEdit = function redirectToEdit(recordId, dataEncaminhamento) {
+    const year = getYearFromDateString(dataEncaminhamento);
+    window.location.href = `encaminhamento.html?editId=${recordId}&year=${year}`;
 };
 window.renderPage = renderPage;
 

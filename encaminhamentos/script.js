@@ -1,4 +1,4 @@
-import { db, safeQuery, getLocalDateString, formatDateTimeSP } from './js/core.js';
+import { db, safeQuery, getLocalDateString, formatDateTimeSP, getYearFromDateString, getEncaminhamentosTableName, ensureEncaminhamentosYear, getCurrentYear } from './js/core.js';
 import { signOut, requireAdminSession } from './js/auth.js';
 
 // ===================================================================
@@ -36,7 +36,10 @@ const state = {
     turmasById: new Map(),
     turmasAnoAtual: new Set(),
     anoLetivoAtual: null,
-    syncTimer: null
+    syncTimer: null,
+    encYear: null,
+    editYear: null,
+    currentCodigo: ''
 };
 
 // ===================================================================
@@ -69,6 +72,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.getElementById('estudante').addEventListener('change', handleAlunoChange);
+    const dataEncInput = document.getElementById('dataEncaminhamento');
+    if (dataEncInput) {
+        dataEncInput.addEventListener('change', async () => {
+            state.encYear = getYearFromDateString(dataEncInput.value);
+            await ensureEncaminhamentosYear(state.encYear);
+            await loadCodigoPreview(true);
+        });
+    }
     document.getElementById('numeroTelefone').addEventListener('input', updateContatoResumo);
     document.getElementById('horarioLigacao').addEventListener('input', updateContatoResumo);
     document.getElementById('recadoCom').addEventListener('input', updateContatoResumo);
@@ -145,6 +156,8 @@ async function loadApp(user, profile) {
     const registradoLabel = document.getElementById('registradoPorLabel');
     if (registradoLabel) registradoLabel.textContent = profile.nome || user.email || '';
     document.getElementById('dataEncaminhamento').value = getLocalDateString();
+    state.encYear = getYearFromDateString(document.getElementById('dataEncaminhamento').value);
+    await ensureEncaminhamentosYear(state.encYear);
 
     await syncEncCache();
     await loadCaches();
@@ -429,10 +442,12 @@ async function saveRecord(e) {
     }
     setLoadingState(true, 'Salvando...');
     try {
-        await safeQuery(
-            db.from('enc_encaminhamentos').insert(newRecord).select().single()
-        );
-        showStatusMessage('✅ Encaminhamento registrado com sucesso!', true);
+        const encYear = getYearFromDateString(newRecord.data_encaminhamento);
+        await ensureEncaminhamentosYear(encYear);
+        const tableName = getEncaminhamentosTableName(encYear);
+        const { data: created } = await safeQuery(db.from(tableName).insert(newRecord).select().single());
+        const codigoMsg = created?.codigo ? ` Código: ${created.codigo}` : '';
+        showStatusMessage(`✅ Encaminhamento registrado com sucesso!${codigoMsg}`, true);
         resetForm();
     } catch (err) {
         handleSupabaseError(err);
@@ -447,8 +462,11 @@ async function updateRecord() {
     const updatedRecord = getFormData();
     setLoadingState(true, 'Atualizando...', true);
     try {
+        const encYear = state.editYear || getYearFromDateString(updatedRecord.data_encaminhamento);
+        await ensureEncaminhamentosYear(encYear);
+        const tableName = getEncaminhamentosTableName(encYear);
         await safeQuery(
-            db.from('enc_encaminhamentos')
+            db.from(tableName)
                 .update({ ...updatedRecord, updated_at: new Date().toISOString() })
                 .eq('id', recordId)
         );
@@ -467,13 +485,16 @@ async function checkEditMode() {
     const params = new URLSearchParams(window.location.search);
     const recordId = params.get('editId');
     if (recordId) {
+        const yearParam = Number(params.get('year')) || getCurrentYear();
+        state.editYear = yearParam;
+        await ensureEncaminhamentosYear(yearParam);
         const formTitle = document.getElementById('form-title');
         formTitle.textContent = "Editando Encaminhamento";
         showStatusMessage('Carregando dados...', false);
         document.getElementById('editId').value = recordId;
         try {
             const { data } = await safeQuery(
-                db.from('enc_encaminhamentos').select('*').eq('id', recordId).single()
+                db.from(getEncaminhamentosTableName(yearParam)).select('*').eq('id', recordId).single()
             );
             if (data) {
                 populateForm(data);
@@ -485,10 +506,13 @@ async function checkEditMode() {
         } catch (err) {
             handleSupabaseError(err);
         }
+    } else {
+        await loadCodigoPreview(true);
     }
 }
 
 function getFormData() {
+    const isEditing = !!document.getElementById('editId')?.value;
     const alunoSelect = document.getElementById('estudante');
     const professorSelect = document.getElementById('professor');
     const alunoId = Number(alunoSelect.value || 0) || null;
@@ -500,6 +524,7 @@ function getFormData() {
     const turma = aluno ? state.turmasById.get(Number(aluno.turma_id)) : null;
 
     return {
+        codigo: isEditing ? (document.getElementById('codigoEncaminhamento')?.value || state.currentCodigo || null)?.toString().replace(/\s+/g, '') || null : null,
         data_encaminhamento: document.getElementById('dataEncaminhamento').value,
         aluno_id: alunoId,
         aluno_nome: aluno?.nome_completo || alunoNomeSelecionado,
@@ -528,6 +553,9 @@ function getFormData() {
 }
 
 function populateForm(data) {
+    state.currentCodigo = (data.codigo || '').toString().replace(/\s+/g, '');
+    const codigoInput = document.getElementById('codigoEncaminhamento');
+    if (codigoInput) codigoInput.value = state.currentCodigo;
     document.getElementById('dataEncaminhamento').value = data.data_encaminhamento || '';
     ensureSelectOption('professor', data.professor_uid, data.professor_nome || data.professor_uid);
     ensureSelectOption('estudante', data.aluno_id, data.aluno_nome || `Aluno ${data.aluno_id}`);
@@ -555,6 +583,31 @@ function populateForm(data) {
     document.getElementById('status').value = data.status || '';
     document.getElementById('outrasInformacoes').value = data.outras_informacoes || '';
     document.getElementById('registradoPor').value = data.registrado_por_nome || '';
+}
+
+async function loadCodigoPreview(force = false) {
+    const codigoInput = document.getElementById('codigoEncaminhamento');
+    if (!codigoInput) return;
+    const isEditing = !!document.getElementById('editId')?.value;
+    if (isEditing && state.currentCodigo) {
+        codigoInput.value = state.currentCodigo;
+        return;
+    }
+    const dataEnc = document.getElementById('dataEncaminhamento')?.value;
+    const year = getYearFromDateString(dataEnc);
+    if (!force && state.currentCodigo && state.encYear === year) {
+        codigoInput.value = state.currentCodigo;
+        return;
+    }
+    try {
+        const { data } = await safeQuery(db.rpc('next_enc_codigo_preview', { p_data: dataEnc }));
+        const codigo = typeof data === 'string' ? data : (Array.isArray(data) ? data[0] : data);
+        state.currentCodigo = (codigo || '').toString().replace(/\s+/g, '');
+        state.encYear = year;
+        codigoInput.value = state.currentCodigo;
+    } catch (err) {
+        console.warn('Falha ao gerar codigo:', err?.message || err);
+    }
 }
 
 function ensureSelectOption(selectId, value, label) {
@@ -593,6 +646,8 @@ function resetForm() {
     document.getElementById('solicitacaoComparecimentoData').value = '';
     document.getElementById('solicitacaoComparecimentoHora').value = '';
     updateContatoResumo();
+    state.currentCodigo = '';
+    loadCodigoPreview(true);
     switchToEditMode(false);
     window.history.pushState({}, document.title, window.location.pathname);
 }

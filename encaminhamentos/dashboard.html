@@ -13,6 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 </head>
 <body class="bg-gray-200 text-gray-800">
@@ -31,6 +32,7 @@
                 <a href="encaminhamento.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Registrar</a>
                 <a href="consulta.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Consultar</a>
                 <a href="relatorios.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Relatórios</a>
+                <a href="cadastros.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Cadastros</a>
             </nav>
             <div class="p-4 border-t border-gray-700 space-y-4">
                 <div class="text-xs text-center text-gray-400">
@@ -40,7 +42,7 @@
                     <p>WhatsApp: (48) 99100-4780</p>
                     <a href="#" id="support-link-enc" class="text-blue-400 hover:underline">Suporte Técnico</a>
                 </div>
-                <div id="enc-app-version" class="text-xs text-center text-gray-400" data-version="1.0.5">V1.0.5</div>
+                <div id="enc-app-version" class="text-xs text-center text-gray-400" data-version="1.0.6">V1.0.6</div>
                 <button id="logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
             </div>
         </aside>
@@ -51,6 +53,7 @@
                     <button id="mobile-menu-btn" class="text-gray-600 hover:text-gray-800 md:hidden">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </button>
+                    <button id="qr-open-btn" class="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200">QR do Dia</button>
                 </div>
 
                 <div class="bg-white p-6 rounded-lg shadow-md">
@@ -142,10 +145,25 @@
         </div>
     </div>
 
+    <div id="qr-modal" class="hidden fixed inset-0 z-40 bg-black/50 flex items-center justify-center px-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold">QR do Dia</h3>
+                <button id="qr-close-btn" class="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <div class="flex flex-col items-center gap-3">
+                <div id="qr-code" class="border border-gray-200 rounded-md p-2 bg-white"></div>
+                <div id="qr-status" class="text-xs text-gray-500 text-center">Gerando...</div>
+                <div class="text-xs text-gray-400 text-center">Validação única do dia. Expira às 18h.</div>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="js/sidebar.js"></script>
     <script type="module" src="dashboard.js"></script>
 </body>
 </html>
+
 
 
 

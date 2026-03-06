@@ -148,3 +148,26 @@ export function resetInactivityTimer() {
         }
     }, INACTIVITY_TIMEOUT);
 }
+
+function enableUppercaseInputs() {
+    document.addEventListener('input', (event) => {
+        const el = event.target;
+        if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
+        if (el.dataset.keepCase === 'true') return;
+        const type = (el.type || '').toLowerCase();
+        if (['email', 'password', 'date', 'time', 'tel', 'number', 'search', 'url'].includes(type)) return;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const upper = el.value.toUpperCase();
+        if (upper !== el.value) {
+            el.value = upper;
+            if (start !== null && end !== null) {
+                el.setSelectionRange(start, end);
+            }
+        }
+    });
+}
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', enableUppercaseInputs);
+}

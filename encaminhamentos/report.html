@@ -25,25 +25,46 @@
             const resultsData = JSON.parse(localStorage.getItem('searchResults'));
             const summary = localStorage.getItem('searchSummary');
             const reportType = localStorage.getItem('reportType') || 'simple';
+            const reportLayout = localStorage.getItem('reportLayout') || 'single';
 
             if (resultsData && resultsData.length > 0) {
                 document.getElementById('report-date').textContent = `Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`;
                 document.getElementById('report-summary').textContent = summary || '';
 
                 let contentHTML = '';
-                document.getElementById('report-title').textContent = 'Ficha de Encaminhamento';
-                contentHTML = buildFichaReport(resultsData);
+                if (reportType === 'simple') {
+                    document.body.classList.add('simple-report');
+                    document.getElementById('report-title').textContent = 'Relatório Simples de Encaminhamentos';
+                    contentHTML = buildSimpleReport(resultsData);
+                    injectPageStyle('landscape');
+                } else {
+                    document.getElementById('report-title').textContent = 'Ficha de Encaminhamento';
+                    contentHTML = buildFichaReport(resultsData, reportLayout);
+                    if (reportLayout === 'double') {
+                        document.body.classList.add('report-double');
+                        injectPageStyle('landscape');
+                    }
+                }
                 document.getElementById('report-main-content').innerHTML = contentHTML;
 
                 localStorage.removeItem('searchResults');
                 localStorage.removeItem('searchSummary');
                 localStorage.removeItem('reportType');
+                localStorage.removeItem('reportLayout');
 
                 setTimeout(() => { window.print(); }, 500);
             } else {
                 document.getElementById('report-main-content').innerHTML = "<p>Nenhum dado encontrado para gerar o relatório.</p>";
             }
         });
+
+        function injectPageStyle(mode) {
+            const style = document.createElement('style');
+            if (mode === 'landscape') {
+                style.textContent = '@page { size: A4 landscape; margin: 12mm; }';
+            }
+            document.head.appendChild(style);
+        }
 
         function parseList(value) {
             if (!value) return [];
@@ -54,7 +75,48 @@
             return `<div class="checkbox-line">(${checked ? 'x' : ' '}) ${label}</div>`;
         }
 
-        function buildFichaReport(data) {
+        function buildSimpleReport(data) {
+            const grouped = new Map();
+            data.forEach(item => {
+                const key = `${item.aluno_id || ''}-${item.aluno_nome || ''}`;
+                if (!grouped.has(key)) grouped.set(key, []);
+                grouped.get(key).push(item);
+            });
+
+            let html = '<div class="simple-report-list">';
+            grouped.forEach((items, key) => {
+                const aluno = items[0];
+                const turma = aluno.turma_nome || '';
+                items.sort((a, b) => String(a.data_encaminhamento || '').localeCompare(String(b.data_encaminhamento || '')));
+                html += `
+                    <div class="simple-card">
+                        <div class="simple-header">
+                            <div><strong>Aluno:</strong> ${aluno.aluno_nome || '-'}</div>
+                            <div><strong>Turma:</strong> ${turma || '-'}</div>
+                        </div>
+                        <div class="simple-lines">
+                            ${items.map(buildSimpleLine).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function buildSimpleLine(item) {
+            const parts = [];
+            if (item.data_encaminhamento) parts.push(`Data: ${item.data_encaminhamento}`);
+            if (item.professor_nome) parts.push(`Prof: ${item.professor_nome}`);
+            if (item.motivos) parts.push(`Motivos: ${item.motivos}`);
+            if (item.acoes_tomadas) parts.push(`Ações: ${item.acoes_tomadas}`);
+            if (item.providencias) parts.push(`Providências: ${item.providencias}`);
+            if (item.status) parts.push(`Status: ${item.status}`);
+            if (item.codigo) parts.push(`Código: ${item.codigo}`);
+            return `<div class="simple-line">${parts.join(' • ')}</div>`;
+        }
+
+        function buildFichaReport(data, layout) {
             const motivosBase = [
                 "Indisciplina / Xingamentos",
                 "Gazeando aula",
@@ -75,7 +137,7 @@
             ];
 
             let reportHTML = '';
-            data.forEach(item => {
+            const renderCard = (item) => {
                 const motivos = parseList(item.motivos);
                 const acoes = parseList(item.acoes_tomadas);
                 const providencias = parseList(item.providencias);
@@ -83,12 +145,13 @@
                 const outrosAcoes = acoes.find(m => m.startsWith('Outros:')) || '';
                 const outrosProvidencias = providencias.find(m => m.startsWith('Outros:')) || '';
 
-                reportHTML += `
+                return `
                     <div class="record-card">
                         <div class="ficha-header">
                             <div class="ficha-title">E.E.B GETÚLIO VARGAS</div>
                             <div class="ficha-subtitle">FICHA DE ENCAMINHAMENTO</div>
                         </div>
+                        <div class="ficha-field"><strong>CÓDIGO:</strong> ${item.codigo || ''}</div>
                         <div class="ficha-field"><strong>PROFESSOR(A):</strong> ${item.professor_nome || ''}</div>
                         <div class="ficha-field"><strong>ESTUDANTE:</strong> ${item.aluno_nome || ''}</div>
                         <div class="ficha-field"><strong>TURMA:</strong> ${item.turma_nome || ''}</div>
@@ -108,11 +171,11 @@
                             <div class="section-title">Encaminhamentos realizados na orientação/coordenação</div>
                             <div class="checkbox-group">
                                 ${acoesBase.map(m => checkbox(m, acoes.includes(m))).join('')}
-                                ${checkbox('Outros', !!outrosAcoes)}
+                            ${checkbox('Outros', !!outrosAcoes)}
                             </div>
                             <div class="line-block">${outrosAcoes.replace('Outros:', '').trim() || ''}</div>
-                        <div class="ficha-field"><strong>RESPONSÁVEL:</strong> ${item.responsavel_nome || ''}</div>
-                        <div class="ficha-field"><strong>TELEFONE:</strong> ${item.numero_telefone || ''}</div>
+                            <div class="ficha-field"><strong>RESPONSÁVEL:</strong> ${item.responsavel_nome || ''}</div>
+                            <div class="ficha-field"><strong>TELEFONE:</strong> ${item.numero_telefone || ''}</div>
                             <div class="ficha-field"><strong>HORÁRIO DO CONTATO:</strong> ${item.horario_ligacao || ''}</div>
                             <div class="checkbox-group">
                                 ${checkbox('Atendeu', item.status_ligacao === 'Atendeu')}
@@ -139,7 +202,17 @@
                         </div>
                     </div>
                 `;
-            });
+            };
+
+            if (layout === 'double') {
+                for (let i = 0; i < data.length; i += 2) {
+                    const first = data[i];
+                    const second = data[i + 1];
+                    reportHTML += `<div class="two-up-page">${renderCard(first)}${second ? renderCard(second) : ''}</div>`;
+                }
+            } else {
+                data.forEach(item => { reportHTML += renderCard(item); });
+            }
             return reportHTML;
         }
     </script>

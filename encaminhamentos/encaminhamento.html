@@ -31,6 +31,7 @@
                 <a href="encaminhamento.html" class="block px-4 py-2 rounded-md bg-gray-700">Registrar</a>
                 <a href="consulta.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Consultar</a>
                 <a href="relatorios.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Relatórios</a>
+                <a href="cadastros.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Cadastros</a>
             </nav>
             <div class="p-4 border-t border-gray-700 space-y-4">
                 <div class="text-xs text-center text-gray-400">
@@ -40,7 +41,7 @@
                     <p>WhatsApp: (48) 99100-4780</p>
                     <a href="#" id="support-link-enc" class="text-blue-400 hover:underline">Suporte Técnico</a>
                 </div>
-                <div id="enc-app-version" class="text-xs text-center text-gray-400" data-version="1.0.5">V1.0.5</div>
+                <div id="enc-app-version" class="text-xs text-center text-gray-400" data-version="1.0.6">V1.0.6</div>
                 <button id="logout-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
             </div>
         </aside>
@@ -73,11 +74,27 @@
                             <h3 class="text-base font-semibold text-gray-900 border-b border-gray-200 pb-2">Dados do Encaminhamento</h3>
                             <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
+                                    <label for="codigoEncaminhamento" class="text-sm font-medium text-gray-700">Código</label>
+                                    <input type="text" id="codigoEncaminhamento" readonly class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm bg-gray-50 font-mono tracking-wider">
+                                </div>
+                                <div>
                                     <label for="dataEncaminhamento" class="text-sm font-medium text-gray-700">Data do Encaminhamento</label>
                                     <input type="date" id="dataEncaminhamento" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 </div>
+                            </div>
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="relative">
-                                    <label for="professor" class="text-sm font-medium text-gray-700">Professor(a)</label>
+                                    <label for="estudante" class="text-sm font-medium text-gray-700">Estudante</label>
+                                    <select id="estudante" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Carregando...</option>
+                                    </select>
+                                    <div id="aluno-search-panel" class="hidden absolute left-0 right-0 mt-2 border border-gray-200 rounded-md bg-white p-2 shadow-lg z-30">
+                                        <input type="text" id="aluno-search-input" placeholder="Digite para filtrar..." class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md">
+                                        <div id="aluno-search-list" class="mt-2 max-h-56 overflow-y-auto text-sm divide-y divide-gray-100"></div>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <label for="professor" class="text-sm font-medium text-gray-700">Professor(a) que encaminhou</label>
                                     <select id="professor" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Carregando...</option>
                                     </select>
@@ -85,16 +102,6 @@
                                         <input type="text" id="professor-search-input" placeholder="Digite para filtrar..." class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md">
                                         <div id="professor-search-list" class="mt-2 max-h-56 overflow-y-auto text-sm divide-y divide-gray-100"></div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="mt-4 relative">
-                                <label for="estudante" class="text-sm font-medium text-gray-700">Estudante</label>
-                                <select id="estudante" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">Carregando...</option>
-                                </select>
-                                <div id="aluno-search-panel" class="hidden absolute left-0 right-0 mt-2 border border-gray-200 rounded-md bg-white p-2 shadow-lg z-30">
-                                    <input type="text" id="aluno-search-input" placeholder="Digite para filtrar..." class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md">
-                                    <div id="aluno-search-list" class="mt-2 max-h-56 overflow-y-auto text-sm divide-y divide-gray-100"></div>
                                 </div>
                             </div>
                             <div class="mt-4">
@@ -225,6 +232,7 @@
     <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 

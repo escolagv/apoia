@@ -20,6 +20,37 @@ export function getLocalDateString() {
     return `${year}-${month}-${day}`;
 }
 
+export function getCurrentYear() {
+    return new Date().getFullYear();
+}
+
+export function getYearFromDateString(value) {
+    if (!value) return getCurrentYear();
+    const match = String(value).match(/^(\d{4})-\d{2}-\d{2}$/);
+    if (match) return Number(match[1]);
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed.getFullYear();
+    return getCurrentYear();
+}
+
+export function getEncaminhamentosTableName(year) {
+    const safeYear = Number(year) || getCurrentYear();
+    return `enc_encaminhamentos_${safeYear}`;
+}
+
+const ensuredYears = new Set();
+
+export async function ensureEncaminhamentosYear(year) {
+    const safeYear = Number(year);
+    if (!safeYear || ensuredYears.has(safeYear)) return;
+    try {
+        await safeQuery(db.rpc('ensure_encaminhamentos_year', { p_year: safeYear }));
+        ensuredYears.add(safeYear);
+    } catch (err) {
+        console.warn('Falha ao garantir tabela anual:', err?.message || err);
+    }
+}
+
 export async function safeQuery(queryBuilder) {
     const { data, error, count } = await queryBuilder;
     if (error) {
@@ -46,4 +77,27 @@ export function formatDateTimeSP(value) {
         timeStyle: 'short',
         hour12: false
     }).format(date);
+}
+
+function enableUppercaseInputs() {
+    document.addEventListener('input', (event) => {
+        const el = event.target;
+        if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
+        if (el.dataset.keepCase === 'true') return;
+        const type = (el.type || '').toLowerCase();
+        if (['email', 'password', 'date', 'time', 'tel', 'number', 'search', 'url'].includes(type)) return;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const upper = el.value.toUpperCase();
+        if (upper !== el.value) {
+            el.value = upper;
+            if (start !== null && end !== null) {
+                el.setSelectionRange(start, end);
+            }
+        }
+    });
+}
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', enableUppercaseInputs);
 }
