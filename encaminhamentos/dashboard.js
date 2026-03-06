@@ -111,21 +111,27 @@ function initQrModal() {
     const openBtn = document.getElementById('qr-open-btn');
     const modal = document.getElementById('qr-modal');
     const closeBtn = document.getElementById('qr-close-btn');
+    const newBtn = document.getElementById('qr-new-btn');
     if (!openBtn || !modal) return;
 
     openBtn.addEventListener('click', async () => {
         modal.classList.remove('hidden');
-        await loadQrCode();
+        await loadQrCode(false);
     });
     if (closeBtn) {
         closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    }
+    if (newBtn) {
+        newBtn.addEventListener('click', async () => {
+            await loadQrCode(true);
+        });
     }
     modal.addEventListener('click', (event) => {
         if (event.target === modal) modal.classList.add('hidden');
     });
 }
 
-async function loadQrCode() {
+async function loadQrCode(forceNew = false) {
     const qrEl = document.getElementById('qr-code');
     const statusEl = document.getElementById('qr-status');
     if (!qrEl || !statusEl) return;
@@ -143,7 +149,7 @@ async function loadQrCode() {
                 Authorization: `Bearer ${sessionData.session.access_token}`,
                 apikey: SUPABASE_ANON_KEY
             },
-            body: JSON.stringify({})
+            body: JSON.stringify({ force: forceNew })
         });
         const payload = await response.json();
         if (!response.ok) {

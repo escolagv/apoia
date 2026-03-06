@@ -40,12 +40,21 @@ async function validateToken() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                apikey: SUPABASE_ANON_KEY
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`
             },
             body: JSON.stringify({ token, device_id: deviceId })
         });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload?.error || 'Falha na validação.');
+        let payload = {};
+        try {
+            payload = await response.json();
+        } catch (err) {
+            payload = {};
+        }
+        if (!response.ok) {
+            const msg = payload?.error || `Falha na validação (${response.status})`;
+            throw new Error(msg);
+        }
         const expiresAt = payload?.expires_at;
         if (expiresAt) {
             const time = new Date(expiresAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });

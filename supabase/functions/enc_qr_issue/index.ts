@@ -71,16 +71,31 @@ serve(async (req) => {
     const { dateStr } = getSaoPauloDateParts(now);
     const expiresAt = new Date(`${dateStr}T18:00:00-03:00`);
 
+    let forceNew = false;
+    try {
+      const payload = await req.json();
+      forceNew = !!payload?.force;
+    } catch (_) {
+      forceNew = false;
+    }
+
     const { data: existing } = await adminClient
       .from('enc_qr_tokens')
       .select('id, token, expires_at, used_at, device_id')
       .eq('dia', dateStr)
       .maybeSingle();
 
-    if (existing?.token) {
+    if (existing?.token && !forceNew) {
       return new Response(JSON.stringify(existing), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
+    }
+
+    if (existing?.id && forceNew) {
+      await adminClient
+        .from('enc_qr_tokens')
+        .update({ expires_at: now.toISOString(), used_at: now.toISOString() })
+        .eq('id', existing.id);
     }
 
     const token = crypto.randomUUID();
