@@ -190,7 +190,7 @@ async function runOcr(blob) {
         const data = result?.data;
         if (!data) return null;
 
-        const fields = extractHeaderFields(data, canvas.height);
+        const fields = extractHeaderFields(data, canvas.width, canvas.height);
         const motivos = extractCheckedLabels(data, ctx, motivoDefs, canvas.width);
         const acoes = extractCheckedLabels(data, ctx, acaoDefs, canvas.width);
         const providencias = extractCheckedLabels(data, ctx, providenciaDefs, canvas.width);
@@ -218,34 +218,82 @@ function normalizeText(text) {
         .trim();
 }
 
-function extractHeaderFields(data, imageHeight) {
-    const fields = { professor: '', estudante: '', turma: '', data: '', matricula: '' };
-    const lines = data.lines || [];
-    lines.forEach(line => {
-        const raw = line.text || '';
-        const norm = normalizeText(raw);
-        const y0 = line.bbox?.y0 ?? 0;
-        if (imageHeight && y0 > imageHeight * 0.35) return;
-        if (norm.includes('professor')) {
-            if (!norm.includes('profissionais')) {
-                fields.professor = raw.replace(/.*professor[^\w]*/i, '').trim();
-            }
-        } else if (norm.includes('estudante')) {
-            fields.estudante = raw.replace(/.*estudante[^\w]*/i, '').trim();
-        } else if (norm.startsWith('turma')) {
-            fields.turma = raw.replace(/.*turma[^\w]*/i, '').trim();
-        } else if (norm.includes('matricula')) {
-            fields.matricula = raw.replace(/.*matricula[^\d]*/i, '').replace(/\D+/g, '').trim();
-        } else if (norm.startsWith('data')) {
-            fields.data = raw.replace(/.*data[^\w]*/i, '').trim();
+function startsWithKnownFieldLabel(text) {
+    return /^(?:professor(?:a)?|aluno|estudante|turma|data|matri)/i.test(normalizeText(text));
+}
+
+function extractValueAfterLabel(text, pattern) {
+    const match = (text || '').match(pattern);
+    if (!match) return '';
+    return (match[1] || '').replace(/^[\s:;.,|_-]+/, '').trim();
+}
+
+function getOrderedOcrLines(data) {
+    const lines = Array.isArray(data?.lines) ? [...data.lines] : [];
+    if (lines.length > 0) {
+        return lines
+            .filter(line => (line?.text || '').trim())
+            .sort((a, b) => {
+                const ay = a?.bbox?.y0 ?? 0;
+                const by = b?.bbox?.y0 ?? 0;
+                if (ay !== by) return ay - by;
+                const ax = a?.bbox?.x0 ?? 0;
+                const bx = b?.bbox?.x0 ?? 0;
+                return ax - bx;
+            })
+            .map(line => ({ text: line.text || '' }));
+    }
+
+    return (data?.text || '')
+        .split(/\r?\n/)
+        .map(text => ({ text }))
+        .filter(line => line.text.trim());
+}
+
+function extractFieldFromLines(lines, pattern, options = {}) {
+    const { digitsOnly = false } = options;
+
+    for (let index = 0; index < lines.length; index += 1) {
+        const raw = (lines[index]?.text || '').trim();
+        if (!raw) continue;
+
+        const directValue = extractValueAfterLabel(raw, pattern);
+        if (directValue) {
+            return digitsOnly ? directValue.replace(/\D+/g, '').trim() : directValue;
         }
-    });
+
+        if (!pattern.test(raw)) continue;
+
+        for (let nextIndex = index + 1; nextIndex < lines.length; nextIndex += 1) {
+            const nextRaw = (lines[nextIndex]?.text || '').trim();
+            if (!nextRaw) continue;
+            if (startsWithKnownFieldLabel(nextRaw)) return '';
+            return digitsOnly ? nextRaw.replace(/\D+/g, '').trim() : nextRaw;
+        }
+    }
+
+    return '';
+}
+
+function extractHeaderFields(data) {
+    const fields = { professor: '', estudante: '', turma: '', data: '', matricula: '' };
+    const lines = getOrderedOcrLines(data);
+
+    fields.professor = extractFieldFromLines(lines, /^\s*professor(?:\(a\))?[^\w]*(.*)$/i);
+    fields.estudante = extractFieldFromLines(lines, /^\s*(?:estudante|aluno)[^\w]*(.*)$/i);
+    fields.turma = extractFieldFromLines(lines, /^\s*turma[^\w]*(.*)$/i);
+    fields.data = extractFieldFromLines(lines, /^\s*data[^\w]*(.*)$/i);
+    fields.matricula = extractFieldFromLines(lines, /^\s*matr[íi]cula[^\d]*(.*)$/i, { digitsOnly: true });
+
     if (!fields.matricula) {
-        const match = (data.text || '').match(/matri[^\d]*([0-9]{4,})/i);
+        const match = (data.text || '').match(/matr[íi]cula[^\d]*([0-9]{4,})/i);
         if (match) fields.matricula = match[1];
     }
     fields.professor = cleanName(fields.professor);
     fields.estudante = cleanName(fields.estudante);
+    if (fields.matricula && fields.matricula.length < 4) {
+        fields.matricula = '';
+    }
     return fields;
 }
 
@@ -280,32 +328,21 @@ function extractCheckedLabels(data, ctx, defs, imageWidth) {
         });
         if (!line || !line.bbox) return;
         if (imageWidth && line.bbox.x0 > imageWidth * 0.4) return;
-        const isChecked = detectMarkInline(ctx, line.bbox) || detectMarkLeft(ctx, line.bbox);
+        const isChecked = detectMarkLeft(ctx, line.bbox);
         if (isChecked) checked.push(def.label);
     });
     return checked;
 }
 
-function detectMarkInline(ctx, bbox) {
-    const { x0, y0, x1, y1 } = bbox;
-    const height = y1 - y0;
-    const width = Math.max(20, height * 1.1);
-    const x = Math.max(0, x0);
-    const y = Math.max(0, y0 - 2);
-    const w = Math.max(10, width);
-    const h = Math.max(10, height + 4);
-    return isRegionCenterMarked(ctx, x, y, w, h, 0.35);
-}
-
 function detectMarkLeft(ctx, bbox) {
     const { x0, y0, x1, y1 } = bbox;
     const height = y1 - y0;
-    const width = Math.max(18, height * 0.8);
-    const x = Math.max(0, x0 - width - 6);
+    const width = Math.max(16, height * 0.6);
+    const x = Math.max(0, x0 - width - 12);
     const y = Math.max(0, y0 - 2);
     const w = Math.max(8, width);
     const h = Math.max(8, height + 4);
-    return isRegionCenterMarked(ctx, x, y, w, h, 0.35);
+    return isRegionCenterMarked(ctx, x, y, w, h, 0.5);
 }
 
 function isRegionDark(ctx, x, y, w, h, threshold) {
@@ -340,7 +377,8 @@ function cleanName(value) {
     const text = (value || '').replace(/[|_]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!text) return '';
     if (text.length < 3) return '';
-    if (/profissionais|unidade escolar/i.test(text)) return '';
+    if (/^(?:aluno|estudante|professor(?:a)?|turma|data|matricula)$/i.test(normalizeText(text))) return '';
+    if (/profissionais|unidade escolar|acima citado|direcionado/i.test(text)) return '';
     const words = text.split(' ').filter(Boolean);
     if (words.length < 2 && text.length < 6) return '';
     return text;

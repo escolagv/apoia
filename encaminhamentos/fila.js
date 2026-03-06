@@ -58,6 +58,15 @@ async function buildSignedUrls() {
     await Promise.all(tasks);
 }
 
+function sanitizeOcrName(value) {
+    const text = (value || '').replace(/[|_]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!text) return '';
+    if (/profissionais|unidade escolar|acima citado|direcionado/i.test(text)) return '';
+    const words = text.split(' ').filter(Boolean);
+    if (words.length < 2 && text.length < 6) return '';
+    return text;
+}
+
 function renderQueue() {
     const list = document.getElementById('queue-list');
     const countEl = document.getElementById('queue-count');
@@ -82,8 +91,8 @@ function renderQueue() {
             : `<div class="w-full h-40 flex items-center justify-center bg-gray-100 rounded-md border border-gray-200 text-xs text-gray-400">Sem prévia</div>`;
 
         const matriculaValue = job.aluno_matricula ? String(job.aluno_matricula) : (job.ocr_json?.fields?.matricula || '');
-        const alunoNome = (job.ocr_json?.fields?.estudante || '').trim();
-        const profNome = (job.ocr_json?.fields?.professor || '').trim();
+        const alunoNome = sanitizeOcrName(job.ocr_json?.fields?.estudante || '');
+        const profNome = sanitizeOcrName(job.ocr_json?.fields?.professor || '');
         return `
             <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col gap-3">
                 ${previewHtml}

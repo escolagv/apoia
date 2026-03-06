@@ -607,7 +607,8 @@ function applyOcrPrefill(ocrJson) {
 function sanitizeOcrName(value) {
     const text = (value || '').replace(/[|_]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!text) return '';
-    if (/profissionais|unidade escolar/i.test(text)) return '';
+    if (/^(?:aluno|estudante|professor(?:a)?|turma|data|matricula)$/i.test(normalizeText(text))) return '';
+    if (/profissionais|unidade escolar|acima citado|direcionado/i.test(text)) return '';
     const words = text.split(' ').filter(Boolean);
     if (words.length < 2 && text.length < 6) return '';
     return text;
