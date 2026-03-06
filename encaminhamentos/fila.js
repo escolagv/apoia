@@ -29,7 +29,7 @@ async function loadQueue() {
     try {
         const { data } = await safeQuery(
             db.from('enc_scan_jobs')
-                .select('id, status, storage_path, mime_type, created_at, device_id, drive_url, drive_file_id, encaminhamento_id, aluno_matricula')
+                .select('id, status, storage_path, mime_type, created_at, device_id, drive_url, drive_file_id, encaminhamento_id, aluno_matricula, ocr_json')
                 .order('created_at', { ascending: false })
         );
         state.jobs = data || [];
@@ -81,15 +81,20 @@ function renderQueue() {
             ? `<img src="${preview}" alt="Prévia" class="w-full h-40 object-cover rounded-md border border-gray-200">`
             : `<div class="w-full h-40 flex items-center justify-center bg-gray-100 rounded-md border border-gray-200 text-xs text-gray-400">Sem prévia</div>`;
 
-        const matriculaValue = job.aluno_matricula ? String(job.aluno_matricula) : '';
+        const matriculaValue = job.aluno_matricula ? String(job.aluno_matricula) : (job.ocr_json?.fields?.matricula || '');
+        const alunoNome = (job.ocr_json?.fields?.estudante || '').trim();
+        const profNome = (job.ocr_json?.fields?.professor || '').trim();
         return `
             <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col gap-3">
                 ${previewHtml}
-                <div class="text-xs text-gray-500">Enviado em: ${created}</div>
+                <div class="flex items-center justify-between gap-2 text-xs text-gray-500">
+                    <span>Enviado em: ${created}</span>
+                    <span>Matrícula: <strong class="text-gray-700">${matriculaValue || '-'}</strong></span>
+                </div>
                 <div class="text-xs text-gray-500">Status: <span class="font-semibold text-gray-700">${status}</span></div>
+                <div class="text-xs text-gray-600">Aluno: <span class="font-semibold text-gray-800">${alunoNome || '-'}</span></div>
+                <div class="text-xs text-gray-600">Professor: <span class="font-semibold text-gray-800">${profNome || '-'}</span></div>
                 ${driveLink}
-                <div class="text-xs text-gray-500">Matrícula do estudante</div>
-                <input type="text" class="queue-matricula-input w-full px-2 py-1 text-sm border border-gray-300 rounded-md" data-id="${job.id}" value="${matriculaValue}" placeholder="Digite a matrícula">
                 <div class="flex gap-2">
                     <button type="button" class="queue-select-btn flex-1 px-3 py-2 text-xs font-semibold rounded-md ${disabled ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}"
                         data-id="${job.id}" ${disabled ? 'disabled' : ''}>
@@ -108,23 +113,7 @@ function renderQueue() {
         btn.addEventListener('click', async () => {
             const id = btn.getAttribute('data-id');
             if (!id) return;
-            const input = document.querySelector(`.queue-matricula-input[data-id="${id}"]`);
-            const matricula = (input?.value || '').trim();
-            if (matricula) {
-                try {
-                    await safeQuery(
-                        db.from('enc_scan_jobs')
-                            .update({ aluno_matricula: matricula })
-                            .eq('id', id)
-                    );
-                } catch (err) {
-                    console.warn('Falha ao salvar matrícula na fila:', err?.message || err);
-                }
-            }
-            const params = new URLSearchParams();
-            params.set('scanId', id);
-            if (matricula) params.set('matricula', matricula);
-            window.location.href = `encaminhamento.html?${params.toString()}`;
+            window.location.href = `encaminhamento.html?scanId=${encodeURIComponent(id)}`;
         });
     });
 

@@ -589,6 +589,9 @@ function applyOcrPrefill(ocrJson) {
     if (professor) {
         prefillProfessorByName(professor);
     }
+    if (fields.matricula) {
+        prefillAlunoByMatricula(fields.matricula);
+    }
 
     if (Array.isArray(ocr.motivos) && ocr.motivos.length) {
         setCheckboxValues('motivo', ocr.motivos.join(', '));

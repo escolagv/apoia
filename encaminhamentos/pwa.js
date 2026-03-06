@@ -182,6 +182,7 @@ async function runOcr(blob) {
         canvas.height = image.height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(image, 0, 0);
+        preprocessCanvas(ctx, canvas.width, canvas.height);
 
         const result = await window.Tesseract.recognize(canvas, 'por', {
             logger: () => {}
@@ -218,7 +219,7 @@ function normalizeText(text) {
 }
 
 function extractHeaderFields(data) {
-    const fields = { professor: '', estudante: '', turma: '', data: '' };
+    const fields = { professor: '', estudante: '', turma: '', data: '', matricula: '' };
     const lines = data.lines || [];
     lines.forEach(line => {
         const raw = line.text || '';
@@ -229,10 +230,16 @@ function extractHeaderFields(data) {
             fields.estudante = raw.replace(/.*estudante[^\w]*/i, '').trim();
         } else if (norm.startsWith('turma')) {
             fields.turma = raw.replace(/.*turma[^\w]*/i, '').trim();
+        } else if (norm.includes('matricula')) {
+            fields.matricula = raw.replace(/.*matricula[^\d]*/i, '').replace(/\D+/g, '').trim();
         } else if (norm.startsWith('data')) {
             fields.data = raw.replace(/.*data[^\w]*/i, '').trim();
         }
     });
+    if (!fields.matricula) {
+        const match = (data.text || '').match(/matri[^\d]*([0-9]{4,})/i);
+        if (match) fields.matricula = match[1];
+    }
     return fields;
 }
 
@@ -266,10 +273,21 @@ function extractCheckedLabels(data, ctx, defs) {
             return def.tokens.every(token => norm.includes(token));
         });
         if (!line || !line.bbox) return;
-        const isChecked = detectMarkLeft(ctx, line.bbox);
+        const isChecked = detectMarkInline(ctx, line.bbox) || detectMarkLeft(ctx, line.bbox);
         if (isChecked) checked.push(def.label);
     });
     return checked;
+}
+
+function detectMarkInline(ctx, bbox) {
+    const { x0, y0, x1, y1 } = bbox;
+    const height = y1 - y0;
+    const width = Math.max(20, height * 1.1);
+    const x = Math.max(0, x0);
+    const y = Math.max(0, y0 - 2);
+    const w = Math.max(10, width);
+    const h = Math.max(10, height + 4);
+    return isRegionDark(ctx, x, y, w, h, 0.14);
 }
 
 function detectMarkLeft(ctx, bbox) {
@@ -300,6 +318,28 @@ function isRegionDark(ctx, x, y, w, h, threshold) {
         return ratio > threshold;
     } catch (err) {
         return false;
+    }
+}
+
+function preprocessCanvas(ctx, width, height) {
+    try {
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const data = imageData.data;
+        const contrast = 1.2;
+        const brightness = 5;
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+            const adj = Math.min(255, Math.max(0, (gray - 128) * contrast + 128 + brightness));
+            data[i] = adj;
+            data[i + 1] = adj;
+            data[i + 2] = adj;
+        }
+        ctx.putImageData(imageData, 0, 0);
+    } catch (err) {
+        // ignore
     }
 }
 
