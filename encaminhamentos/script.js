@@ -609,8 +609,12 @@ function sanitizeOcrName(value) {
     if (!text) return '';
     if (/^(?:aluno|estudante|professor(?:a)?|turma|data|matricula)$/i.test(normalizeText(text))) return '';
     if (/profissionais|unidade escolar|acima citado|direcionado/i.test(text)) return '';
+    if (/\d/.test(text)) return '';
     const words = text.split(' ').filter(Boolean);
-    if (words.length < 2 && text.length < 6) return '';
+    const meaningfulWords = words.filter(word => /[a-zà-ÿ]{2,}/i.test(word));
+    const letters = (text.match(/[a-zà-ÿ]/gi) || []).length;
+    if (meaningfulWords.length < 2) return '';
+    if (letters < Math.max(6, Math.floor(text.length * 0.7))) return '';
     return text;
 }
 

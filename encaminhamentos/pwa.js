@@ -218,8 +218,24 @@ function normalizeText(text) {
         .trim();
 }
 
+function isLikelyPersonName(text) {
+    const cleaned = (text || '').replace(/[|_]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!cleaned) return false;
+    if (/\d/.test(cleaned)) return false;
+
+    const words = cleaned.split(' ').filter(Boolean);
+    if (words.length < 2) return false;
+
+    const meaningfulWords = words.filter(word => /[a-zà-ÿ]{2,}/i.test(word));
+    if (meaningfulWords.length < 2) return false;
+
+    const letters = (cleaned.match(/[a-zà-ÿ]/gi) || []).length;
+    return letters >= Math.max(6, Math.floor(cleaned.length * 0.7));
+}
+
 function startsWithKnownFieldLabel(text) {
-    return /^(?:professor(?:a)?|aluno|estudante|turma|data|matri)/i.test(normalizeText(text));
+    const normalized = normalizeText(text);
+    return /^(?:professor|profes+sor|profe+sor|aluno|estudante|turma|data|matri|matricula)/i.test(normalized);
 }
 
 function extractValueAfterLabel(text, pattern) {
@@ -279,11 +295,11 @@ function extractHeaderFields(data) {
     const fields = { professor: '', estudante: '', turma: '', data: '', matricula: '' };
     const lines = getOrderedOcrLines(data);
 
-    fields.professor = extractFieldFromLines(lines, /^\s*professor(?:\(a\))?[^\w]*(.*)$/i);
+    fields.professor = extractFieldFromLines(lines, /^\s*prof(?:e|o|0)?s{1,2}or(?:\(a\))?[^\w]*(.*)$/i);
     fields.estudante = extractFieldFromLines(lines, /^\s*(?:estudante|aluno)[^\w]*(.*)$/i);
     fields.turma = extractFieldFromLines(lines, /^\s*turma[^\w]*(.*)$/i);
     fields.data = extractFieldFromLines(lines, /^\s*data[^\w]*(.*)$/i);
-    fields.matricula = extractFieldFromLines(lines, /^\s*matr[íi]cula[^\d]*(.*)$/i, { digitsOnly: true });
+    fields.matricula = extractFieldFromLines(lines, /^\s*matr(?:[íi]cula|icula|icu1a|icuia)[^\d]*(.*)$/i, { digitsOnly: true });
 
     if (!fields.matricula) {
         const match = (data.text || '').match(/matr[íi]cula[^\d]*([0-9]{4,})/i);
@@ -379,8 +395,7 @@ function cleanName(value) {
     if (text.length < 3) return '';
     if (/^(?:aluno|estudante|professor(?:a)?|turma|data|matricula)$/i.test(normalizeText(text))) return '';
     if (/profissionais|unidade escolar|acima citado|direcionado/i.test(text)) return '';
-    const words = text.split(' ').filter(Boolean);
-    if (words.length < 2 && text.length < 6) return '';
+    if (!isLikelyPersonName(text)) return '';
     return text;
 }
 
