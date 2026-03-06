@@ -78,7 +78,7 @@ function renderQueue() {
         const deleteDisabled = status === 'vinculado';
         const driveLink = job.drive_url ? `<a href="${job.drive_url}" target="_blank" rel="noopener" class="text-xs text-blue-600 hover:underline">Abrir no Drive</a>` : '';
         const previewHtml = preview
-            ? `<img src="${preview}" alt="Prévia" class="w-full h-40 object-cover rounded-md border border-gray-200">`
+            ? `<img src="${preview}" data-url="${preview}" alt="Prévia" class="queue-image w-full h-40 object-cover rounded-md border border-gray-200 cursor-zoom-in">`
             : `<div class="w-full h-40 flex items-center justify-center bg-gray-100 rounded-md border border-gray-200 text-xs text-gray-400">Sem prévia</div>`;
 
         const matriculaValue = job.aluno_matricula ? String(job.aluno_matricula) : (job.ocr_json?.fields?.matricula || '');
@@ -89,9 +89,9 @@ function renderQueue() {
                 ${previewHtml}
                 <div class="flex items-center justify-between gap-2 text-xs text-gray-500">
                     <span>Enviado em: ${created}</span>
-                    <span>Matrícula: <strong class="text-gray-700">${matriculaValue || '-'}</strong></span>
+                    <span>Status: <strong class="text-gray-700">${status}</strong></span>
                 </div>
-                <div class="text-xs text-gray-500">Status: <span class="font-semibold text-gray-700">${status}</span></div>
+                <div class="text-xs text-gray-500">Matrícula: <span class="font-semibold text-gray-700">${matriculaValue || '-'}</span></div>
                 <div class="text-xs text-gray-600">Aluno: <span class="font-semibold text-gray-800">${alunoNome || '-'}</span></div>
                 <div class="text-xs text-gray-600">Professor: <span class="font-semibold text-gray-800">${profNome || '-'}</span></div>
                 ${driveLink}
@@ -135,6 +135,12 @@ function renderQueue() {
             }
         });
     });
+
+    document.querySelectorAll('.queue-image').forEach(img => {
+        img.addEventListener('click', () => {
+            openZoom(img.getAttribute('data-url') || img.src);
+        });
+    });
 }
 
 function renderQueueError() {
@@ -142,3 +148,49 @@ function renderQueueError() {
     if (!list) return;
     list.innerHTML = '<p class="text-sm text-red-600">Erro ao carregar a fila. Tente novamente.</p>';
 }
+
+let zoomScale = 1;
+function openZoom(url) {
+    const modal = document.getElementById('zoom-modal');
+    const img = document.getElementById('zoom-image');
+    const link = document.getElementById('zoom-open-link');
+    if (!modal || !img || !url) return;
+    img.src = url;
+    zoomScale = 1;
+    img.style.transform = `scale(${zoomScale})`;
+    if (link) link.href = url;
+    modal.classList.remove('hidden');
+}
+
+function initZoomControls() {
+    const modal = document.getElementById('zoom-modal');
+    const img = document.getElementById('zoom-image');
+    const closeBtn = document.getElementById('zoom-close-btn');
+    const zoomIn = document.getElementById('zoom-in-btn');
+    const zoomOut = document.getElementById('zoom-out-btn');
+    const reset = document.getElementById('zoom-reset-btn');
+    if (!modal || !img) return;
+
+    const applyScale = () => {
+        img.style.transform = `scale(${zoomScale})`;
+    };
+
+    zoomIn?.addEventListener('click', () => {
+        zoomScale = Math.min(3, zoomScale + 0.25);
+        applyScale();
+    });
+    zoomOut?.addEventListener('click', () => {
+        zoomScale = Math.max(0.75, zoomScale - 0.25);
+        applyScale();
+    });
+    reset?.addEventListener('click', () => {
+        zoomScale = 1;
+        applyScale();
+    });
+    closeBtn?.addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) modal.classList.add('hidden');
+    });
+}
+
+initZoomControls();

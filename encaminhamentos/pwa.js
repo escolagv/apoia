@@ -190,10 +190,10 @@ async function runOcr(blob) {
         const data = result?.data;
         if (!data) return null;
 
-        const fields = extractHeaderFields(data);
-        const motivos = extractCheckedLabels(data, ctx, motivoDefs);
-        const acoes = extractCheckedLabels(data, ctx, acaoDefs);
-        const providencias = extractCheckedLabels(data, ctx, providenciaDefs);
+        const fields = extractHeaderFields(data, canvas.height);
+        const motivos = extractCheckedLabels(data, ctx, motivoDefs, canvas.width);
+        const acoes = extractCheckedLabels(data, ctx, acaoDefs, canvas.width);
+        const providencias = extractCheckedLabels(data, ctx, providenciaDefs, canvas.width);
 
         return {
             fields,
@@ -218,14 +218,18 @@ function normalizeText(text) {
         .trim();
 }
 
-function extractHeaderFields(data) {
+function extractHeaderFields(data, imageHeight) {
     const fields = { professor: '', estudante: '', turma: '', data: '', matricula: '' };
     const lines = data.lines || [];
     lines.forEach(line => {
         const raw = line.text || '';
         const norm = normalizeText(raw);
+        const y0 = line.bbox?.y0 ?? 0;
+        if (imageHeight && y0 > imageHeight * 0.35) return;
         if (norm.includes('professor')) {
-            fields.professor = raw.replace(/.*professor[^\w]*/i, '').trim();
+            if (!norm.includes('profissionais')) {
+                fields.professor = raw.replace(/.*professor[^\w]*/i, '').trim();
+            }
         } else if (norm.includes('estudante')) {
             fields.estudante = raw.replace(/.*estudante[^\w]*/i, '').trim();
         } else if (norm.startsWith('turma')) {
@@ -240,6 +244,8 @@ function extractHeaderFields(data) {
         const match = (data.text || '').match(/matri[^\d]*([0-9]{4,})/i);
         if (match) fields.matricula = match[1];
     }
+    fields.professor = cleanName(fields.professor);
+    fields.estudante = cleanName(fields.estudante);
     return fields;
 }
 
@@ -264,7 +270,7 @@ const providenciaDefs = [
     { label: 'Advertência', tokens: ['advertencia'] }
 ];
 
-function extractCheckedLabels(data, ctx, defs) {
+function extractCheckedLabels(data, ctx, defs, imageWidth) {
     const lines = data.lines || [];
     const checked = [];
     defs.forEach(def => {
@@ -273,6 +279,7 @@ function extractCheckedLabels(data, ctx, defs) {
             return def.tokens.every(token => norm.includes(token));
         });
         if (!line || !line.bbox) return;
+        if (imageWidth && line.bbox.x0 > imageWidth * 0.4) return;
         const isChecked = detectMarkInline(ctx, line.bbox) || detectMarkLeft(ctx, line.bbox);
         if (isChecked) checked.push(def.label);
     });
@@ -287,7 +294,7 @@ function detectMarkInline(ctx, bbox) {
     const y = Math.max(0, y0 - 2);
     const w = Math.max(10, width);
     const h = Math.max(10, height + 4);
-    return isRegionDark(ctx, x, y, w, h, 0.14);
+    return isRegionCenterMarked(ctx, x, y, w, h, 0.35);
 }
 
 function detectMarkLeft(ctx, bbox) {
@@ -298,7 +305,7 @@ function detectMarkLeft(ctx, bbox) {
     const y = Math.max(0, y0 - 2);
     const w = Math.max(8, width);
     const h = Math.max(8, height + 4);
-    return isRegionDark(ctx, x, y, w, h, 0.18);
+    return isRegionCenterMarked(ctx, x, y, w, h, 0.35);
 }
 
 function isRegionDark(ctx, x, y, w, h, threshold) {
@@ -319,6 +326,24 @@ function isRegionDark(ctx, x, y, w, h, threshold) {
     } catch (err) {
         return false;
     }
+}
+
+function isRegionCenterMarked(ctx, x, y, w, h, threshold) {
+    const cx = x + Math.floor(w * 0.25);
+    const cy = y + Math.floor(h * 0.25);
+    const cw = Math.max(6, Math.floor(w * 0.5));
+    const ch = Math.max(6, Math.floor(h * 0.5));
+    return isRegionDark(ctx, cx, cy, cw, ch, threshold);
+}
+
+function cleanName(value) {
+    const text = (value || '').replace(/[|_]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!text) return '';
+    if (text.length < 3) return '';
+    if (/profissionais|unidade escolar/i.test(text)) return '';
+    const words = text.split(' ').filter(Boolean);
+    if (words.length < 2 && text.length < 6) return '';
+    return text;
 }
 
 function preprocessCanvas(ctx, width, height) {

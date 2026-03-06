@@ -571,8 +571,8 @@ function prefillAlunoByMatricula(matricula) {
 function applyOcrPrefill(ocrJson) {
     const ocr = ocrJson || {};
     const fields = ocr.fields || {};
-    const estudante = (fields.estudante || '').trim();
-    const professor = (fields.professor || '').trim();
+    const estudante = sanitizeOcrName(fields.estudante || '');
+    const professor = sanitizeOcrName(fields.professor || '');
     const dataTexto = (fields.data || '').trim();
 
     if (dataTexto) {
@@ -602,6 +602,15 @@ function applyOcrPrefill(ocrJson) {
     if (Array.isArray(ocr.providencias) && ocr.providencias.length) {
         setCheckboxValues('providencia', ocr.providencias.join(', '));
     }
+}
+
+function sanitizeOcrName(value) {
+    const text = (value || '').replace(/[|_]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!text) return '';
+    if (/profissionais|unidade escolar/i.test(text)) return '';
+    const words = text.split(' ').filter(Boolean);
+    if (words.length < 2 && text.length < 6) return '';
+    return text;
 }
 
 function normalizeText(value) {
