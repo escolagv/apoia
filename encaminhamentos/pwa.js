@@ -132,8 +132,10 @@ function resetCapture() {
 
 async function uploadBlob(blob, fileName) {
     if (!blob) return;
-    uploadStatus.textContent = 'Enviando...';
+    uploadStatus.textContent = 'Lendo documento...';
     try {
+        const ocrJson = await runOcr(blob);
+        uploadStatus.textContent = 'Enviando...';
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -152,7 +154,8 @@ async function uploadBlob(blob, fileName) {
                 status: 'novo',
                 storage_path: path,
                 mime_type: blob.type || 'image/jpeg',
-                device_id: deviceId
+                device_id: deviceId,
+                ocr_json: ocrJson || null
             });
 
         if (jobError) throw jobError;
@@ -162,6 +165,136 @@ async function uploadBlob(blob, fileName) {
         if (fileInput) fileInput.value = '';
     } catch (err) {
         uploadStatus.textContent = err?.message || 'Falha ao enviar.';
+    }
+}
+
+async function runOcr(blob) {
+    if (!window.Tesseract) return null;
+    try {
+        const image = await createImageBitmap(blob);
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+
+        const result = await window.Tesseract.recognize(canvas, 'por', {
+            logger: () => {}
+        });
+        const data = result?.data;
+        if (!data) return null;
+
+        const fields = extractHeaderFields(data);
+        const motivos = extractCheckedLabels(data, ctx, motivoDefs);
+        const acoes = extractCheckedLabels(data, ctx, acaoDefs);
+        const providencias = extractCheckedLabels(data, ctx, providenciaDefs);
+
+        return {
+            fields,
+            motivos,
+            acoes,
+            providencias,
+            raw_text: data.text || ''
+        };
+    } catch (err) {
+        console.warn('OCR falhou:', err?.message || err);
+        return null;
+    }
+}
+
+function normalizeText(text) {
+    return (text || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function extractHeaderFields(data) {
+    const fields = { professor: '', estudante: '', turma: '', data: '' };
+    const lines = data.lines || [];
+    lines.forEach(line => {
+        const raw = line.text || '';
+        const norm = normalizeText(raw);
+        if (norm.includes('professor')) {
+            fields.professor = raw.replace(/.*professor[^\w]*/i, '').trim();
+        } else if (norm.includes('estudante')) {
+            fields.estudante = raw.replace(/.*estudante[^\w]*/i, '').trim();
+        } else if (norm.startsWith('turma')) {
+            fields.turma = raw.replace(/.*turma[^\w]*/i, '').trim();
+        } else if (norm.startsWith('data')) {
+            fields.data = raw.replace(/.*data[^\w]*/i, '').trim();
+        }
+    });
+    return fields;
+}
+
+const motivoDefs = [
+    { label: 'Indisciplina / Xingamentos', tokens: ['indisciplina', 'xing'] },
+    { label: 'Gazeando aula', tokens: ['gazeando'] },
+    { label: 'Agressão / Bullying / Discriminação', tokens: ['agressao', 'bullying'] },
+    { label: 'Uso de celular / fone de ouvido', tokens: ['uso', 'celular'] },
+    { label: 'Dificuldade de aprendizado', tokens: ['dificuldade', 'aprendizado'] },
+    { label: 'Desrespeito com professor / profissionais da unidade escolar', tokens: ['desrespeito', 'professor'] },
+    { label: 'Não produz e não participa em sala', tokens: ['nao', 'produz'] }
+];
+
+const acaoDefs = [
+    { label: 'Diálogo com o estudante', tokens: ['dialogo', 'estudante'] },
+    { label: 'Comunicado aos responsáveis', tokens: ['comunicado', 'responsaveis'] },
+    { label: 'Mensagem via WhatsApp', tokens: ['mensagem', 'whatsapp'] }
+];
+
+const providenciaDefs = [
+    { label: 'Solicitar comparecimento do responsável na escola', tokens: ['comparecimento'] },
+    { label: 'Advertência', tokens: ['advertencia'] }
+];
+
+function extractCheckedLabels(data, ctx, defs) {
+    const lines = data.lines || [];
+    const checked = [];
+    defs.forEach(def => {
+        const line = lines.find(l => {
+            const norm = normalizeText(l.text);
+            return def.tokens.every(token => norm.includes(token));
+        });
+        if (!line || !line.bbox) return;
+        const isChecked = detectMarkLeft(ctx, line.bbox);
+        if (isChecked) checked.push(def.label);
+    });
+    return checked;
+}
+
+function detectMarkLeft(ctx, bbox) {
+    const { x0, y0, x1, y1 } = bbox;
+    const height = y1 - y0;
+    const width = Math.max(18, height * 0.8);
+    const x = Math.max(0, x0 - width - 6);
+    const y = Math.max(0, y0 - 2);
+    const w = Math.max(8, width);
+    const h = Math.max(8, height + 4);
+    return isRegionDark(ctx, x, y, w, h, 0.18);
+}
+
+function isRegionDark(ctx, x, y, w, h, threshold) {
+    try {
+        const imageData = ctx.getImageData(x, y, w, h);
+        const data = imageData.data;
+        let dark = 0;
+        const total = data.length / 4;
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const lum = (r + g + b) / 3;
+            if (lum < 130) dark += 1;
+        }
+        const ratio = dark / total;
+        return ratio > threshold;
+    } catch (err) {
+        return false;
     }
 }
 

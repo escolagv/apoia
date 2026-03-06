@@ -524,7 +524,7 @@ async function loadScanJobFromParams() {
     try {
     const { data: job } = await safeQuery(
         db.from('enc_scan_jobs')
-                .select('id, status, storage_path, mime_type, created_at, device_id, aluno_matricula')
+                .select('id, status, storage_path, mime_type, created_at, device_id, aluno_matricula, ocr_json')
                 .eq('id', scanId)
                 .single()
         );
@@ -542,6 +542,9 @@ async function loadScanJobFromParams() {
             }
         }
         showScanPreview(job, state.scanUrl);
+        if (job.ocr_json) {
+            applyOcrPrefill(job.ocr_json);
+        }
         const matriculaParam = params.get('matricula');
         const matricula = (job.aluno_matricula || matriculaParam || '').toString().trim();
         if (matricula) {
@@ -563,6 +566,80 @@ function prefillAlunoByMatricula(matricula) {
     const select = document.getElementById('estudante');
     if (select) select.value = String(aluno.id);
     handleAlunoChange();
+}
+
+function applyOcrPrefill(ocrJson) {
+    const ocr = ocrJson || {};
+    const fields = ocr.fields || {};
+    const estudante = (fields.estudante || '').trim();
+    const professor = (fields.professor || '').trim();
+    const dataTexto = (fields.data || '').trim();
+
+    if (dataTexto) {
+        const dateInput = document.getElementById('dataEncaminhamento');
+        const iso = parseDateToIso(dataTexto);
+        if (dateInput && iso) {
+            dateInput.value = iso;
+        }
+    }
+
+    if (estudante) {
+        prefillAlunoByName(estudante);
+    }
+    if (professor) {
+        prefillProfessorByName(professor);
+    }
+
+    if (Array.isArray(ocr.motivos) && ocr.motivos.length) {
+        setCheckboxValues('motivo', ocr.motivos.join(', '));
+    }
+    if (Array.isArray(ocr.acoes) && ocr.acoes.length) {
+        setCheckboxValues('acao', ocr.acoes.join(', '));
+    }
+    if (Array.isArray(ocr.providencias) && ocr.providencias.length) {
+        setCheckboxValues('providencia', ocr.providencias.join(', '));
+    }
+}
+
+function normalizeText(value) {
+    return (value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function prefillAlunoByName(name) {
+    const norm = normalizeText(name);
+    if (!norm) return;
+    const aluno = state.alunos.find(a => normalizeText(a.nome_completo || '').includes(norm));
+    if (!aluno) return;
+    ensureSelectOption('estudante', aluno.id, aluno.nome_completo || `Aluno ${aluno.id}`);
+    const select = document.getElementById('estudante');
+    if (select) select.value = String(aluno.id);
+    handleAlunoChange();
+}
+
+function prefillProfessorByName(name) {
+    const norm = normalizeText(name);
+    if (!norm) return;
+    const prof = state.professores.find(p => normalizeText(p.nome || '').includes(norm));
+    if (!prof) return;
+    ensureSelectOption('professor', prof.user_uid, prof.nome || prof.user_uid);
+    const select = document.getElementById('professor');
+    if (select) select.value = String(prof.user_uid);
+}
+
+function parseDateToIso(value) {
+    const text = value.trim();
+    if (!text) return '';
+    const br = text.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if (br) return `${br[3]}-${br[2]}-${br[1]}`;
+    const iso = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+    return '';
 }
 
 function showScanPreview(job, url) {
