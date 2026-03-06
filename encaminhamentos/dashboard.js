@@ -165,6 +165,7 @@ async function loadQrCode(forceNew = false) {
         }
         const pwaUrl = new URL('/encaminhamentos/pwa.html', window.location.origin);
         pwaUrl.searchParams.set('token', token);
+        pwaUrl.searchParams.set('v', Date.now().toString());
         qrEl.innerHTML = '';
         if (window.QRCode) {
             // qrcodejs

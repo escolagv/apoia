@@ -1,7 +1,12 @@
 import { db, SUPABASE_URL, SUPABASE_ANON_KEY } from './js/core.js';
 
 const params = new URLSearchParams(window.location.search);
-const token = params.get('token') || '';
+const tokenFromQuery = params.get('token');
+const tokenFromHref = (() => {
+    const match = window.location.href.match(/token=([^&]+)/i);
+    return match ? decodeURIComponent(match[1]) : '';
+})();
+const token = tokenFromQuery || tokenFromHref || '';
 
 const tokenEl = document.getElementById('pwa-token');
 const statusEl = document.getElementById('pwa-status');
