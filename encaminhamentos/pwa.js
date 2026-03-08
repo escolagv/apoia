@@ -303,7 +303,8 @@ function startsWithKnownFieldLabel(text) {
 function extractValueAfterLabel(text, pattern) {
     const match = (text || '').match(pattern);
     if (!match) return '';
-    return (match[1] || '').replace(/^[\s:;.,|_-]+/, '').trim();
+    const rawValue = (match[1] || '').replace(/^[\s:;.,|_-]+/, '').trim();
+    return rawValue;
 }
 
 function getOrderedOcrLines(data) {
@@ -384,22 +385,22 @@ function extractDateFromText(text) {
 
 function extractHeaderFieldsFromLines(lines) {
     const fields = { professor: '', estudante: '', turma: '', data: '', matricula: '' };
-    const professorLabelPattern = /^(?:professor|profes+sor|profe+sor|profes0r|profesor)/;
-    const alunoLabelPattern = /^(?:aluno|alun0|estudante|estudant[ea3]?)/;
-    const matriculaLabelPattern = /^(?:matricula|matricu1a|matricuia|matr1cula|matri?cula)/;
-    const dataLabelPattern = /^(?:data|dat[a4])/;
+    const professorLabelPattern = /(?:professor|profes+sor|profe+sor|profes0r|profesor)/;
+    const alunoLabelPattern = /(?:aluno|alun0|estudante|estudant[ea3]?)/;
+    const matriculaLabelPattern = /(?:matricula|matricu1a|matricuia|matr1cula|matri?cula)/;
+    const dataLabelPattern = /(?:data|dat[a4])/;
 
-    fields.professor = extractFieldFromLines(lines, /^\s*prof(?:e|o|0)?s{1,2}or(?:\(a\))?\s*[:;\-_.|]*\s*(.*)$/i, {
+    fields.professor = extractFieldFromLines(lines, /prof(?:e|o|0)?s{1,2}or(?:\(a\))?\s*[:;\-_.|]*\s*(.*)$/i, {
         normalizedPattern: professorLabelPattern
     });
-    fields.estudante = extractFieldFromLines(lines, /^\s*(?:estudante|aluno)\s*[:;\-_.|]*\s*(.*)$/i, {
+    fields.estudante = extractFieldFromLines(lines, /(?:estudante|aluno)\s*[:;\-_.|]*\s*(.*)$/i, {
         normalizedPattern: alunoLabelPattern
     });
-    fields.turma = extractFieldFromLines(lines, /^\s*turma\s*[:;\-_.|]*\s*(.*)$/i);
-    fields.data = extractFieldFromLines(lines, /^\s*data\s*[:;\-_.|]*\s*(.*)$/i, {
+    fields.turma = extractFieldFromLines(lines, /turma\s*[:;\-_.|]*\s*(.*)$/i);
+    fields.data = extractFieldFromLines(lines, /data\s*[:;\-_.|]*\s*(.*)$/i, {
         normalizedPattern: dataLabelPattern
     });
-    fields.matricula = extractFieldFromLines(lines, /^\s*matr(?:[íi]cula|icula|icu1a|icuia)\s*[:;\-_.|]*\s*(.*)$/i, {
+    fields.matricula = extractFieldFromLines(lines, /matr(?:[íi]cula|icula|icu1a|icuia)\s*[:;\-_.|]*\s*(.*)$/i, {
         digitsOnly: true,
         normalizedPattern: matriculaLabelPattern
     });

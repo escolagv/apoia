@@ -127,10 +127,8 @@ function renderQueue() {
         const matriculaValue = job.aluno_matricula
             ? String(job.aluno_matricula)
             : (job.ocr_json?.fields?.matricula || extractMatricula(rawText) || '');
-        const alunoNomeRaw = job.ocr_json?.fields?.estudante
-            || extractLabelValue(rawText, /^(?:aluno|estudante)\b/, /^(?:aluno|estudante)\b/i);
-        const profNomeRaw = job.ocr_json?.fields?.professor
-            || extractLabelValue(rawText, /^(?:professor|professora)\b/, /^(?:professor|professora)\b/i);
+        const alunoNomeRaw = job.ocr_json?.fields?.estudante || '';
+        const profNomeRaw = job.ocr_json?.fields?.professor || '';
         const alunoNome = sanitizeOcrName(alunoNomeRaw);
         const profNome = sanitizeOcrName(profNomeRaw);
         const driveLink = job.drive_url ? `<a href="${job.drive_url}" target="_blank" rel="noopener" class="text-xs text-blue-600 hover:underline">Abrir no Drive</a>` : '';
@@ -569,22 +567,22 @@ function extractDateFromText(text) {
 
 function extractHeaderFieldsFromLines(lines) {
     const fields = { professor: '', estudante: '', turma: '', data: '', matricula: '' };
-    const professorLabelPattern = /^(?:professor|profes+sor|profe+sor|profes0r|profesor)/;
-    const alunoLabelPattern = /^(?:aluno|alun0|estudante|estudant[ea3]?)/;
-    const matriculaLabelPattern = /^(?:matricula|matricu1a|matricuia|matr1cula|matri?cula)/;
-    const dataLabelPattern = /^(?:data|dat[a4])/;
+    const professorLabelPattern = /(?:professor|profes+sor|profe+sor|profes0r|profesor)/;
+    const alunoLabelPattern = /(?:aluno|alun0|estudante|estudant[ea3]?)/;
+    const matriculaLabelPattern = /(?:matricula|matricu1a|matricuia|matr1cula|matri?cula)/;
+    const dataLabelPattern = /(?:data|dat[a4])/;
 
-    fields.professor = extractFieldFromLines(lines, /^\s*prof(?:e|o|0)?s{1,2}or(?:\(a\))?\s*[:;\-_.|]*\s*(.*)$/i, {
+    fields.professor = extractFieldFromLines(lines, /prof(?:e|o|0)?s{1,2}or(?:\(a\))?\s*[:;\-_.|]*\s*(.*)$/i, {
         normalizedPattern: professorLabelPattern
     });
-    fields.estudante = extractFieldFromLines(lines, /^\s*(?:estudante|aluno)\s*[:;\-_.|]*\s*(.*)$/i, {
+    fields.estudante = extractFieldFromLines(lines, /(?:estudante|aluno)\s*[:;\-_.|]*\s*(.*)$/i, {
         normalizedPattern: alunoLabelPattern
     });
-    fields.turma = extractFieldFromLines(lines, /^\s*turma\s*[:;\-_.|]*\s*(.*)$/i);
-    fields.data = extractFieldFromLines(lines, /^\s*data\s*[:;\-_.|]*\s*(.*)$/i, {
+    fields.turma = extractFieldFromLines(lines, /turma\s*[:;\-_.|]*\s*(.*)$/i);
+    fields.data = extractFieldFromLines(lines, /data\s*[:;\-_.|]*\s*(.*)$/i, {
         normalizedPattern: dataLabelPattern
     });
-    fields.matricula = extractFieldFromLines(lines, /^\s*matr(?:[íi]cula|icula|icu1a|icuia)\s*[:;\-_.|]*\s*(.*)$/i, {
+    fields.matricula = extractFieldFromLines(lines, /matr(?:[íi]cula|icula|icu1a|icuia)\s*[:;\-_.|]*\s*(.*)$/i, {
         digitsOnly: true,
         normalizedPattern: matriculaLabelPattern
     });
