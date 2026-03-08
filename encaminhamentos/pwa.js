@@ -233,7 +233,10 @@ function isLikelyPersonName(text) {
     if (/\d/.test(cleaned)) return false;
 
     const words = cleaned.split(' ').filter(Boolean);
-    if (words.length < 2) return false;
+    if (words.length < 2) {
+        const letters = (cleaned.match(/[a-zà-ÿ]/gi) || []).length;
+        return cleaned.length >= 5 && letters >= Math.max(4, Math.floor(cleaned.length * 0.7));
+    }
 
     const meaningfulWords = words.filter(word => /[a-zà-ÿ]{2,}/i.test(word));
     if (meaningfulWords.length < 2) return false;
@@ -279,8 +282,8 @@ function getHeaderCandidateLines(lines, imageWidth, imageHeight) {
     if (!Array.isArray(lines) || lines.length === 0) return [];
     if (!imageWidth && !imageHeight) return lines;
 
-    const maxY = imageHeight ? imageHeight * 0.35 : null;
-    const maxX = imageWidth ? imageWidth * 0.7 : null;
+    const maxY = imageHeight ? imageHeight * 0.45 : null;
+    const maxX = imageWidth ? imageWidth * 0.85 : null;
     const filtered = lines.filter(line => {
         const bbox = line?.bbox;
         if (!bbox) return true;
@@ -336,17 +339,17 @@ function extractHeaderFieldsFromLines(lines) {
     const matriculaLabelPattern = /^(?:matricula|matricu1a|matricuia|matr1cula|matri?cula)/;
     const dataLabelPattern = /^(?:data|dat[a4])/;
 
-    fields.professor = extractFieldFromLines(lines, /^\s*prof(?:e|o|0)?s{1,2}or(?:\(a\))?[^\w]*(.*)$/i, {
+    fields.professor = extractFieldFromLines(lines, /^\s*prof(?:e|o|0)?s{1,2}or(?:\(a\))?\s*[:;\-_.|]*\s*(.*)$/i, {
         normalizedPattern: professorLabelPattern
     });
-    fields.estudante = extractFieldFromLines(lines, /^\s*(?:estudante|aluno)[^\w]*(.*)$/i, {
+    fields.estudante = extractFieldFromLines(lines, /^\s*(?:estudante|aluno)\s*[:;\-_.|]*\s*(.*)$/i, {
         normalizedPattern: alunoLabelPattern
     });
-    fields.turma = extractFieldFromLines(lines, /^\s*turma[^\w]*(.*)$/i);
-    fields.data = extractFieldFromLines(lines, /^\s*data[^\w]*(.*)$/i, {
+    fields.turma = extractFieldFromLines(lines, /^\s*turma\s*[:;\-_.|]*\s*(.*)$/i);
+    fields.data = extractFieldFromLines(lines, /^\s*data\s*[:;\-_.|]*\s*(.*)$/i, {
         normalizedPattern: dataLabelPattern
     });
-    fields.matricula = extractFieldFromLines(lines, /^\s*matr(?:[íi]cula|icula|icu1a|icuia)[^\d]*(.*)$/i, {
+    fields.matricula = extractFieldFromLines(lines, /^\s*matr(?:[íi]cula|icula|icu1a|icuia)\s*[:;\-_.|]*\s*(.*)$/i, {
         digitsOnly: true,
         normalizedPattern: matriculaLabelPattern
     });

@@ -67,9 +67,42 @@ function sanitizeOcrName(value) {
     const words = text.split(' ').filter(Boolean);
     const meaningfulWords = words.filter(word => /[a-zà-ÿ]{2,}/i.test(word));
     const letters = (text.match(/[a-zà-ÿ]/gi) || []).length;
-    if (meaningfulWords.length < 2) return '';
-    if (letters < Math.max(6, Math.floor(text.length * 0.7))) return '';
+    if (meaningfulWords.length < 2) {
+        if (text.length < 5 || letters < Math.max(4, Math.floor(text.length * 0.7))) return '';
+    }
+    if (letters < Math.max(4, Math.floor(text.length * 0.7))) return '';
     return text;
+}
+
+function normalizeText(value) {
+    return (value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function extractLabelValue(rawText, labelPattern, stripPattern) {
+    const lines = (rawText || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+    if (!lines.length) return '';
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        const normalized = normalizeText(line);
+        if (!labelPattern.test(normalized)) continue;
+        const sameLine = line.replace(stripPattern, '').replace(/^[\s:;.\-|_]+/, '').trim();
+        if (sameLine) return sameLine;
+        const nextLine = lines[i + 1] || '';
+        if (nextLine && !labelPattern.test(normalizeText(nextLine))) return nextLine;
+        return '';
+    }
+    return '';
+}
+
+function extractMatricula(rawText) {
+    const match = (rawText || '').match(/matr[íi]cula[^\d]*([0-9]{4,})/i);
+    return match ? match[1] : '';
 }
 
 function renderQueue() {
@@ -90,9 +123,16 @@ function renderQueue() {
         const status = job.status || 'novo';
         const disabled = status !== 'novo';
         const deleteDisabled = status === 'vinculado';
-        const matriculaValue = job.aluno_matricula ? String(job.aluno_matricula) : (job.ocr_json?.fields?.matricula || '');
-        const alunoNome = sanitizeOcrName(job.ocr_json?.fields?.estudante || '');
-        const profNome = sanitizeOcrName(job.ocr_json?.fields?.professor || '');
+        const rawText = job.ocr_json?.raw_text || '';
+        const matriculaValue = job.aluno_matricula
+            ? String(job.aluno_matricula)
+            : (job.ocr_json?.fields?.matricula || extractMatricula(rawText) || '');
+        const alunoNomeRaw = job.ocr_json?.fields?.estudante
+            || extractLabelValue(rawText, /^(?:aluno|estudante)\b/, /^(?:aluno|estudante)\b/i);
+        const profNomeRaw = job.ocr_json?.fields?.professor
+            || extractLabelValue(rawText, /^(?:professor|professora)\b/, /^(?:professor|professora)\b/i);
+        const alunoNome = sanitizeOcrName(alunoNomeRaw);
+        const profNome = sanitizeOcrName(profNomeRaw);
         const driveLink = job.drive_url ? `<a href="${job.drive_url}" target="_blank" rel="noopener" class="text-xs text-blue-600 hover:underline">Abrir no Drive</a>` : '';
         const previewHtml = preview
             ? `<img src="${preview}" data-url="${preview}" data-aluno="${alunoNome || ''}" data-professor="${profNome || ''}" data-matricula="${matriculaValue || ''}" data-data="${created || ''}" alt="Prévia" class="queue-image w-full h-40 object-cover rounded-md border border-gray-200 cursor-zoom-in">`
