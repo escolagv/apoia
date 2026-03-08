@@ -32,7 +32,8 @@ async function loadQueue() {
                 .select('id, status, storage_path, mime_type, created_at, device_id, drive_url, drive_file_id, encaminhamento_id, aluno_matricula, ocr_json')
                 .order('created_at', { ascending: false })
         );
-        state.jobs = data || [];
+        const allJobs = data || [];
+        state.jobs = allJobs.filter(job => (job.status || 'novo') === 'novo');
         await buildSignedUrls();
         renderQueue();
     } catch (err) {

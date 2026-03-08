@@ -4,7 +4,8 @@ import { SignJWT, importPKCS8 } from 'https://esm.sh/jose@5.6.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-authorization',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
 async function getAccessToken(clientEmail: string, privateKey: string) {
@@ -62,7 +63,7 @@ async function findOrCreateFolder(accessToken: string, name: string, parentId: s
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
