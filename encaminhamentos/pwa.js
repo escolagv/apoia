@@ -494,7 +494,12 @@ function extractCheckedLabels(data, ctx, defs, imageWidth) {
             const norm = normalizeText(l.text);
             return def.tokens.every(token => norm.includes(token));
         });
-        if (!line || !line.bbox) return;
+        if (!line) return;
+        if (lineHasTextMark(line.text)) {
+            checked.push(def.label);
+            return;
+        }
+        if (!line.bbox) return;
         if (imageWidth && line.bbox.x0 > imageWidth * 0.4) return;
         const isChecked = detectMarkLeft(ctx, line.bbox);
         if (isChecked) checked.push(def.label);
@@ -502,15 +507,26 @@ function extractCheckedLabels(data, ctx, defs, imageWidth) {
     return checked;
 }
 
+function lineHasTextMark(text) {
+    const raw = (text || '').trim();
+    if (!raw) return false;
+    const compact = raw.replace(/\s+/g, '');
+    if (/\([xXvV\/\\*\+\-✓]\)/.test(compact)) return true;
+    if (/\[[xXvV\/\\*\+\-✓]\]/.test(compact)) return true;
+    if (/^[xXvV✓]\b/.test(raw)) return true;
+    return false;
+}
+
 function detectMarkLeft(ctx, bbox) {
     const { x0, y0, x1, y1 } = bbox;
     const height = y1 - y0;
-    const width = Math.max(16, height * 0.6);
-    const x = Math.max(0, x0 - width - 12);
-    const y = Math.max(0, y0 - 2);
-    const w = Math.max(8, width);
-    const h = Math.max(8, height + 4);
-    return isRegionCenterMarked(ctx, x, y, w, h, 0.5);
+    const width = Math.max(20, height * 0.9);
+    const x = Math.max(0, x0 - width - 14);
+    const y = Math.max(0, y0 - 3);
+    const w = Math.max(10, width);
+    const h = Math.max(10, height + 6);
+    if (isRegionCenterMarked(ctx, x, y, w, h, 0.2)) return true;
+    return isRegionDark(ctx, x, y, w, h, 0.12);
 }
 
 function isRegionDark(ctx, x, y, w, h, threshold) {
