@@ -373,7 +373,7 @@ async function runOcrFromBlob(blob) {
         const canvas = document.createElement('canvas');
         canvas.width = image.width;
         canvas.height = image.height;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(image, 0, 0);
         preprocessCanvas(ctx, canvas.width, canvas.height);
 
@@ -388,13 +388,15 @@ async function runOcrFromBlob(blob) {
         const headerData = await runHeaderOcr(image);
         const headerFields = headerData ? extractHeaderFields(headerData, headerData.width || 0, headerData.height || 0) : null;
         const fields = mergeHeaderFields(headerFields, extractHeaderFields(data, canvas.width, canvas.height));
+        const cropFields = await extractHeaderFieldsByCrop(image);
+        const mergedFields = mergeHeaderFields(cropFields, fields);
 
         const motivos = extractCheckedLabels(data, ctx, motivoDefs, canvas.width);
         const acoes = extractCheckedLabels(data, ctx, acaoDefs, canvas.width);
         const providencias = extractCheckedLabels(data, ctx, providenciaDefs, canvas.width);
 
         return {
-            fields,
+            fields: mergedFields,
             motivos,
             acoes,
             providencias,
@@ -414,7 +416,7 @@ async function runHeaderOcr(image) {
         const scale = 1.5;
         headerCanvas.width = Math.floor(image.width * scale);
         headerCanvas.height = Math.floor(headerHeight * scale);
-        const hctx = headerCanvas.getContext('2d');
+        const hctx = headerCanvas.getContext('2d', { willReadFrequently: true });
         hctx.drawImage(
             image,
             0,
@@ -451,6 +453,80 @@ function mergeHeaderFields(primary, fallback) {
         data: primary.data || base.data || '',
         matricula: primary.matricula || base.matricula || ''
     };
+}
+
+const headerCropDefs = [
+    { key: 'professor', x: 0.22, y: 0.16, w: 0.73, h: 0.06, type: 'name' },
+    { key: 'estudante', x: 0.22, y: 0.22, w: 0.73, h: 0.06, type: 'name' },
+    { key: 'turma', x: 0.16, y: 0.27, w: 0.30, h: 0.06, type: 'text' },
+    { key: 'matricula', x: 0.55, y: 0.27, w: 0.40, h: 0.06, type: 'digits' },
+    { key: 'data', x: 0.16, y: 0.32, w: 0.25, h: 0.06, type: 'date' }
+];
+
+async function extractHeaderFieldsByCrop(image) {
+    const result = { professor: '', estudante: '', turma: '', data: '', matricula: '' };
+    for (const def of headerCropDefs) {
+        const text = await runSingleLineOcr(image, def);
+        if (!text) continue;
+        if (def.type === 'digits') {
+            const digits = text.replace(/\D+/g, '').trim();
+            if (digits.length >= 4) result[def.key] = digits;
+            continue;
+        }
+        if (def.type === 'date') {
+            const dateValue = extractDateFromText(text);
+            if (dateValue) result[def.key] = dateValue;
+            continue;
+        }
+        if (def.type === 'name') {
+            const cleaned = cleanHeaderText(text);
+            if (cleaned) result[def.key] = cleaned;
+            continue;
+        }
+        const cleaned = cleanHeaderText(text);
+        if (cleaned) result[def.key] = cleaned;
+    }
+    return result;
+}
+
+async function runSingleLineOcr(image, def) {
+    try {
+        const canvas = document.createElement('canvas');
+        const scale = 2;
+        const sx = Math.max(0, Math.floor(image.width * def.x));
+        const sy = Math.max(0, Math.floor(image.height * def.y));
+        const sw = Math.max(1, Math.floor(image.width * def.w));
+        const sh = Math.max(1, Math.floor(image.height * def.h));
+        canvas.width = Math.floor(sw * scale);
+        canvas.height = Math.floor(sh * scale);
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+        preprocessCanvas(ctx, canvas.width, canvas.height);
+
+        const whitelist = def.type === 'digits'
+            ? '0123456789'
+            : def.type === 'date'
+                ? '0123456789/'
+                : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÁÂÃÇÉÊÍÓÔÕÚàáâãçéêíóôõú ';
+
+        const { data } = await window.Tesseract.recognize(canvas, 'por', {
+            logger: () => {},
+            tessedit_pageseg_mode: 7,
+            preserve_interword_spaces: '1',
+            tessedit_char_whitelist: whitelist
+        });
+        return (data?.text || '').trim();
+    } catch (err) {
+        return '';
+    }
+}
+
+function cleanHeaderText(text) {
+    return (text || '')
+        .replace(/(?:professor|professora|estudante|aluno|turma|data|matr[íi]cula)/gi, ' ')
+        .replace(/[|_]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 function normalizeNameCandidate(text) {
