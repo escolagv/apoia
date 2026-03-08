@@ -192,7 +192,10 @@ async function runOcr(blob) {
         const data = result?.data;
         if (!data) return null;
 
-        const fields = extractHeaderFields(data, canvas.width, canvas.height);
+        const headerData = await runHeaderOcr(image);
+        const headerFields = headerData ? extractHeaderFields(headerData, headerData.width || 0, headerData.height || 0) : null;
+        const fields = mergeHeaderFields(headerFields, extractHeaderFields(data, canvas.width, canvas.height));
+
         const motivos = extractCheckedLabels(data, ctx, motivoDefs, canvas.width);
         const acoes = extractCheckedLabels(data, ctx, acaoDefs, canvas.width);
         const providencias = extractCheckedLabels(data, ctx, providenciaDefs, canvas.width);
@@ -202,12 +205,59 @@ async function runOcr(blob) {
             motivos,
             acoes,
             providencias,
-            raw_text: data.text || ''
+            raw_text: data.text || '',
+            header_text: headerData?.text || ''
         };
     } catch (err) {
         console.warn('OCR falhou:', err?.message || err);
         return null;
     }
+}
+
+async function runHeaderOcr(image) {
+    try {
+        const headerCanvas = document.createElement('canvas');
+        const headerHeight = Math.floor(image.height * 0.5);
+        const scale = 1.5;
+        headerCanvas.width = Math.floor(image.width * scale);
+        headerCanvas.height = Math.floor(headerHeight * scale);
+        const hctx = headerCanvas.getContext('2d');
+        hctx.drawImage(
+            image,
+            0,
+            0,
+            image.width,
+            headerHeight,
+            0,
+            0,
+            headerCanvas.width,
+            headerCanvas.height
+        );
+        preprocessCanvas(hctx, headerCanvas.width, headerCanvas.height);
+
+        const headerResult = await window.Tesseract.recognize(headerCanvas, 'por', {
+            logger: () => {},
+            tessedit_pageseg_mode: 6,
+            preserve_interword_spaces: '1'
+        });
+        const headerData = headerResult?.data;
+        if (!headerData) return null;
+        return { ...headerData, width: headerCanvas.width, height: headerCanvas.height };
+    } catch (err) {
+        return null;
+    }
+}
+
+function mergeHeaderFields(primary, fallback) {
+    const base = fallback || { professor: '', estudante: '', turma: '', data: '', matricula: '' };
+    if (!primary) return base;
+    return {
+        professor: primary.professor || base.professor || '',
+        estudante: primary.estudante || base.estudante || '',
+        turma: primary.turma || base.turma || '',
+        data: primary.data || base.data || '',
+        matricula: primary.matricula || base.matricula || ''
+    };
 }
 
 function normalizeText(text) {
@@ -361,6 +411,24 @@ function extractHeaderFieldsFromLines(lines) {
                 fields.data = dateValue;
                 break;
             }
+        }
+    }
+
+    if (!fields.estudante || !fields.professor) {
+        const candidates = [];
+        for (const line of lines) {
+            const raw = (line?.text || '').trim();
+            if (!raw) continue;
+            const normalized = normalizeText(raw);
+            if (/^(?:aluno|estudante|professor|professora|turma|data|matricula)\b/.test(normalized)) continue;
+            if (/encaminhamento|orientacao|coordenacao|unidade|profissionais|escola/.test(normalized)) continue;
+            if (!isLikelyPersonName(raw)) continue;
+            candidates.push(raw);
+        }
+        if (!fields.estudante && candidates[0]) fields.estudante = candidates[0];
+        if (!fields.professor) {
+            const next = candidates.find(name => normalizeText(name) !== normalizeText(fields.estudante || ''));
+            if (next) fields.professor = next;
         }
     }
 
