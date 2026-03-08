@@ -243,13 +243,16 @@ function populateSelects() {
     });
 
     alunoSelect.innerHTML = '<option value="">Selecione...</option>';
-    state.alunos
-        .filter(a => a.status !== 'inativo')
-        .filter(a => {
-            if (!state.anoLetivoAtual) return true;
-            return state.turmasAnoAtual.has(Number(a.turma_id));
-        })
-        .forEach(a => {
+    const alunosOrdenados = sortAlunos(
+        state.alunos
+            .filter(a => a.status !== 'inativo')
+            .filter(a => {
+                if (!state.anoLetivoAtual) return true;
+                return state.turmasAnoAtual.has(Number(a.turma_id));
+            })
+    );
+
+    alunosOrdenados.forEach(a => {
             const option = document.createElement('option');
             option.value = a.id;
             option.textContent = a.nome_completo || `Aluno ${a.id}`;
@@ -335,10 +338,14 @@ function renderSearchList(type, query) {
 
     const q = (query || '').trim().toLowerCase();
     const items = type === 'aluno'
-        ? state.alunos.filter(a => a.status !== 'inativo').filter(a => {
-            if (!state.anoLetivoAtual) return true;
-            return state.turmasAnoAtual.has(Number(a.turma_id));
-        })
+        ? sortAlunos(
+            state.alunos
+                .filter(a => a.status !== 'inativo')
+                .filter(a => {
+                    if (!state.anoLetivoAtual) return true;
+                    return state.turmasAnoAtual.has(Number(a.turma_id));
+                })
+        )
         : state.professores.filter(p => p.status !== 'inativo');
 
     const filtered = !q ? items : items.filter(item => {
@@ -390,6 +397,20 @@ function getAnoLetivoAtual(turmas) {
         .filter(Number.isFinite);
     if (anos.length === 0) return null;
     return Math.max(...anos);
+}
+
+function sortAlunos(alunos) {
+    const collator = new Intl.Collator('pt-BR', { sensitivity: 'base', numeric: true });
+    return [...(alunos || [])].sort((a, b) => {
+        const nomeA = (a.nome_completo || '').trim();
+        const nomeB = (b.nome_completo || '').trim();
+        const nomeCmp = collator.compare(nomeA, nomeB);
+        if (nomeCmp !== 0) return nomeCmp;
+
+        const turmaA = (state.turmasById.get(Number(a.turma_id))?.nome_turma || '').trim();
+        const turmaB = (state.turmasById.get(Number(b.turma_id))?.nome_turma || '').trim();
+        return collator.compare(turmaA, turmaB);
+    });
 }
 
 function handleAlunoChange() {
@@ -540,7 +561,7 @@ async function checkEditMode() {
         document.getElementById('editId').value = recordId;
         try {
             const { data } = await safeQuery(
-                db.from(getEncaminhamentosTableName(yearParam)).select('*').eq('id', recordId).single()
+                db.from(getEncaminhamentosTableName(yearParam)).select('*').eq('id', recordId).maybeSingle()
             );
             if (data) {
                 await populateForm(data);
