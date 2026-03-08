@@ -414,24 +414,6 @@ function extractHeaderFieldsFromLines(lines) {
         }
     }
 
-    if (!fields.estudante || !fields.professor) {
-        const candidates = [];
-        for (const line of lines) {
-            const raw = (line?.text || '').trim();
-            if (!raw) continue;
-            const normalized = normalizeText(raw);
-            if (/^(?:aluno|estudante|professor|professora|turma|data|matricula)\b/.test(normalized)) continue;
-            if (/encaminhamento|orientacao|coordenacao|unidade|profissionais|escola/.test(normalized)) continue;
-            if (!isLikelyPersonName(raw)) continue;
-            candidates.push(raw);
-        }
-        if (!fields.estudante && candidates[0]) fields.estudante = candidates[0];
-        if (!fields.professor) {
-            const next = candidates.find(name => normalizeText(name) !== normalizeText(fields.estudante || ''));
-            if (next) fields.professor = next;
-        }
-    }
-
     return fields;
 }
 

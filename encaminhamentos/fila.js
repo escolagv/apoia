@@ -62,7 +62,7 @@ async function buildSignedUrls() {
 function sanitizeOcrName(value) {
     const text = (value || '').replace(/[|_]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!text) return '';
-    if (/profissionais|unidade escolar|acima citado|direcionado/i.test(text)) return '';
+    if (/profissionais|unidade escolar|acima citado|direcionado|encaminhamento|orientacao|coordenacao|motivo/i.test(text)) return '';
     if (/\d/.test(text)) return '';
     const words = text.split(' ').filter(Boolean);
     const meaningfulWords = words.filter(word => /[a-zà-ÿ]{2,}/i.test(word));
