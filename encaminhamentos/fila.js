@@ -456,17 +456,17 @@ function mergeHeaderFields(primary, fallback) {
 }
 
 const headerCropDefs = [
-    { key: 'professor', x: 0.22, y: 0.16, w: 0.73, h: 0.06, type: 'name' },
-    { key: 'estudante', x: 0.22, y: 0.22, w: 0.73, h: 0.06, type: 'name' },
-    { key: 'turma', x: 0.16, y: 0.27, w: 0.30, h: 0.06, type: 'text' },
-    { key: 'matricula', x: 0.55, y: 0.27, w: 0.40, h: 0.06, type: 'digits' },
-    { key: 'data', x: 0.16, y: 0.32, w: 0.25, h: 0.06, type: 'date' }
+    { key: 'professor', x: 0.26, y: 0.17, w: 0.70, h: 0.07, type: 'name' },
+    { key: 'estudante', x: 0.23, y: 0.23, w: 0.72, h: 0.07, type: 'name' },
+    { key: 'turma', x: 0.18, y: 0.29, w: 0.28, h: 0.07, type: 'text' },
+    { key: 'matricula', x: 0.64, y: 0.29, w: 0.32, h: 0.07, type: 'digits' },
+    { key: 'data', x: 0.16, y: 0.34, w: 0.26, h: 0.07, type: 'date' }
 ];
 
 async function extractHeaderFieldsByCrop(image) {
     const result = { professor: '', estudante: '', turma: '', data: '', matricula: '' };
     for (const def of headerCropDefs) {
-        const text = await runSingleLineOcr(image, def);
+        const text = await runSingleLineOcrWithOffsets(image, def);
         if (!text) continue;
         if (def.type === 'digits') {
             const digits = text.replace(/\D+/g, '').trim();
@@ -487,6 +487,30 @@ async function extractHeaderFieldsByCrop(image) {
         if (cleaned) result[def.key] = cleaned;
     }
     return result;
+}
+
+async function runSingleLineOcrWithOffsets(image, def) {
+    const offsets = [-0.015, 0, 0.015];
+    let bestText = '';
+    let bestScore = 0;
+    for (const offset of offsets) {
+        const candidate = await runSingleLineOcr(image, { ...def, y: Math.max(0, def.y + offset) });
+        const score = scoreHeaderCandidate(candidate, def.type);
+        if (score > bestScore) {
+            bestScore = score;
+            bestText = candidate;
+        }
+    }
+    return bestText;
+}
+
+function scoreHeaderCandidate(text, type) {
+    const raw = (text || '').trim();
+    if (!raw) return 0;
+    if (type === 'digits') return raw.replace(/\D+/g, '').length;
+    if (type === 'date') return extractDateFromText(raw) ? 10 : 0;
+    const letters = (raw.match(/[a-zà-ÿ]/gi) || []).length;
+    return letters;
 }
 
 async function runSingleLineOcr(image, def) {
@@ -853,8 +877,10 @@ function detectMarkLeft(ctx, bbox) {
     const y = Math.max(0, y0 - 3);
     const w = Math.max(10, width);
     const h = Math.max(10, height + 6);
-    if (isRegionCenterMarked(ctx, x, y, w, h, 0.16)) return true;
-    return isRegionDark(ctx, x, y, w, h, 0.1);
+    if (isRegionCenterMarked(ctx, x, y, w, h, 0.08)) return true;
+    if (isRegionCenterMarked(ctx, x, y, w, h, 0.14, 0.35)) return true;
+    if (isRegionDark(ctx, x, y, w, h, 0.1)) return true;
+    return isRegionInk(ctx, x, y, w, h, 0.02, 60);
 }
 
 function isRegionDark(ctx, x, y, w, h, threshold) {
@@ -877,12 +903,35 @@ function isRegionDark(ctx, x, y, w, h, threshold) {
     }
 }
 
-function isRegionCenterMarked(ctx, x, y, w, h, threshold) {
-    const cx = x + Math.floor(w * 0.25);
-    const cy = y + Math.floor(h * 0.25);
-    const cw = Math.max(6, Math.floor(w * 0.5));
-    const ch = Math.max(6, Math.floor(h * 0.5));
+function isRegionCenterMarked(ctx, x, y, w, h, threshold, size = 0.5) {
+    const box = Math.max(0.2, Math.min(0.6, size));
+    const cx = x + Math.floor(w * (0.5 - box / 2));
+    const cy = y + Math.floor(h * (0.5 - box / 2));
+    const cw = Math.max(6, Math.floor(w * box));
+    const ch = Math.max(6, Math.floor(h * box));
     return isRegionDark(ctx, cx, cy, cw, ch, threshold);
+}
+
+function isRegionInk(ctx, x, y, w, h, minRatio, minContrast) {
+    try {
+        const imageData = ctx.getImageData(x, y, w, h);
+        const data = imageData.data;
+        let dark = 0;
+        let min = 255;
+        let max = 0;
+        const total = data.length / 4;
+        for (let i = 0; i < data.length; i += 4) {
+            const lum = (data[i] + data[i + 1] + data[i + 2]) / 3;
+            if (lum < 180) dark += 1;
+            if (lum < min) min = lum;
+            if (lum > max) max = lum;
+        }
+        const ratio = dark / total;
+        const contrast = max - min;
+        return ratio >= minRatio && contrast >= minContrast;
+    } catch (err) {
+        return false;
+    }
 }
 
 function preprocessCanvas(ctx, width, height) {
