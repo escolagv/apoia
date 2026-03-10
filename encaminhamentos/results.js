@@ -12,6 +12,9 @@ const resultsSummary = document.getElementById("results-summary");
 const paginationContainer = document.getElementById("pagination-container");
 const reportLayoutModal = document.getElementById('report-layout-modal');
 const reportLayoutCancel = document.getElementById('report-layout-cancel');
+const searchButton = document.getElementById('search-button');
+const searchAno = document.getElementById('search-ano');
+const searchCodigo = document.getElementById('search-codigo');
 
 let allResults = [];
 let currentPage = 1;
@@ -32,9 +35,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'login.html';
     });
 
-    await handleSearch();
-    simpleReportButton.addEventListener('click', () => generateReport('simple'));
-    completeReportButton.addEventListener('click', () => openLayoutModal());
+    initSearchForm();
+    initReportButtons();
+    if (hasActiveFilters()) {
+        await handleSearch();
+    } else {
+        showSearchPrompt();
+    }
 
     if (reportLayoutCancel && reportLayoutModal) {
         reportLayoutCancel.addEventListener('click', () => reportLayoutModal.classList.add('hidden'));
@@ -56,6 +63,94 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ===================================================================
 // FUNÇÕES DE BUSCA E RENDERIZAÇÃO
 // ===================================================================
+function initReportButtons() {
+    if (simpleReportButton) {
+        simpleReportButton.addEventListener('click', () => generateReport('simple'));
+    }
+    if (completeReportButton) {
+        completeReportButton.addEventListener('click', () => openLayoutModal());
+    }
+}
+
+function initSearchForm() {
+    if (!searchButton) return;
+    if (searchAno) {
+        const currentYear = new Date().getFullYear();
+        searchAno.innerHTML = '';
+        for (let i = 0; i < 5; i += 1) {
+            const year = currentYear + i;
+            const option = document.createElement('option');
+            option.value = String(year);
+            option.textContent = String(year);
+            if (i === 0) option.selected = true;
+            searchAno.appendChild(option);
+        }
+        setCodigoPrefix(searchAno.value);
+        searchAno.addEventListener('change', () => {
+            setCodigoPrefix(searchAno.value);
+        });
+    } else if (searchCodigo) {
+        setCodigoPrefix(String(new Date().getFullYear()));
+    }
+
+    searchButton.addEventListener('click', async () => {
+        const params = buildSearchParams();
+        applySearchParams(params);
+        await handleSearch();
+    });
+
+    document.querySelectorAll('#search-estudante, #search-professor, #search-data-start, #search-data-end, #search-codigo, #search-registrado').forEach(input => {
+        input.addEventListener('keydown', async (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const params = buildSearchParams();
+                applySearchParams(params);
+                await handleSearch();
+            }
+        });
+    });
+}
+
+function buildSearchParams() {
+    const params = new URLSearchParams();
+    const estudante = document.getElementById('search-estudante')?.value || '';
+    const professor = document.getElementById('search-professor')?.value || '';
+    const dataStart = document.getElementById('search-data-start')?.value || '';
+    const dataEnd = document.getElementById('search-data-end')?.value || '';
+    const registradoPor = document.getElementById('search-registrado')?.value || '';
+    const ano = document.getElementById('search-ano')?.value || '';
+    const codigo = document.getElementById('search-codigo')?.value || '';
+
+    if (estudante) params.append('estudante', estudante);
+    if (professor) params.append('professor', professor);
+    if (dataStart) params.append('data_inicio', dataStart);
+    if (dataEnd) params.append('data_fim', dataEnd);
+    if (registradoPor) params.append('registradoPor', registradoPor);
+    if (ano) params.append('ano', ano);
+    if (codigo) params.append('codigo', codigo);
+    return params;
+}
+
+function applySearchParams(params) {
+    const query = params.toString();
+    const next = `${window.location.pathname}${query ? `?${query}` : ''}`;
+    window.history.replaceState({}, document.title, next);
+}
+
+function hasActiveFilters() {
+    const params = new URLSearchParams(window.location.search);
+    const dataInicioParam = params.get('data_inicio') || params.get('data') || '';
+    const dataFimParam = params.get('data_fim') || '';
+    const dataInicioEl = document.getElementById('search-data-start');
+    const dataFimEl = document.getElementById('search-data-end');
+    if (dataInicioEl && dataInicioParam) dataInicioEl.value = dataInicioParam;
+    if (dataFimEl && dataFimParam) dataFimEl.value = dataFimParam;
+    return ['estudante', 'professor', 'data', 'data_inicio', 'data_fim', 'registradoPor', 'ano', 'codigo'].some(key => {
+        const value = params.get(key);
+        return value && value.trim();
+    });
+}
+
 async function handleSearch() {
     loadingMessage.style.display = 'block';
     resultsTable.innerHTML = '';
@@ -65,15 +160,16 @@ async function handleSearch() {
     const filters = {
         estudante: (params.get('estudante') || '').toLowerCase(),
         professor: (params.get('professor') || '').toLowerCase(),
-        data: params.get('data') || '',
+        dataInicio: params.get('data_inicio') || params.get('data') || '',
+        dataFim: params.get('data_fim') || '',
         registradoPor: (params.get('registradoPor') || '').toLowerCase(),
         ano: params.get('ano') || '',
         codigo: (params.get('codigo') || '').toLowerCase()
     };
 
     try {
-        const targetYear = filters.data
-            ? getYearFromDateString(filters.data)
+        const targetYear = filters.dataInicio
+            ? getYearFromDateString(filters.dataInicio)
             : (Number(filters.ano) || getCurrentYear());
         await ensureEncaminhamentosTableReady(targetYear);
         const tableName = getEncaminhamentosTableName(targetYear);
@@ -84,7 +180,13 @@ async function handleSearch() {
 
         if (filters.estudante) query = query.ilike('aluno_nome', `%${filters.estudante}%`);
         if (filters.professor) query = query.ilike('professor_nome', `%${filters.professor}%`);
-        if (filters.data) query = query.eq('data_encaminhamento', filters.data);
+        if (filters.dataInicio && filters.dataFim) {
+            query = query.gte('data_encaminhamento', filters.dataInicio).lte('data_encaminhamento', filters.dataFim);
+        } else if (filters.dataInicio) {
+            query = query.gte('data_encaminhamento', filters.dataInicio);
+        } else if (filters.dataFim) {
+            query = query.lte('data_encaminhamento', filters.dataFim);
+        }
         if (filters.registradoPor) query = query.ilike('registrado_por_nome', `%${filters.registradoPor}%`);
         if (filters.codigo) query = query.ilike('codigo', `%${filters.codigo}%`);
 
@@ -96,6 +198,21 @@ async function handleSearch() {
         loadingMessage.style.display = 'none';
     } catch (err) {
         handleSupabaseError(err);
+    }
+}
+
+function setCodigoPrefix(yearValue) {
+    if (!searchCodigo) return;
+    const year = String(yearValue || new Date().getFullYear());
+    const prefix = `ENC-${year}-`;
+    const current = (searchCodigo.value || '').trim();
+    if (!current) {
+        searchCodigo.value = prefix;
+        return;
+    }
+    if (/^ENC-\d{4}-/i.test(current)) {
+        const suffix = current.replace(/^ENC-\d{4}-/i, '');
+        searchCodigo.value = prefix + suffix;
     }
 }
 
@@ -189,6 +306,13 @@ function displayNoResults() {
     loadingMessage.style.display = 'none';
     resultsTable.innerHTML = "<p>Nenhum registro encontrado com estes critérios.</p>";
     resultsSummary.textContent = "Nenhum resultado para a busca atual.";
+}
+
+function showSearchPrompt() {
+    if (loadingMessage) loadingMessage.style.display = 'none';
+    if (resultsTable) resultsTable.innerHTML = "<p class=\"text-sm text-gray-500\">Use os filtros e clique em Buscar para ver os encaminhamentos.</p>";
+    if (resultsSummary) resultsSummary.textContent = "Aguardando busca.";
+    if (paginationContainer) paginationContainer.innerHTML = '';
 }
 
 function handleSupabaseError(error) {

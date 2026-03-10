@@ -112,6 +112,7 @@ function enableUppercaseInputs() {
         const el = event.target;
         if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
         if (el.dataset.keepCase === 'true') return;
+        if (el.dataset.uppercase !== 'true') return;
         const type = (el.type || '').toLowerCase();
         if (['email', 'password', 'date', 'time', 'tel', 'number', 'search', 'url'].includes(type)) return;
         const start = el.selectionStart;

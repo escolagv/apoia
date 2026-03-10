@@ -253,11 +253,14 @@ function populateSelects() {
     );
 
     alunosOrdenados.forEach(a => {
-            const option = document.createElement('option');
-            option.value = a.id;
-            option.textContent = a.nome_completo || `Aluno ${a.id}`;
-            alunoSelect.appendChild(option);
-        });
+        const option = document.createElement('option');
+        const turma = a.turma_id ? state.turmasById.get(Number(a.turma_id)) : null;
+        const turmaLabel = turma?.nome_turma ? ` • ${turma.nome_turma}` : '';
+        const matricula = a.matricula ? `${a.matricula} • ` : '';
+        option.value = a.id;
+        option.textContent = `${matricula}${a.nome_completo || `Aluno ${a.id}`}${turmaLabel}`;
+        alunoSelect.appendChild(option);
+    });
 }
 
 // ===================================================================
@@ -373,10 +376,10 @@ function renderSearchList(type, query) {
         row.className = 'w-full text-left px-2 py-1 hover:bg-gray-100';
         row.dataset.value = type === 'aluno' ? item.id : item.user_uid;
         if (type === 'aluno') {
-            const matricula = item.matricula ? ` • ${item.matricula}` : '';
+            const matricula = item.matricula ? `${item.matricula} • ` : '';
             const turma = item.turma_id ? state.turmasById.get(Number(item.turma_id)) : null;
             const turmaLabel = turma?.nome_turma ? ` • ${turma.nome_turma}` : '';
-            row.textContent = `${item.nome_completo || ''}${matricula}${turmaLabel}`;
+            row.textContent = `${matricula}${item.nome_completo || ''}${turmaLabel}`;
         } else {
             row.textContent = item.nome || item.user_uid;
         }
@@ -404,12 +407,17 @@ function sortAlunos(alunos) {
     return [...(alunos || [])].sort((a, b) => {
         const nomeA = (a.nome_completo || '').trim();
         const nomeB = (b.nome_completo || '').trim();
+        const turmaA = (state.turmasById.get(Number(a.turma_id))?.nome_turma || '').trim();
+        const turmaB = (state.turmasById.get(Number(b.turma_id))?.nome_turma || '').trim();
+        const turmaCmp = collator.compare(turmaA, turmaB);
+        if (turmaCmp !== 0) return turmaCmp;
+
         const nomeCmp = collator.compare(nomeA, nomeB);
         if (nomeCmp !== 0) return nomeCmp;
 
-        const turmaA = (state.turmasById.get(Number(a.turma_id))?.nome_turma || '').trim();
-        const turmaB = (state.turmasById.get(Number(b.turma_id))?.nome_turma || '').trim();
-        return collator.compare(turmaA, turmaB);
+        const matA = (a.matricula || '').trim();
+        const matB = (b.matricula || '').trim();
+        return collator.compare(matA, matB);
     });
 }
 
@@ -539,7 +547,7 @@ async function deleteRecord() {
         );
         showStatusMessage('✅ Encaminhamento excluído com sucesso!', true);
         setTimeout(() => {
-            window.location.href = 'relatorios.html';
+            window.location.href = 'encaminhamento.html?tab=consultar';
         }, 1200);
     } catch (err) {
         handleSupabaseError(err);

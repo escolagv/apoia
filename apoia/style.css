@@ -1,5 +1,18 @@
 body { font-family: 'Inter', sans-serif; }
 
+.table-scroll {
+    max-height: calc(100vh - 320px);
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.table-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f9fafb;
+}
+
 .notification-badge::after {
     content: attr(data-count);
     position: absolute;

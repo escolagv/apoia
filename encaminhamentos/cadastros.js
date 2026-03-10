@@ -5,7 +5,8 @@ const state = {
     alunos: [],
     professores: [],
     turmas: [],
-    anoLetivoAtual: null
+    anoLetivoAtual: null,
+    lastSyncAt: null
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -78,13 +79,55 @@ function bindModals() {
             const el = document.getElementById(id);
             if (el) el.addEventListener('change', renderProfessores);
         });
+
+    const syncBtn = document.getElementById('sync-status-btn');
+    const syncClose = document.getElementById('sync-close-btn');
+    const syncRefresh = document.getElementById('sync-refresh-btn');
+    const syncNow = document.getElementById('sync-now-cadastros');
+    if (syncBtn) {
+        syncBtn.addEventListener('click', async () => {
+            openModal('sync-modal');
+            await loadSyncStatus();
+        });
+    }
+    if (syncClose) {
+        syncClose.addEventListener('click', () => closeModal('sync-modal'));
+    }
+    if (syncRefresh) {
+        syncRefresh.addEventListener('click', async () => {
+            await loadSyncStatus();
+        });
+    }
+    if (syncNow) {
+        syncNow.addEventListener('click', async () => {
+            await runSyncNow();
+        });
+    }
+
+    const consistenciaBtn = document.getElementById('consistencia-btn');
+    const consistenciaClose = document.getElementById('consistencia-close-btn');
+    const consistenciaRefresh = document.getElementById('consistencia-refresh-btn');
+    if (consistenciaBtn) {
+        consistenciaBtn.addEventListener('click', async () => {
+            openModal('consistencia-modal');
+            await loadConsistencia();
+        });
+    }
+    if (consistenciaClose) {
+        consistenciaClose.addEventListener('click', () => closeModal('consistencia-modal'));
+    }
+    if (consistenciaRefresh) {
+        consistenciaRefresh.addEventListener('click', async () => {
+            await loadConsistencia();
+        });
+    }
 }
 
 async function loadData() {
     try {
         const [alunosRes, professoresRes, turmasRes] = await Promise.all([
-            safeQuery(db.from('enc_alunos').select('id, nome_completo, matricula, turma_id, nome_responsavel, telefone, status, origem').order('nome_completo')),
-            safeQuery(db.from('enc_professores').select('user_uid, nome, email, telefone, status, vinculo, origem').order('nome')),
+            safeQuery(db.from('enc_alunos').select('*').order('nome_completo')),
+            safeQuery(db.from('enc_professores').select('*').order('nome')),
             safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo'))
         ]);
         state.alunos = alunosRes.data || [];
@@ -97,6 +140,167 @@ async function loadData() {
         renderProfessores();
     } catch (err) {
         showMessage('Erro ao carregar dados: ' + (err?.message || err), true);
+    }
+}
+
+function formatSyncDate(value) {
+    if (!value) return '-';
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        dateStyle: 'short',
+        timeStyle: 'short',
+        hour12: false
+    }).format(date);
+}
+
+function formatCreatedDate(value) {
+    if (!value) return '-';
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        dateStyle: 'short',
+        timeStyle: 'short',
+        hour12: false
+    }).format(date);
+}
+
+async function loadSyncStatus() {
+    const lastEl = document.getElementById('sync-last');
+    const alunosEl = document.getElementById('sync-alunos-total');
+    const alunosSemTurmaEl = document.getElementById('sync-alunos-sem-turma');
+    const professoresEl = document.getElementById('sync-professores-total');
+    try {
+        const [{ count: alunosTotal }, { count: alunosSemTurma }, { count: professoresTotal }] = await Promise.all([
+            safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true })),
+            safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true }).is('turma_id', null)),
+            safeQuery(db.from('enc_professores').select('*', { count: 'exact', head: true }))
+        ]);
+
+        if (alunosEl) alunosEl.textContent = String(alunosTotal ?? 0);
+        if (alunosSemTurmaEl) alunosSemTurmaEl.textContent = String(alunosSemTurma ?? 0);
+        if (professoresEl) professoresEl.textContent = String(professoresTotal ?? 0);
+        if (lastEl) lastEl.textContent = formatSyncDate(state.lastSyncAt);
+    } catch (err) {
+        showMessage('Erro ao carregar status do sync: ' + (err?.message || err), true);
+    }
+}
+
+async function runSyncNow() {
+    const button = document.getElementById('sync-now-cadastros');
+    if (button) {
+        button.disabled = true;
+        button.textContent = 'Sincronizando...';
+    }
+    try {
+        await safeQuery(db.rpc('sync_enc_cache'));
+        state.lastSyncAt = new Date();
+        await loadData();
+        await loadSyncStatus();
+        showMessage('Sincronização concluída.');
+    } catch (err) {
+        showMessage('Erro ao sincronizar: ' + (err?.message || err), true);
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = 'Sincronizar agora';
+        }
+    }
+}
+
+async function loadConsistencia() {
+    const alunosSemTurmaCountEl = document.getElementById('consistencia-alunos-sem-turma-count');
+    const turmasDuplicadasCountEl = document.getElementById('consistencia-turmas-duplicadas-count');
+    const alunosOrfaosCountEl = document.getElementById('consistencia-alunos-orfaos-count');
+    const alunosSemTurmaTable = document.getElementById('consistencia-alunos-sem-turma-table');
+    const turmasDuplicadasTable = document.getElementById('consistencia-turmas-duplicadas-table');
+    const alunosOrfaosTable = document.getElementById('consistencia-alunos-orfaos-table');
+
+    const setLoading = () => {
+        if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = '...';
+        if (turmasDuplicadasCountEl) turmasDuplicadasCountEl.textContent = '...';
+        if (alunosOrfaosCountEl) alunosOrfaosCountEl.textContent = '...';
+        if (alunosSemTurmaTable) alunosSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center">Carregando...</td></tr>';
+        if (turmasDuplicadasTable) turmasDuplicadasTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
+        if (alunosOrfaosTable) alunosOrfaosTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
+    };
+
+    setLoading();
+
+    try {
+        const [alunosSemTurmaRes, alunosSemTurmaListRes, turmasRes, alunosComTurmaRes] = await Promise.all([
+            safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true }).eq('status', 'ativo').is('turma_id', null)),
+            safeQuery(db.from('enc_alunos').select('id, nome_completo, matricula').eq('status', 'ativo').is('turma_id', null).order('nome_completo').limit(50)),
+            safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo')),
+            safeQuery(db.from('enc_alunos').select('id, nome_completo, matricula, turma_id').eq('status', 'ativo').not('turma_id', 'is', null))
+        ]);
+
+        const alunosSemTurmaCount = alunosSemTurmaRes.count || 0;
+        if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = alunosSemTurmaCount;
+        const alunosSemTurma = alunosSemTurmaListRes.data || [];
+        if (alunosSemTurmaTable) {
+            alunosSemTurmaTable.innerHTML = alunosSemTurma.length
+                ? alunosSemTurma.map(a => `
+                    <tr>
+                        <td class="p-3">${a.nome_completo || '-'}</td>
+                        <td class="p-3">${a.matricula || '-'}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="2" class="p-4 text-center">Nenhum encontrado.</td></tr>';
+        }
+
+        const turmas = turmasRes.data || [];
+        const dupMap = new Map();
+        turmas.forEach(t => {
+            const key = `${t.nome_turma}__${t.ano_letivo}`;
+            const current = dupMap.get(key) || { nome_turma: t.nome_turma, ano_letivo: t.ano_letivo, count: 0 };
+            current.count += 1;
+            dupMap.set(key, current);
+        });
+        const duplicadas = Array.from(dupMap.values()).filter(d => d.count > 1).sort((a, b) => b.count - a.count);
+        if (turmasDuplicadasCountEl) turmasDuplicadasCountEl.textContent = duplicadas.length;
+        if (turmasDuplicadasTable) {
+            turmasDuplicadasTable.innerHTML = duplicadas.length
+                ? duplicadas.slice(0, 50).map(d => `
+                    <tr>
+                        <td class="p-3">${d.nome_turma}</td>
+                        <td class="p-3">${d.ano_letivo}</td>
+                        <td class="p-3">${d.count}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="3" class="p-4 text-center">Nenhuma duplicidade encontrada.</td></tr>';
+        }
+
+        const turmasIds = new Set(turmas.map(t => Number(t.id)));
+        const alunosComTurma = alunosComTurmaRes.data || [];
+        const orfaos = alunosComTurma.filter(a => !turmasIds.has(Number(a.turma_id)));
+        const orfaosCount = orfaos.length;
+        if (alunosOrfaosCountEl) alunosOrfaosCountEl.textContent = alunosSemTurmaCount + orfaosCount;
+        if (alunosOrfaosTable) {
+            const combined = [
+                ...alunosSemTurma.map(a => ({ ...a, turmaInfo: 'Sem turma' })),
+                ...orfaos.map(a => ({ ...a, turmaInfo: `${a.turma_id} (inexistente)` }))
+            ];
+            alunosOrfaosTable.innerHTML = combined.length
+                ? combined.slice(0, 50).map(a => `
+                    <tr>
+                        <td class="p-3">${a.nome_completo || '-'}</td>
+                        <td class="p-3">${a.matricula || '-'}</td>
+                        <td class="p-3">${a.turmaInfo}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="3" class="p-4 text-center">Nenhum encontrado.</td></tr>';
+        }
+    } catch (err) {
+        console.error('Erro ao carregar consistencia:', err);
+        if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = 'Erro';
+        if (turmasDuplicadasCountEl) turmasDuplicadasCountEl.textContent = 'Erro';
+        if (alunosOrfaosCountEl) alunosOrfaosCountEl.textContent = 'Erro';
+        if (alunosSemTurmaTable) alunosSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+        if (turmasDuplicadasTable) turmasDuplicadasTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+        if (alunosOrfaosTable) alunosOrfaosTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
     }
 }
 
@@ -265,6 +469,8 @@ function openAlunoModal(aluno = null) {
     document.getElementById('aluno-responsavel').value = aluno?.nome_responsavel || '';
     document.getElementById('aluno-telefone').value = aluno?.telefone || '';
     document.getElementById('aluno-status').value = aluno?.status || 'ativo';
+    const alunoCriadoEm = aluno?.created_at || aluno?.copied_at || null;
+    document.getElementById('aluno-criado-em').value = formatCreatedDate(alunoCriadoEm);
     openModal('aluno-modal');
 }
 
@@ -276,6 +482,8 @@ function openProfessorModal(professor = null) {
     document.getElementById('professor-telefone').value = professor?.telefone || '';
     document.getElementById('professor-vinculo').value = professor?.vinculo || 'efetivo';
     document.getElementById('professor-status').value = professor?.status || 'ativo';
+    const profCriadoEm = professor?.created_at || professor?.copied_at || null;
+    document.getElementById('professor-criado-em').value = formatCreatedDate(profCriadoEm);
     openModal('professor-modal');
 }
 
@@ -340,7 +548,7 @@ async function deleteAluno(id) {
     const aluno = state.alunos.find(a => Number(a.id) === Number(id));
     if (!aluno) return;
     const warning = aluno.origem === 'apoia'
-        ? 'Este aluno veio do APOIA. Se excluir, ele pode voltar na próxima sincronização.'
+        ? 'Este aluno veio da Chamada. Se excluir, ele pode voltar na próxima sincronização.'
         : 'Esta ação é permanente e não pode ser desfeita.';
     const confirmDelete = window.confirm(`Deseja excluir o aluno "${aluno.nome_completo || ''}"?\n\n${warning}`);
     if (!confirmDelete) return;

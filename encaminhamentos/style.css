@@ -1,5 +1,36 @@
 body { font-family: 'Inter', sans-serif; }
 
+body.form-compact input[type="text"],
+body.form-compact input[type="email"],
+body.form-compact input[type="password"],
+body.form-compact input[type="date"],
+body.form-compact input[type="time"],
+body.form-compact input[type="tel"],
+body.form-compact input[type="number"],
+body.form-compact input[type="search"],
+body.form-compact input[type="url"],
+body.form-compact select,
+body.form-compact textarea {
+    padding: 0.4rem 0.65rem !important;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+body.form-compact input[type="date"],
+body.form-compact input[type="time"] {
+    position: relative;
+    padding-right: 2.25rem !important;
+}
+
+body.form-compact input[type="date"]::-webkit-calendar-picker-indicator {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    right: 0.35rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 .nav-link-active {
     color: #1d4ed8;
     font-weight: 700;
@@ -44,6 +75,28 @@ body { font-family: 'Inter', sans-serif; }
 #results-table td {
     padding: 0.75rem;
     border-bottom: 1px solid #e5e7eb;
+}
+
+.table-scroll {
+    max-height: calc(100vh - 320px);
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.table-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f9fafb;
+}
+
+.enc-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #fff;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
 }
 
 .pagination-btn {

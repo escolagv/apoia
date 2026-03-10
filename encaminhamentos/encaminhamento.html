@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Encaminhamento</title>
+    <title>Encaminhamentos</title>
     <link rel="icon" type="image/x-icon" href="../apoia/favicon.ico">
     <link rel="apple-touch-icon" href="../apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
@@ -15,7 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 </head>
-<body class="bg-gray-200 text-gray-800">
+<body class="bg-gray-200 text-gray-800 form-compact">
     <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"></div>
     <div class="flex h-screen bg-gray-200">
         <aside class="w-64 bg-gray-800 text-white flex flex-col fixed inset-y-0 left-0 z-30 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
@@ -28,9 +28,7 @@
             </div>
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
                 <a href="dashboard.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Dashboard</a>
-                <a href="encaminhamento.html" class="block px-4 py-2 rounded-md bg-gray-700">Registrar</a>
-                <a href="consulta.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Consultar</a>
-                <a href="relatorios.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Relatórios</a>
+                <a href="encaminhamento.html" class="block px-4 py-2 rounded-md bg-gray-700">Encaminhamentos</a>
                 <a href="cadastros.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Cadastros</a>
                 <a href="fila.html" class="block px-4 py-2 rounded-md hover:bg-gray-700">Fila de Scans</a>
             </nav>
@@ -56,20 +54,31 @@
                 </div>
 
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-                        <div>
-                            <h2 class="text-2xl font-bold" id="form-title">Registrar Encaminhamento</h2>
-                            <div class="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                                <span>Sync: <strong id="sync-status">-</strong></span>
-                                <button type="button" id="sync-now-btn" class="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200">Sincronizar agora</button>
+                    <div class="enc-sticky-header">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                            <div>
+                                <h2 class="text-2xl font-bold">Encaminhamentos</h2>
+                                <p id="form-title" class="text-sm text-gray-500">Registrar Encaminhamento</p>
+                                <div class="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                                    <span>Sync: <strong id="sync-status">-</strong></span>
+                                    <button type="button" id="sync-now-btn" class="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200">Sincronizar agora</button>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                Registrado por: <strong id="registradoPorLabel"></strong>
                             </div>
                         </div>
-                        <div class="text-sm text-gray-500">
-                            Registrado por: <strong id="registradoPorLabel"></strong>
+
+                        <div class="border-b border-gray-200">
+                            <nav class="flex gap-6 text-sm font-semibold">
+                                <button type="button" data-enc-tab="registrar" class="tab-btn pb-3 border-b-2 border-blue-600 text-blue-700">Registrar</button>
+                                <button type="button" data-enc-tab="consultar" class="tab-btn pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Consultar</button>
+                            </nav>
                         </div>
                     </div>
 
-                    <form id="encaminhamentoForm" class="space-y-6">
+                    <section id="tab-registrar" data-enc-panel="registrar">
+                        <form id="encaminhamentoForm" class="space-y-6">
                         <input type="hidden" id="editId" name="editId">
                         <div>
                             <h3 class="text-base font-semibold text-gray-900 border-b border-gray-200 pb-2">Dados do Encaminhamento</h3>
@@ -104,14 +113,14 @@
                                     <button type="button" id="scan-add-btn" class="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-md hover:bg-yellow-200">Adicionar imagem</button>
                                 </div>
                             </div>
-                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="mt-4 flex flex-col md:flex-row md:items-end gap-4">
                                 <div>
-                                    <label for="codigoEncaminhamento" class="text-sm font-medium text-gray-700">Código</label>
-                                    <input type="text" id="codigoEncaminhamento" readonly class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm bg-gray-50 font-mono tracking-wider">
+                                    <label for="codigoEncaminhamento" class="block text-sm font-medium text-gray-700">Código</label>
+                                    <input type="text" id="codigoEncaminhamento" readonly class="w-full md:w-[170px] px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm bg-gray-50 font-mono tracking-wider">
                                 </div>
                                 <div>
-                                    <label for="dataEncaminhamento" class="text-sm font-medium text-gray-700">Data do Encaminhamento</label>
-                                    <input type="date" id="dataEncaminhamento" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <label for="dataEncaminhamento" class="block text-sm font-medium text-gray-700">Data do Encaminhamento</label>
+                                    <input type="date" id="dataEncaminhamento" required class="w-full md:w-[140px] px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10">
                                 </div>
                             </div>
                             <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -254,11 +263,74 @@
                                 <button type="button" id="btnExcluir" class="w-full py-2 px-4 font-semibold text-white bg-red-600 rounded-md hover:bg-red-700 hidden">Excluir Encaminhamento</button>
                             </div>
                         </div>
-                    </form>
-                    <div id="status-message"></div>
+                        </form>
+                        <div id="status-message"></div>
+                    </section>
+
+                    <section id="tab-consultar" data-enc-panel="consultar" class="hidden">
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h3 class="text-base font-semibold text-gray-900">Consultar Encaminhamentos</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <label for="search-estudante" class="text-sm font-medium text-gray-700">Buscar por Estudante</label>
+                                    <input type="text" id="search-estudante" placeholder="Parte do nome..." class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label for="search-professor" class="text-sm font-medium text-gray-700">Buscar por Professor(a)</label>
+                                    <input type="text" id="search-professor" placeholder="Parte do nome..." class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label for="search-data-start" class="text-sm font-medium text-gray-700">Data inicial</label>
+                                    <input type="date" id="search-data-start" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label for="search-data-end" class="text-sm font-medium text-gray-700">Data final</label>
+                                    <input type="date" id="search-data-end" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label for="search-codigo" class="text-sm font-medium text-gray-700">Buscar por Código</label>
+                                    <input type="text" id="search-codigo" placeholder="ENC-AAAA-000001" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label for="search-ano" class="text-sm font-medium text-gray-700">Ano do Encaminhamento</label>
+                                    <select id="search-ano" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
+                                </div>
+                                <div>
+                                    <label for="search-registrado" class="text-sm font-medium text-gray-700">Buscar por Quem Registrou</label>
+                                    <input type="text" id="search-registrado" placeholder="Parte do nome..." class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+                            <button type="button" id="search-button" class="w-full mt-5 py-2 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Buscar Encaminhamentos</button>
+                        </div>
+
+                        <div class="mt-6">
+                            <div id="results-summary" class="text-sm text-gray-500"></div>
+                            <div id="results-area" class="mt-4">
+                                <p id="loading-message" class="text-center text-sm text-gray-500">Carregando...</p>
+                                <div id="results-table"></div>
+                            </div>
+                            <div id="pagination-container" class="flex flex-wrap gap-2 mt-4"></div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                                <button id="simple-report-button" class="py-2 px-4 font-semibold text-white bg-slate-700 rounded-md hover:bg-slate-800">Gerar Relatório Simples</button>
+                                <button id="complete-report-button" class="py-2 px-4 font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-950">Gerar Relatório Completo</button>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="report-layout-modal" class="hidden fixed inset-0 z-40 bg-black/50 flex items-center justify-center px-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold mb-2">Formato do Relatório Completo</h3>
+            <p class="text-sm text-gray-600 mb-4">Escolha como deseja imprimir as fichas completas.</p>
+            <div class="grid grid-cols-1 gap-3">
+                <button type="button" data-layout="single" class="w-full py-2 px-4 rounded-md bg-slate-800 text-white hover:bg-slate-900">1 ficha por folha</button>
+                <button type="button" data-layout="double" class="w-full py-2 px-4 rounded-md bg-slate-700 text-white hover:bg-slate-800">2 fichas por folha (paisagem)</button>
+                <button type="button" id="report-layout-cancel" class="w-full py-2 px-4 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100">Cancelar</button>
+            </div>
+        </div>
     </div>
 
     <div id="scan-zoom-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
@@ -280,10 +352,11 @@
     </div>
 
     <script type="module" src="js/sidebar.js"></script>
+    <script type="module" src="unified.js"></script>
+    <script type="module" src="results.js"></script>
     <script type="module" src="script.js"></script>
 </body>
 </html>
-
 
 
 

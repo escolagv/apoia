@@ -53,7 +53,8 @@ function redirectToSearchResults() {
     if (ano) params.append('ano', ano);
     if (codigo) params.append('codigo', codigo);
 
-    window.location.href = `relatorios.html?${params.toString()}`;
+    const query = params.toString();
+    window.location.href = `encaminhamento.html?tab=consultar${query ? `&${query}` : ''}`;
 }
 
 function setCodigoPrefix(yearValue) {
