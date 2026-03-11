@@ -31,6 +31,29 @@ body.form-compact input[type="date"]::-webkit-calendar-picker-indicator {
     transform: translateY(-50%);
 }
 
+.date-clear-btn {
+    position: absolute;
+    right: 2.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    border: 1px solid #d1d5db;
+    color: #6b7280;
+    background: #fff;
+    font-size: 0.9rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.date-clear-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
 .nav-link-active {
     color: #1d4ed8;
     font-weight: 700;
@@ -90,13 +113,25 @@ body.form-compact input[type="date"]::-webkit-calendar-picker-indicator {
     background: #f9fafb;
 }
 
+.enc-card {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 140px);
+    min-height: 0;
+}
+
+.enc-card-body {
+    overflow-y: auto;
+    min-height: 0;
+    padding-top: 1rem;
+}
+
 .enc-sticky-header {
-    position: sticky;
-    top: 0;
-    z-index: 20;
+    position: relative;
+    z-index: 2;
     background: #fff;
     padding-bottom: 0.75rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0;
 }
 
 .pagination-btn {
@@ -124,4 +159,138 @@ body.form-compact input[type="date"]::-webkit-calendar-picker-indicator {
 .clickable-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-clear-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    border: 1px solid #d1d5db;
+    color: #6b7280;
+    background: #fff;
+    font-size: 1rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dashboard-clear-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+#dashboard-date-input {
+    font-size: 0.9rem;
+}
+
+.air-datepicker.enc-dashboard {
+    width: 520px;
+    border-radius: 18px;
+    border: 1px solid #e2e8f0;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    box-shadow: 0 24px 40px -22px rgba(15, 23, 42, 0.45);
+    font-size: 0.95rem;
+    z-index: 40;
+    overflow: hidden;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker--navigation {
+    padding: 14px 16px 6px;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker--nav {
+    border: 0;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker--nav-title {
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: 0.2px;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker--nav-action {
+    border-radius: 999px;
+    width: 34px;
+    height: 34px;
+    color: #334155;
+    background: #f1f5f9;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker--nav-action:hover {
+    background: #e2e8f0;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker--day-names {
+    margin: 0 12px 6px;
+    padding: 8px 0;
+    border-radius: 10px;
+    background: #f1f5f9;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker--day-name {
+    color: #475569;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker-body--cells {
+    grid-auto-rows: 54px;
+    padding: 4px 8px 14px;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker-cell {
+    height: 54px;
+    border-radius: 14px;
+    position: relative;
+    font-weight: 600;
+    color: #0f172a;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker-cell:hover {
+    background: #e0f2fe;
+    color: #0c4a6e;
+    transform: translateY(-1px);
+}
+
+.air-datepicker.enc-dashboard .air-datepicker-cell.-selected-,
+.air-datepicker.enc-dashboard .air-datepicker-cell.-range-from-,
+.air-datepicker.enc-dashboard .air-datepicker-cell.-range-to- {
+    background: #2563eb;
+    color: #fff;
+    box-shadow: 0 10px 20px -10px rgba(37, 99, 235, 0.8);
+}
+
+.air-datepicker.enc-dashboard .air-datepicker-cell.-in-range- {
+    background: #dbeafe;
+    color: #1e3a8a;
+}
+
+.air-datepicker.enc-dashboard .air-datepicker-cell.dp-today:not(.-selected-):not(.-range-from-):not(.-range-to-)::after {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: 9999px;
+    border: 2px solid #22c55e;
+}
+
+@media (max-width: 640px) {
+    .air-datepicker.enc-dashboard {
+        width: 100%;
+    }
+
+    .air-datepicker.enc-dashboard .air-datepicker-body--cells {
+        grid-auto-rows: 40px;
+    }
+
+    .air-datepicker.enc-dashboard .air-datepicker-cell {
+        height: 40px;
+    }
 }

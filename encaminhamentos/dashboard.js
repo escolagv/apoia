@@ -25,11 +25,25 @@ const providenciasOptions = [
     "Outros"
 ];
 
+const ptBrLocale = {
+    days: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
+    daysShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+    daysMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'],
+    months: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+    monthsShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+    today: 'Hoje',
+    clear: 'Limpar',
+    dateFormat: 'dd/MM/yyyy',
+    timeFormat: 'HH:mm',
+    firstDay: 1
+};
+
 const state = {
-    selectedDate: new Date(),
-    calendarMonth: new Date().getMonth(),
-    calendarYear: new Date().getFullYear(),
-    data: []
+    selectionStart: null,
+    selectionEnd: null,
+    data: [],
+    datepicker: null,
+    suppressSelect: false
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -46,213 +60,222 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     initDashboard();
-    initQrModal();
 });
 
 function initDashboard() {
     const dateInput = document.getElementById('dashboard-date-input');
-    const todayBtn = document.getElementById('dashboard-today-btn');
-    const latestBtn = document.getElementById('dashboard-latest-btn');
-    const latestClose = document.getElementById('latest-close-btn');
-    const modal = document.getElementById('latest-modal');
+    const clearBtn = document.getElementById('dashboard-clear-btn');
+    const consistenciaBtn = document.getElementById('consistencia-open-btn');
+    const consistenciaModal = document.getElementById('consistencia-modal');
+    const consistenciaClose = document.getElementById('consistencia-close-btn');
+    const consistenciaRefresh = document.getElementById('consistencia-refresh-btn');
 
     if (dateInput) {
+        initDatepicker(dateInput, clearBtn);
+    }
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            clearSelection();
+        });
+    }
+
+    if (consistenciaBtn && consistenciaModal) {
+        consistenciaBtn.addEventListener('click', async () => {
+            consistenciaModal.classList.remove('hidden');
+            await loadConsistenciaModal();
+        });
+    }
+    if (consistenciaClose && consistenciaModal) {
+        consistenciaClose.addEventListener('click', () => consistenciaModal.classList.add('hidden'));
+    }
+    if (consistenciaModal) {
+        consistenciaModal.addEventListener('click', (e) => {
+            if (e.target === consistenciaModal) consistenciaModal.classList.add('hidden');
+        });
+    }
+    if (consistenciaRefresh) {
+        consistenciaRefresh.addEventListener('click', async () => {
+            await loadConsistenciaModal();
+        });
+    }
+
+    syncDateInput();
+    loadDashboardData();
+    loadQueueSummary();
+    loadConsistenciaSummary();
+    loadEncTotal();
+}
+
+// QR do dia foi movido para a Fila de Scans.
+
+function initDatepicker(dateInput, clearBtn) {
+    if (typeof AirDatepicker === 'undefined') {
+        dateInput.readOnly = false;
+        dateInput.type = 'date';
         dateInput.value = getLocalDateString();
         dateInput.addEventListener('change', () => {
-            const value = dateInput.value;
-            if (value) {
-                state.selectedDate = new Date(`${value}T00:00:00`);
-                state.calendarMonth = state.selectedDate.getMonth();
-                state.calendarYear = state.selectedDate.getFullYear();
-                renderCalendar();
-                loadDashboardData();
+            if (!dateInput.value) {
+                clearSelection();
+                return;
             }
+            const date = new Date(`${dateInput.value}T00:00:00`);
+            setSelectionFromDates([date]);
         });
+        return;
     }
 
-    if (todayBtn) {
-        todayBtn.addEventListener('click', () => {
-            const now = new Date();
-            state.selectedDate = now;
-            state.calendarMonth = now.getMonth();
-            state.calendarYear = now.getFullYear();
-            if (dateInput) dateInput.value = getLocalDateString();
-            renderCalendar();
-            loadDashboardData();
-        });
-    }
+    const today = new Date();
+    const locale = ptBrLocale;
 
-    if (latestBtn && modal) {
-        latestBtn.addEventListener('click', () => {
-            modal.classList.remove('hidden');
-            renderLatestList();
-        });
-    }
+    state.datepicker = new AirDatepicker(dateInput, {
+        locale,
+        multipleDates: 2,
+        multipleDatesSeparator: ' a ',
+        toggleSelected: true,
+        autoClose: false,
+        isMobile: false,
+        classes: 'enc-dashboard',
+        onSelect: ({ date }) => {
+            if (state.suppressSelect) return;
+            const dates = Array.isArray(date) ? date.filter(Boolean) : (date ? [date] : []);
+            setSelectionFromDates(dates);
+        },
+        onRenderCell: ({ date, cellType }) => {
+            if (cellType !== 'day') return null;
+            if (isSameDate(date, today)) {
+                return { classes: 'dp-today' };
+            }
+            return null;
+        }
+    });
 
-    if (latestClose && modal) {
-        latestClose.addEventListener('click', () => modal.classList.add('hidden'));
-    }
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.classList.add('hidden');
-        });
-    }
+    if (clearBtn) clearBtn.classList.toggle('hidden', true);
+}
 
-    const prevBtn = document.getElementById('cal-prev');
-    const nextBtn = document.getElementById('cal-next');
-    if (prevBtn) prevBtn.addEventListener('click', () => changeMonth(-1));
-    if (nextBtn) nextBtn.addEventListener('click', () => changeMonth(1));
-
-    renderCalendar();
+function clearSelection(options = {}) {
+    state.suppressSelect = true;
+    if (state.datepicker) {
+        state.datepicker.clear();
+        if (options.focusToday && typeof state.datepicker.setViewDate === 'function') {
+            state.datepicker.setViewDate(new Date());
+        }
+    }
+    state.suppressSelect = false;
+    state.selectionStart = null;
+    state.selectionEnd = null;
+    syncDateInput();
     loadDashboardData();
 }
 
-function initQrModal() {
-    const openBtn = document.getElementById('qr-open-btn');
-    const modal = document.getElementById('qr-modal');
-    const closeBtn = document.getElementById('qr-close-btn');
-    const newBtn = document.getElementById('qr-new-btn');
-    if (!openBtn || !modal) return;
-
-    openBtn.addEventListener('click', async () => {
-        modal.classList.remove('hidden');
-        await loadQrCode(false);
-    });
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+function setSelectionFromDates(dates) {
+    if (!dates || dates.length === 0) {
+        state.selectionStart = null;
+        state.selectionEnd = null;
+        syncDateInput();
+        loadDashboardData();
+        return;
     }
-    if (newBtn) {
-        newBtn.addEventListener('click', async () => {
-            await loadQrCode(true);
-        });
-    }
-    modal.addEventListener('click', (event) => {
-        if (event.target === modal) modal.classList.add('hidden');
-    });
-}
 
-async function loadQrCode(forceNew = false) {
-    const qrEl = document.getElementById('qr-code');
-    const statusEl = document.getElementById('qr-status');
-    if (!qrEl || !statusEl) return;
-    statusEl.textContent = 'Gerando...';
-    try {
-        const { data: sessionData, error: sessionError } = await db.auth.getSession();
-        if (sessionError || !sessionData?.session?.access_token) {
-            statusEl.textContent = 'Sessão expirada. Faça login novamente.';
+    if (dates.length === 1) {
+        const date = stripTime(dates[0]);
+        const sameAsCurrent = state.selectionStart && !state.selectionEnd && isSameDate(state.selectionStart, date);
+        if (sameAsCurrent) {
+            clearSelection();
             return;
         }
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/enc_qr_issue`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${sessionData.session.access_token}`,
-                apikey: SUPABASE_ANON_KEY
-            },
-            body: JSON.stringify({ force: forceNew })
-        });
-        const payload = await response.json();
-        if (!response.ok) {
-            statusEl.textContent = payload?.error || 'Falha ao gerar QR.';
-            return;
-        }
-        const token = payload?.token;
-        const expiresAt = payload?.expires_at;
-        const usedAt = payload?.used_at;
-        if (!token) {
-            statusEl.textContent = 'Token não encontrado.';
-            return;
-        }
-        const pwaUrl = new URL('/encaminhamentos/pwa.html', window.location.origin);
-        pwaUrl.searchParams.set('token', token);
-        pwaUrl.searchParams.set('v', Date.now().toString());
-        qrEl.innerHTML = '';
-        if (window.QRCode) {
-            // qrcodejs
-            new QRCode(qrEl, {
-                text: pwaUrl.toString(),
-                width: 220,
-                height: 220
-            });
-        }
-        const usedLabel = usedAt ? ' (já usado)' : '';
-        statusEl.textContent = expiresAt ? `Expira às 18h${usedLabel}` : `QR pronto${usedLabel}`;
-    } catch (err) {
-        statusEl.textContent = 'Erro ao gerar QR.';
-        console.error(err);
+        state.selectionStart = date;
+        state.selectionEnd = null;
+        syncDateInput();
+        loadDashboardData();
+        return;
     }
+
+    const [first, second] = dates.map(stripTime).sort((a, b) => a - b);
+    state.selectionStart = first;
+    state.selectionEnd = second;
+    syncDateInput();
+    loadDashboardData();
 }
 
-function changeMonth(delta) {
-    state.calendarMonth += delta;
-    if (state.calendarMonth < 0) {
-        state.calendarMonth = 11;
-        state.calendarYear -= 1;
+function syncDateInput() {
+    const input = document.getElementById('dashboard-date-input');
+    const clearBtn = document.getElementById('dashboard-clear-btn');
+    if (!input) return;
+
+    if (!state.selectionStart) {
+        const today = new Date();
+        input.value = formatDateBrShort(toDateString(today));
+        if (clearBtn) clearBtn.classList.add('hidden');
+        return;
     }
-    if (state.calendarMonth > 11) {
-        state.calendarMonth = 0;
-        state.calendarYear += 1;
-    }
-    renderCalendar();
+
+    const startStr = toDateString(state.selectionStart);
+    const endStr = state.selectionEnd ? toDateString(state.selectionEnd) : startStr;
+    input.value = state.selectionEnd
+        ? `${formatDateBrShort(startStr)} a ${formatDateBrShort(endStr)}`
+        : formatDateBrShort(startStr);
+
+    if (clearBtn) clearBtn.classList.remove('hidden');
 }
 
-function renderCalendar() {
-    const monthYear = document.getElementById('cal-month-year');
-    const grid = document.getElementById('cal-grid');
-    if (!monthYear || !grid) return;
-
-    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    monthYear.textContent = `${monthNames[state.calendarMonth]} ${state.calendarYear}`;
-    grid.innerHTML = '';
-
-    const firstDay = new Date(state.calendarYear, state.calendarMonth, 1);
-    const startDay = firstDay.getDay();
-    const daysInMonth = new Date(state.calendarYear, state.calendarMonth + 1, 0).getDate();
-    const selectedWeek = getWeekRange(state.selectedDate);
-
-    for (let i = 0; i < startDay; i += 1) {
-        const empty = document.createElement('div');
-        empty.className = 'h-7';
-        grid.appendChild(empty);
+function getSelectedRange() {
+    if (state.selectionStart) {
+        const start = stripTime(state.selectionStart);
+        const end = stripTime(state.selectionEnd || state.selectionStart);
+        return {
+            start,
+            end,
+            mode: state.selectionEnd ? 'range' : 'day'
+        };
     }
 
-    for (let day = 1; day <= daysInMonth; day += 1) {
-        const date = new Date(state.calendarYear, state.calendarMonth, day);
-        const dateStr = toDateString(date);
-        const isInWeek = dateStr >= selectedWeek.start && dateStr <= selectedWeek.end;
-        const isSelected = dateStr === toDateString(state.selectedDate);
+    const weekRange = getWeekRange(new Date());
+    return {
+        start: weekRange.start,
+        end: weekRange.end,
+        mode: 'week'
+    };
+}
 
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `h-7 rounded-md text-xs ${isInWeek ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'} ${isSelected ? 'ring-2 ring-blue-500' : ''}`;
-        btn.textContent = day;
-        btn.addEventListener('click', () => {
-            state.selectedDate = date;
-            const dateInput = document.getElementById('dashboard-date-input');
-            if (dateInput) dateInput.value = toDateString(date);
-            renderCalendar();
-            loadDashboardData();
-        });
-        grid.appendChild(btn);
+function updateDashboardPeriod(range) {
+    const periodEl = document.getElementById('dashboard-period');
+    if (!periodEl) return;
+
+    const weekInfo = getIsoWeekInfo(range.start);
+    const currentInfo = getIsoWeekInfo(new Date());
+    const isCurrent = weekInfo.week === currentInfo.week && weekInfo.year === currentInfo.year;
+    const weekLabel = `Semana ${weekInfo.week}${isCurrent ? ' (Atual)' : ''}`;
+
+    const startStr = toDateString(range.start);
+    const endStr = toDateString(range.end);
+    let detail = '';
+    if (range.mode === 'day') {
+        detail = `Dia ${formatDateBr(startStr)}`;
+    } else if (range.mode === 'range') {
+        detail = `Período ${formatDateBr(startStr)} a ${formatDateBr(endStr)}`;
+    } else {
+        detail = `${formatDateBr(startStr)} a ${formatDateBr(endStr)} (Seg–Sex)`;
     }
+
+    periodEl.textContent = `${weekLabel} • ${detail}`;
 }
 
 async function loadDashboardData() {
-    const range = getWeekRange(state.selectedDate);
-    const periodEl = document.getElementById('dashboard-period');
-    if (periodEl) {
-        periodEl.textContent = `Semana: ${formatDateBr(range.start)} a ${formatDateBr(range.end)} (Seg–Sex)`;
-    }
+    const range = getSelectedRange();
+    updateDashboardPeriod(range);
+    const rangeStart = toDateString(range.start);
+    const rangeEnd = toDateString(range.end);
 
     try {
-        const year = getYearFromDateString(range.start);
+        const year = getYearFromDateString(rangeStart);
         await ensureEncaminhamentosTableReady(year);
         const tableName = getEncaminhamentosTableName(year);
         const { data } = await safeQuery(
             db.from(tableName)
                 .select('id, data_encaminhamento, aluno_id, aluno_nome, professor_uid, professor_nome, motivos, acoes_tomadas, providencias, status, status_ligacao, whatsapp_enviado, whatsapp_status')
-                .gte('data_encaminhamento', range.start)
-                .lte('data_encaminhamento', range.end)
+                .gte('data_encaminhamento', rangeStart)
+                .lte('data_encaminhamento', rangeEnd)
                 .order('data_encaminhamento', { ascending: false })
         );
         state.data = data || [];
@@ -260,9 +283,118 @@ async function loadDashboardData() {
         renderMotivos();
         renderAcoesProvidencias();
         renderContato();
-        renderLatestList();
+        await loadQueueSummary();
+        await loadConsistenciaSummary();
+        await loadEncTotal();
     } catch (err) {
         console.error('Erro ao carregar dashboard:', err?.message || err);
+    }
+}
+
+async function loadQueueSummary() {
+    const countEl = document.getElementById('dash-queue-count');
+    if (!countEl) return;
+    try {
+        const { count } = await safeQuery(
+            db.from('enc_scan_jobs')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'novo')
+        );
+        countEl.textContent = String(count ?? 0);
+    } catch (err) {
+        countEl.textContent = '—';
+    }
+}
+
+async function loadConsistenciaSummary() {
+    const semTurmaEl = document.getElementById('dash-consistencia-sem-turma');
+    const semMatriculaEl = document.getElementById('dash-consistencia-sem-matricula');
+    try {
+        const [alunosSemTurmaRes, alunosSemMatriculaRes] = await Promise.all([
+            safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true }).eq('status', 'ativo').is('turma_id', null)),
+            safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true }).eq('status', 'ativo').or('matricula.is.null,matricula.eq.'))
+        ]);
+        if (semTurmaEl) semTurmaEl.textContent = String(alunosSemTurmaRes.count ?? 0);
+        if (semMatriculaEl) semMatriculaEl.textContent = String(alunosSemMatriculaRes.count ?? 0);
+    } catch (err) {
+        if (semTurmaEl) semTurmaEl.textContent = '—';
+        if (semMatriculaEl) semMatriculaEl.textContent = '—';
+    }
+}
+
+async function loadEncTotal() {
+    const totalEl = document.getElementById('dash-enc-total');
+    if (!totalEl) return;
+    try {
+        const range = getSelectedRange();
+        const year = getYearFromDateString(toDateString(range.start));
+        await ensureEncaminhamentosTableReady(year);
+        const tableName = getEncaminhamentosTableName(year);
+        const { count } = await safeQuery(db.from(tableName).select('*', { count: 'exact', head: true }));
+        totalEl.textContent = String(count ?? 0);
+    } catch (err) {
+        totalEl.textContent = '—';
+    }
+}
+
+async function loadConsistenciaModal() {
+    const alunosSemTurmaCountEl = document.getElementById('consistencia-alunos-sem-turma-count');
+    const alunosSemMatriculaCountEl = document.getElementById('consistencia-alunos-sem-matricula-count');
+    const alunosSemTurmaTable = document.getElementById('consistencia-alunos-sem-turma-table');
+    const alunosSemMatriculaTable = document.getElementById('consistencia-alunos-sem-matricula-table');
+
+    const setLoading = () => {
+        if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = '...';
+        if (alunosSemMatriculaCountEl) alunosSemMatriculaCountEl.textContent = '...';
+        if (alunosSemTurmaTable) alunosSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center">Carregando...</td></tr>';
+        if (alunosSemMatriculaTable) alunosSemMatriculaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center">Carregando...</td></tr>';
+    };
+
+    setLoading();
+
+    try {
+        const [alunosSemTurmaRes, alunosSemTurmaListRes, alunosSemMatriculaRes, alunosSemMatriculaListRes, turmasRes] = await Promise.all([
+            safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true }).eq('status', 'ativo').is('turma_id', null)),
+            safeQuery(db.from('enc_alunos').select('id, nome_completo, matricula').eq('status', 'ativo').is('turma_id', null).order('nome_completo').limit(50)),
+            safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true }).eq('status', 'ativo').or('matricula.is.null,matricula.eq.')),
+            safeQuery(db.from('enc_alunos').select('id, nome_completo, turma_id').eq('status', 'ativo').or('matricula.is.null,matricula.eq.').order('nome_completo').limit(50)),
+            safeQuery(db.from('turmas').select('id, nome_turma'))
+        ]);
+
+        const alunosSemTurmaCount = alunosSemTurmaRes.count || 0;
+        if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = alunosSemTurmaCount;
+        const alunosSemTurma = alunosSemTurmaListRes.data || [];
+        if (alunosSemTurmaTable) {
+            alunosSemTurmaTable.innerHTML = alunosSemTurma.length
+                ? alunosSemTurma.map(a => `
+                    <tr>
+                        <td class="p-3">${a.nome_completo || '-'}</td>
+                        <td class="p-3">${a.matricula || '-'}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="2" class="p-4 text-center">Nenhum encontrado.</td></tr>';
+        }
+
+        if (alunosSemMatriculaCountEl) alunosSemMatriculaCountEl.textContent = alunosSemMatriculaRes.count || 0;
+        const alunosSemMatricula = alunosSemMatriculaListRes.data || [];
+        const turmas = turmasRes.data || [];
+        const turmasById = new Map(turmas.map(t => [Number(t.id), t.nome_turma]));
+        if (alunosSemMatriculaTable) {
+            alunosSemMatriculaTable.innerHTML = alunosSemMatricula.length
+                ? alunosSemMatricula.slice(0, 50).map(a => `
+                    <tr>
+                        <td class="p-3">${a.nome_completo || '-'}</td>
+                        <td class="p-3">${turmasById.get(Number(a.turma_id)) || '-'}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="2" class="p-4 text-center">Nenhum encontrado.</td></tr>';
+        }
+    } catch (err) {
+        console.error('Erro ao carregar consistencia:', err);
+        if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = 'Erro';
+        if (alunosSemMatriculaCountEl) alunosSemMatriculaCountEl.textContent = 'Erro';
+        if (alunosSemTurmaTable) alunosSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
+        if (alunosSemMatriculaTable) alunosSemMatriculaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
     }
 }
 
@@ -313,32 +445,6 @@ function renderContato() {
         buildLine('WhatsApp respondeu', countWhatsResp, total),
         buildLine('WhatsApp não respondeu', countWhatsNaoResp, total)
     ].join('');
-}
-
-function renderLatestList() {
-    const list = document.getElementById('latest-list');
-    if (!list) return;
-    const latest = [...state.data].sort((a, b) => {
-        const da = a.data_encaminhamento || '';
-        const db = b.data_encaminhamento || '';
-        if (da === db) return (b.id || 0) - (a.id || 0);
-        return da < db ? 1 : -1;
-    }).slice(0, 5);
-
-    if (latest.length === 0) {
-        list.innerHTML = '<p class="text-sm text-gray-500">Nenhum encaminhamento na semana selecionada.</p>';
-        return;
-    }
-    list.innerHTML = latest.map(item => `
-        <div class="p-3 border border-gray-200 rounded-md bg-gray-50">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div class="font-semibold text-gray-800">${item.aluno_nome || 'Aluno'}</div>
-                <div class="text-xs text-gray-500">${formatDateBr(item.data_encaminhamento || '')}</div>
-            </div>
-            <div class="text-sm text-gray-600 mt-1">Prof: ${item.professor_nome || '-'}</div>
-            <div class="text-xs text-gray-500 mt-1">Motivos: ${item.motivos || '-'}</div>
-        </div>
-    `).join('');
 }
 
 function buildOptionList(options, getValues, data) {
@@ -392,6 +498,17 @@ function setCardWithPct(valueId, pctId, barId, count, total) {
     if (barEl) barEl.style.width = `${pct}%`;
 }
 
+function stripTime(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function isSameDate(a, b) {
+    if (!a || !b) return false;
+    return a.getFullYear() === b.getFullYear()
+        && a.getMonth() === b.getMonth()
+        && a.getDate() === b.getDate();
+}
+
 function getWeekRange(date) {
     const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const day = copy.getDay();
@@ -400,7 +517,7 @@ function getWeekRange(date) {
     monday.setDate(copy.getDate() + diff);
     const friday = new Date(monday);
     friday.setDate(monday.getDate() + 4);
-    return { start: toDateString(monday), end: toDateString(friday) };
+    return { start: monday, end: friday };
 }
 
 function toDateString(date) {
@@ -415,4 +532,20 @@ function formatDateBr(dateStr) {
     const [year, month, day] = dateStr.split('-');
     if (!year || !month || !day) return dateStr;
     return `${day}/${month}/${year}`;
+}
+
+function formatDateBrShort(dateStr) {
+    if (!dateStr) return '-';
+    const [year, month, day] = dateStr.split('-');
+    if (!year || !month || !day) return dateStr;
+    return `${day}/${month}/${year.slice(2)}`;
+}
+
+function getIsoWeekInfo(date) {
+    const temp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = temp.getUTCDay() || 7;
+    temp.setUTCDate(temp.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(temp.getUTCFullYear(), 0, 1));
+    const week = Math.ceil((((temp - yearStart) / 86400000) + 1) / 7);
+    return { week, year: temp.getUTCFullYear() };
 }

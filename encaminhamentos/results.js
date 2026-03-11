@@ -93,6 +93,12 @@ function initSearchForm() {
         setCodigoPrefix(String(new Date().getFullYear()));
     }
 
+    const dataStartEl = document.getElementById('search-data-start');
+    if (dataStartEl && !dataStartEl.value) {
+        const today = new Date().toISOString().slice(0, 10);
+        dataStartEl.value = today;
+    }
+
     searchButton.addEventListener('click', async () => {
         const params = buildSearchParams();
         applySearchParams(params);
@@ -107,6 +113,14 @@ function initSearchForm() {
                 applySearchParams(params);
                 await handleSearch();
             }
+        });
+    });
+
+    document.querySelectorAll('.date-clear-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.dataset.target;
+            const target = targetId ? document.getElementById(targetId) : null;
+            if (target) target.value = '';
         });
     });
 }
@@ -183,7 +197,7 @@ async function handleSearch() {
         if (filters.dataInicio && filters.dataFim) {
             query = query.gte('data_encaminhamento', filters.dataInicio).lte('data_encaminhamento', filters.dataFim);
         } else if (filters.dataInicio) {
-            query = query.gte('data_encaminhamento', filters.dataInicio);
+            query = query.eq('data_encaminhamento', filters.dataInicio);
         } else if (filters.dataFim) {
             query = query.lte('data_encaminhamento', filters.dataFim);
         }

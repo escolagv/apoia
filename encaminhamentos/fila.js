@@ -1,4 +1,4 @@
-import { db, safeQuery, formatDateTimeSP } from './js/core.js';
+import { db, safeQuery, formatDateTimeSP, SUPABASE_URL, SUPABASE_ANON_KEY } from './js/core.js';
 import { requireAdminSession, signOut } from './js/auth.js';
 
 const state = {
@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (refreshBtn) refreshBtn.addEventListener('click', loadQueue);
 
     await loadQueue();
+    initQrModal();
 });
 
 async function loadQueue() {
@@ -39,6 +40,86 @@ async function loadQueue() {
     } catch (err) {
         console.error('Erro ao carregar fila:', err?.message || err);
         renderQueueError();
+    }
+}
+
+function initQrModal() {
+    const openBtn = document.getElementById('qr-open-btn');
+    const modal = document.getElementById('qr-modal');
+    const closeBtn = document.getElementById('qr-close-btn');
+    const newBtn = document.getElementById('qr-new-btn');
+    if (!openBtn || !modal) return;
+
+    openBtn.addEventListener('click', async () => {
+        modal.classList.remove('hidden');
+        await loadQrCode(false);
+    });
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    }
+    if (newBtn) {
+        newBtn.addEventListener('click', async () => {
+            await loadQrCode(true);
+        });
+    }
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) modal.classList.add('hidden');
+    });
+}
+
+async function loadQrCode(forceNew = false) {
+    const qrEl = document.getElementById('qr-code');
+    const statusEl = document.getElementById('qr-status');
+    if (!qrEl || !statusEl) return;
+    statusEl.textContent = 'Gerando...';
+    try {
+        const { data: sessionData, error: sessionError } = await db.auth.getSession();
+        if (sessionError || !sessionData?.session?.access_token) {
+            statusEl.textContent = 'Sessão expirada. Faça login novamente.';
+            return;
+        }
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/enc_qr_issue`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${sessionData.session.access_token}`,
+                apikey: SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ force: forceNew })
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+            statusEl.textContent = payload?.error || 'Falha ao gerar QR.';
+            return;
+        }
+        const token = payload?.token;
+        const expiresAt = payload?.expires_at;
+        const usedAt = payload?.used_at;
+        if (!token) {
+            statusEl.textContent = 'Token não encontrado.';
+            return;
+        }
+        const pwaUrl = new URL('/encaminhamentos/pwa.html', window.location.origin);
+        pwaUrl.searchParams.set('token', token);
+        pwaUrl.searchParams.set('v', Date.now().toString());
+        qrEl.innerHTML = '';
+        if (window.QRCode) {
+            new QRCode(qrEl, {
+                text: pwaUrl.toString(),
+                width: 220,
+                height: 220
+            });
+        }
+        const usedLabel = usedAt ? ' (já usado)' : '';
+        const now = new Date();
+        const expDate = expiresAt ? new Date(expiresAt) : null;
+        const expired = expDate ? now.getTime() > expDate.getTime() : now.getHours() >= 18;
+        statusEl.textContent = expired
+            ? `Expirado${usedLabel}`
+            : (expiresAt ? `Expira às 18h${usedLabel}` : `QR pronto${usedLabel}`);
+    } catch (err) {
+        statusEl.textContent = 'Erro ao gerar QR.';
+        console.error(err);
     }
 }
 
