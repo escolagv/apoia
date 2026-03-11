@@ -34,14 +34,62 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-$confirmApoia = Read-Host "Atualizar versao do APOIA/AppProf? (s/N)"
-if ($confirmApoia -match '^(s|S|y|Y)') {
-    $appprofScript = Join-Path $root "deploy-appprof.ps1"
-    if (Test-Path $appprofScript) {
-        & $appprofScript -AutoVersion -UpdateProfessorVersion -SkipGit -SkipVercel
-    } else {
-        Write-Host "Script nao encontrado: $appprofScript" -ForegroundColor Yellow
+function Parse-Version {
+    param([string]$Value)
+    $match = [regex]::Match($Value, '\d+(?:\.\d+)*')
+    if ($match.Success) { return $match.Value }
+    return ""
+}
+
+function Get-NextVersion {
+    param([string]$Current)
+    $parts = $Current -split '\.' | ForEach-Object { [int]($_) }
+    $major = if ($parts.Length -gt 0) { $parts[0] } else { 1 }
+    $minor = if ($parts.Length -gt 1) { $parts[1] } else { 0 }
+    $patch = if ($parts.Length -gt 2) { $parts[2] } else { 0 }
+    $patch += 1
+    return "$major.$minor.$patch"
+}
+
+function Get-ApoiaAdminVersion {
+    param([string]$Content)
+    $match = [regex]::Match($Content, 'id="apoia-admin-version"[^>]*data-version="([^"]+)"')
+    if ($match.Success) {
+        $ver = Parse-Version $match.Groups[1].Value
+        if ($ver) { return $ver }
     }
+    $match = [regex]::Match($Content, 'id="apoia-admin-version"[^>]*>V?(\d+(?:\.\d+)*)')
+    if ($match.Success) {
+        $ver = Parse-Version $match.Groups[1].Value
+        if ($ver) { return $ver }
+    }
+    return "1.0.0"
+}
+
+function Update-ApoiaAdminVersion {
+    param([string]$PagePath)
+    if (!(Test-Path $PagePath)) {
+        Write-Host "Arquivo nao encontrado: $PagePath" -ForegroundColor Yellow
+        return
+    }
+    $content = Get-Content $PagePath -Raw
+    if ($content -notmatch 'id="apoia-admin-version"') {
+        Write-Host "Marcador nao encontrado (id=""apoia-admin-version""): $PagePath" -ForegroundColor Yellow
+        return
+    }
+    $current = Get-ApoiaAdminVersion -Content $content
+    $next = Get-NextVersion -Current $current
+    Write-Host "Versao automatica (APOIA admin): $current -> $next" -ForegroundColor Cyan
+    $content = [regex]::Replace($content, '(id="apoia-admin-version"[^>]*data-version=")[^"]*(")', "`${1}$next`${2}")
+    $content = [regex]::Replace($content, '(id="apoia-admin-version"[^>]*>)[^<]*(</div>)', "`${1}V$next`${2}")
+    Set-Content -Path $PagePath -Value $content -Encoding UTF8
+    Write-Host "Versao atualizada: $PagePath" -ForegroundColor Green
+}
+
+$confirmApoia = Read-Host "Atualizar versao do Painel Admin (APOIA)? (s/N)"
+if ($confirmApoia -match '^(s|S|y|Y)') {
+    $apoiaIndex = Join-Path $root "apoia\\index.html"
+    Update-ApoiaAdminVersion -PagePath $apoiaIndex
 }
 
 $confirmEnc = Read-Host "Atualizar versao do Encaminhamentos? (s/N)"

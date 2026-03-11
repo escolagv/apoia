@@ -35,7 +35,7 @@ const ptBrLocale = {
     clear: 'Limpar',
     dateFormat: 'dd/MM/yyyy',
     timeFormat: 'HH:mm',
-    firstDay: 1
+    firstDay: 0
 };
 
 const state = {
@@ -458,12 +458,12 @@ function renderContato() {
     const countWhatsNaoResp = state.data.filter(i => i.whatsapp_status === 'Não respondeu').length;
 
     container.innerHTML = [
-        buildLine('Ligou', countLigou, total),
-        buildLine('Atendeu', countAtendeu, total),
-        buildLine('Não atendeu', countNaoAtendeu, total),
-        buildLine('WhatsApp enviado', countWhats, total),
-        buildLine('WhatsApp respondeu', countWhatsResp, total),
-        buildLine('WhatsApp não respondeu', countWhatsNaoResp, total)
+        buildLine('Ligou', countLigou, total, 0),
+        buildLine('Atendeu', countAtendeu, total, 1),
+        buildLine('Não atendeu', countNaoAtendeu, total, 2),
+        buildLine('WhatsApp enviado', countWhats, total, 3),
+        buildLine('WhatsApp respondeu', countWhatsResp, total, 4),
+        buildLine('WhatsApp não respondeu', countWhatsNaoResp, total, 5)
     ].join('');
 }
 
@@ -481,19 +481,20 @@ function buildOptionList(options, getValues, data) {
         });
     });
 
-    const rows = options.map(opt => {
+    const rows = options.map((opt, idx) => {
         const count = counts.get(opt) || 0;
-        return buildLine(opt, count, total);
+        return buildLine(opt, count, total, idx);
     });
     return rows.join('');
 }
 
-function buildLine(label, count, total) {
+function buildLine(label, count, total, idx = 0) {
     const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+    const rowClass = idx % 2 === 0 ? 'bg-gray-50' : 'bg-white';
     return `
-        <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center justify-between gap-3 py-1 px-2 ${rowClass}">
             <span class="text-gray-700">${label}</span>
-            <span class="text-gray-500 text-xs">${pct}% <span class="text-gray-400">(${count})</span></span>
+            <span class="text-gray-500 text-xs whitespace-nowrap flex-shrink-0 text-right">${pct}% <span class="text-gray-400">(${count})</span></span>
         </div>
     `;
 }

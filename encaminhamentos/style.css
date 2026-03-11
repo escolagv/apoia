@@ -113,6 +113,28 @@ body.form-compact input[type="date"]::-webkit-calendar-picker-indicator {
     background: #f9fafb;
 }
 
+.sortable-th {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.sortable-th .sort-indicator {
+    margin-left: 6px;
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+.sortable-th.sorted-asc .sort-indicator::after {
+    content: '▲';
+    color: #2563eb;
+}
+
+.sortable-th.sorted-desc .sort-indicator::after {
+    content: '▼';
+    color: #2563eb;
+}
+
 .enc-card {
     display: flex;
     flex-direction: column;

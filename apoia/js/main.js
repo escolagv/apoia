@@ -694,5 +694,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    console.log('Sistema de Gestao de Faltas (Supabase) inicializado com todas as funcionalidades.');
+    // console.log('Sistema de Gestao de Faltas (Supabase) inicializado com todas as funcionalidades.');
 });

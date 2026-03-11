@@ -9,6 +9,8 @@ const state = {
     lastSyncAt: null
 };
 
+const professoresSort = { key: 'nome', dir: 'asc' };
+
 document.addEventListener('DOMContentLoaded', async () => {
     const { session, profile } = await requireAdminSession();
     if (!session || !profile) {
@@ -95,11 +97,7 @@ function bindModals() {
             const el = document.getElementById(id);
             if (el) el.addEventListener('change', renderAlunos);
         });
-    ['professor-filtro-status', 'professor-filtro-origem', 'professor-filtro-vinculo', 'professor-ordenacao']
-        .forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('change', renderProfessores);
-        });
+    bindProfessorSortHeaders();
 
     const syncBtn = document.getElementById('sync-status-btn');
     const syncClose = document.getElementById('sync-close-btn');
@@ -239,23 +237,25 @@ async function runSyncNow() {
 
 async function loadConsistencia() {
     const alunosSemTurmaCountEl = document.getElementById('consistencia-alunos-sem-turma-count');
-    const turmasDuplicadasCountEl = document.getElementById('consistencia-turmas-duplicadas-count');
+    const totalAlunosCountEl = document.getElementById('consistencia-total-alunos-count');
+    const totalProfessoresCountEl = document.getElementById('consistencia-total-professores-count');
     const alunosSemTurmaTable = document.getElementById('consistencia-alunos-sem-turma-table');
-    const turmasDuplicadasTable = document.getElementById('consistencia-turmas-duplicadas-table');
 
     const setLoading = () => {
         if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = '...';
-        if (turmasDuplicadasCountEl) turmasDuplicadasCountEl.textContent = '...';
+        if (totalAlunosCountEl) totalAlunosCountEl.textContent = '...';
+        if (totalProfessoresCountEl) totalProfessoresCountEl.textContent = '...';
         if (alunosSemTurmaTable) alunosSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center">Carregando...</td></tr>';
-        if (turmasDuplicadasTable) turmasDuplicadasTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
     };
 
     setLoading();
 
     try {
-        const [alunosAtivosRes, turmasRes] = await Promise.all([
+        const [alunosAtivosRes, turmasRes, totalAlunosRes, totalProfessoresRes] = await Promise.all([
             safeQuery(db.from('enc_alunos').select('id, nome_completo, matricula, turma_id').eq('status', 'ativo')),
-            safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo'))
+            safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo')),
+            safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true })),
+            safeQuery(db.from('enc_professores').select('*', { count: 'exact', head: true }))
         ]);
 
         const turmas = turmasRes.data || [];
@@ -266,6 +266,8 @@ async function loadConsistencia() {
             .sort((a, b) => (a.nome_completo || '').localeCompare(b.nome_completo || '', undefined, { sensitivity: 'base' }));
         const alunosSemTurmaCount = alunosSemTurma.length;
         if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = alunosSemTurmaCount;
+        if (totalAlunosCountEl) totalAlunosCountEl.textContent = totalAlunosRes.count ?? 0;
+        if (totalProfessoresCountEl) totalProfessoresCountEl.textContent = totalProfessoresRes.count ?? 0;
         if (alunosSemTurmaTable) {
             alunosSemTurmaTable.innerHTML = alunosSemTurma.length
                 ? alunosSemTurma.slice(0, 50).map(a => `
@@ -277,33 +279,12 @@ async function loadConsistencia() {
                 : '<tr><td colspan="2" class="p-4 text-center">Nenhum encontrado.</td></tr>';
         }
 
-        const dupMap = new Map();
-        turmas.forEach(t => {
-            const key = `${t.nome_turma}__${t.ano_letivo}`;
-            const current = dupMap.get(key) || { nome_turma: t.nome_turma, ano_letivo: t.ano_letivo, count: 0 };
-            current.count += 1;
-            dupMap.set(key, current);
-        });
-        const duplicadas = Array.from(dupMap.values()).filter(d => d.count > 1).sort((a, b) => b.count - a.count);
-        if (turmasDuplicadasCountEl) turmasDuplicadasCountEl.textContent = duplicadas.length;
-        if (turmasDuplicadasTable) {
-            turmasDuplicadasTable.innerHTML = duplicadas.length
-                ? duplicadas.slice(0, 50).map(d => `
-                    <tr>
-                        <td class="p-3">${d.nome_turma}</td>
-                        <td class="p-3">${d.ano_letivo}</td>
-                        <td class="p-3">${d.count}</td>
-                    </tr>
-                `).join('')
-                : '<tr><td colspan="3" class="p-4 text-center">Nenhuma duplicidade encontrada.</td></tr>';
-        }
-
     } catch (err) {
         console.error('Erro ao carregar consistencia:', err);
         if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = 'Erro';
-        if (turmasDuplicadasCountEl) turmasDuplicadasCountEl.textContent = 'Erro';
+        if (totalAlunosCountEl) totalAlunosCountEl.textContent = 'Erro';
+        if (totalProfessoresCountEl) totalProfessoresCountEl.textContent = 'Erro';
         if (alunosSemTurmaTable) alunosSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
-        if (turmasDuplicadasTable) turmasDuplicadasTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
     }
 }
 
@@ -415,29 +396,13 @@ function renderAlunos() {
 function renderProfessores() {
     const tbody = document.getElementById('professores-table-body');
     const filtro = (document.getElementById('professor-search')?.value || '').toLowerCase();
-    const filtroStatus = document.getElementById('professor-filtro-status')?.value || '';
-    const filtroOrigem = document.getElementById('professor-filtro-origem')?.value || '';
-    const filtroVinculo = document.getElementById('professor-filtro-vinculo')?.value || '';
-    const ordenacao = document.getElementById('professor-ordenacao')?.value || 'nome';
     const filtered = state.professores.filter(p => {
         if (!filtro) return true;
         return (p.nome || '').toLowerCase().includes(filtro) ||
             (p.email || '').toLowerCase().includes(filtro);
-    }).filter(p => {
-        if (filtroStatus && String(p.status || '') !== String(filtroStatus)) return false;
-        if (filtroOrigem && String(p.origem || '') !== String(filtroOrigem)) return false;
-        if (filtroVinculo && String(p.vinculo || '') !== String(filtroVinculo)) return false;
-        return true;
     });
-
-    filtered.sort((a, b) => {
-        if (ordenacao === 'vinculo') {
-            const vinculoCompare = (a.vinculo || '').localeCompare(b.vinculo || '', undefined, { sensitivity: 'base' });
-            if (vinculoCompare !== 0) return vinculoCompare;
-        }
-        return (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base' });
-    });
-    tbody.innerHTML = filtered.map(p => `
+    const sorted = sortProfessores(filtered);
+    tbody.innerHTML = sorted.map(p => `
         <tr class="border-b">
             <td class="py-2">${p.nome || '-'}</td>
             <td class="py-2">${p.email || '-'}</td>
@@ -463,6 +428,70 @@ function renderProfessores() {
             const id = btn.dataset.id;
             await toggleProfessorStatus(id, 'inativo');
         });
+    });
+}
+
+function bindProfessorSortHeaders() {
+    const panel = document.getElementById('professores-panel');
+    if (!panel) return;
+    const headers = panel.querySelectorAll('th[data-sort]');
+    if (!headers.length) return;
+    headers.forEach(th => {
+        if (th.dataset.sortBound === '1') return;
+        th.dataset.sortBound = '1';
+        th.addEventListener('click', () => {
+            const key = th.dataset.sort;
+            if (!key) return;
+            if (professoresSort.key === key) {
+                professoresSort.dir = professoresSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                professoresSort.key = key;
+                professoresSort.dir = 'asc';
+            }
+            updateProfessorSortIndicators(headers);
+            renderProfessores();
+        });
+    });
+    updateProfessorSortIndicators(headers);
+}
+
+function updateProfessorSortIndicators(headers) {
+    headers.forEach(th => {
+        th.classList.remove('sorted-asc', 'sorted-desc');
+        if (th.dataset.sort === professoresSort.key) {
+            th.classList.add(professoresSort.dir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+        }
+    });
+}
+
+function sortProfessores(list) {
+    const collator = new Intl.Collator('pt-BR', { sensitivity: 'base', numeric: true });
+    const getValue = (p) => {
+        switch (professoresSort.key) {
+            case 'email':
+                return p.email || '';
+            case 'status':
+                return p.status || '';
+            case 'vinculo':
+                return p.vinculo || '';
+            case 'origem':
+                return p.origem || '';
+            case 'nome':
+            default:
+                return p.nome || '';
+        }
+    };
+    const dir = professoresSort.dir === 'desc' ? -1 : 1;
+    const statusRank = (p) => (String(p.status || '').toLowerCase() === 'ativo' ? 0 : 1);
+    return [...list].sort((a, b) => {
+        const rankA = statusRank(a);
+        const rankB = statusRank(b);
+        if (rankA !== rankB) return rankA - rankB;
+        const valA = getValue(a);
+        const valB = getValue(b);
+        let cmp = collator.compare(String(valA), String(valB));
+        if (cmp === 0) cmp = collator.compare(String(a.nome || ''), String(b.nome || ''));
+        return cmp * dir;
     });
 }
 
