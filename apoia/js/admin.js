@@ -1122,6 +1122,13 @@ export async function handleProfessorFormSubmit(e) {
             authUserUid = await fetchAuthUserUidByEmail(originalEmail);
         }
         const shouldUpdateAuthEmail = nextEmail && originalEmail && nextEmail !== originalEmail;
+        if (shouldUpdateAuthEmail) {
+            const existingAuthUid = await fetchAuthUserUidByEmail(nextEmail);
+            if (existingAuthUid && existingAuthUid !== authUserUid) {
+                showToast('Este e-mail já está em uso por outro professor.', true);
+                return;
+            }
+        }
         if (shouldUpdateAuthEmail && !authUserUid) {
             showToast('Nao foi possivel localizar o usuario de login para atualizar o email.', true);
             return;
