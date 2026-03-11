@@ -1602,6 +1602,8 @@ export async function renderConsistenciaPanel() {
     const profSemTurmaCountEl = document.getElementById('consistencia-prof-sem-turma-count');
     const turmasDuplicadasCountEl = document.getElementById('consistencia-turmas-duplicadas-count');
     const alunosOrfaosCountEl = document.getElementById('consistencia-alunos-orfaos-count');
+    const totalAlunosCountEl = document.getElementById('consistencia-total-alunos-count');
+    const totalProfessoresCountEl = document.getElementById('consistencia-total-professores-count');
 
     const alunosSemTurmaTable = document.getElementById('consistencia-alunos-sem-turma-table');
     const profSemTurmaTable = document.getElementById('consistencia-prof-sem-turma-table');
@@ -1613,6 +1615,8 @@ export async function renderConsistenciaPanel() {
         profSemTurmaCountEl.textContent = '...';
         turmasDuplicadasCountEl.textContent = '...';
         alunosOrfaosCountEl.textContent = '...';
+        if (totalAlunosCountEl) totalAlunosCountEl.textContent = '...';
+        if (totalProfessoresCountEl) totalProfessoresCountEl.textContent = '...';
         alunosSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center">Carregando...</td></tr>';
         profSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center">Carregando...</td></tr>';
         turmasDuplicadasTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Carregando...</td></tr>';
@@ -1630,7 +1634,9 @@ export async function renderConsistenciaPanel() {
             turmasRes,
             totalComTurmaRes,
             totalComJoinRes,
-            alunosComTurmaListRes
+            alunosComTurmaListRes,
+            totalAlunosRes,
+            totalProfessoresRes
         ] = await Promise.all([
             safeQuery(db.from('alunos').select('*', { count: 'exact', head: true }).eq('status', 'ativo').is('turma_id', null)),
             safeQuery(db.from('alunos').select('id, nome_completo, matricula').eq('status', 'ativo').is('turma_id', null).order('nome_completo').limit(50)),
@@ -1639,7 +1645,9 @@ export async function renderConsistenciaPanel() {
             safeQuery(db.from('turmas').select('id, nome_turma, ano_letivo')),
             safeQuery(db.from('alunos').select('*', { count: 'exact', head: true }).not('turma_id', 'is', null)),
             safeQuery(db.from('alunos').select('id, turmas!inner(id)', { count: 'exact', head: true }).not('turma_id', 'is', null)),
-            safeQuery(db.from('alunos').select('id, nome_completo, matricula, turma_id, turmas ( id )').not('turma_id', 'is', null).limit(500))
+            safeQuery(db.from('alunos').select('id, nome_completo, matricula, turma_id, turmas ( id )').not('turma_id', 'is', null).limit(500)),
+            safeQuery(db.from('alunos').select('*', { count: 'exact', head: true })),
+            safeQuery(db.from('usuarios').select('*', { count: 'exact', head: true }).eq('papel', 'professor'))
         ]);
 
         // Alunos ativos sem turma
@@ -1729,12 +1737,17 @@ export async function renderConsistenciaPanel() {
                 </tr>
             `).join('')
             : '<tr><td colspan="3" class="p-4 text-center">Nenhum encontrado.</td></tr>';
+
+        if (totalAlunosCountEl) totalAlunosCountEl.textContent = totalAlunosRes.count ?? 0;
+        if (totalProfessoresCountEl) totalProfessoresCountEl.textContent = totalProfessoresRes.count ?? 0;
     } catch (err) {
         console.error('Erro ao carregar consistencia:', err);
         alunosSemTurmaCountEl.textContent = 'Erro';
         profSemTurmaCountEl.textContent = 'Erro';
         turmasDuplicadasCountEl.textContent = 'Erro';
         alunosOrfaosCountEl.textContent = 'Erro';
+        if (totalAlunosCountEl) totalAlunosCountEl.textContent = 'Erro';
+        if (totalProfessoresCountEl) totalProfessoresCountEl.textContent = 'Erro';
         alunosSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
         profSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
         turmasDuplicadasTable.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';

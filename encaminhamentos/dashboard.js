@@ -342,12 +342,16 @@ async function loadEncTotal() {
 async function loadConsistenciaModal() {
     const alunosSemTurmaCountEl = document.getElementById('consistencia-alunos-sem-turma-count');
     const alunosSemMatriculaCountEl = document.getElementById('consistencia-alunos-sem-matricula-count');
+    const totalAlunosCountEl = document.getElementById('consistencia-total-alunos-count');
+    const totalProfessoresCountEl = document.getElementById('consistencia-total-professores-count');
     const alunosSemTurmaTable = document.getElementById('consistencia-alunos-sem-turma-table');
     const alunosSemMatriculaTable = document.getElementById('consistencia-alunos-sem-matricula-table');
 
     const setLoading = () => {
         if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = '...';
         if (alunosSemMatriculaCountEl) alunosSemMatriculaCountEl.textContent = '...';
+        if (totalAlunosCountEl) totalAlunosCountEl.textContent = '...';
+        if (totalProfessoresCountEl) totalProfessoresCountEl.textContent = '...';
         if (alunosSemTurmaTable) alunosSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center">Carregando...</td></tr>';
         if (alunosSemMatriculaTable) alunosSemMatriculaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center">Carregando...</td></tr>';
     };
@@ -355,12 +359,14 @@ async function loadConsistenciaModal() {
     setLoading();
 
     try {
-        const [alunosSemTurmaRes, alunosSemTurmaListRes, alunosSemMatriculaRes, alunosSemMatriculaListRes, turmasRes] = await Promise.all([
+        const [alunosSemTurmaRes, alunosSemTurmaListRes, alunosSemMatriculaRes, alunosSemMatriculaListRes, turmasRes, totalAlunosRes, totalProfessoresRes] = await Promise.all([
             safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true }).eq('status', 'ativo').is('turma_id', null)),
             safeQuery(db.from('enc_alunos').select('id, nome_completo, matricula').eq('status', 'ativo').is('turma_id', null).order('nome_completo').limit(50)),
             safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true }).eq('status', 'ativo').or('matricula.is.null,matricula.eq.')),
             safeQuery(db.from('enc_alunos').select('id, nome_completo, turma_id').eq('status', 'ativo').or('matricula.is.null,matricula.eq.').order('nome_completo').limit(50)),
-            safeQuery(db.from('turmas').select('id, nome_turma'))
+            safeQuery(db.from('turmas').select('id, nome_turma')),
+            safeQuery(db.from('enc_alunos').select('*', { count: 'exact', head: true })),
+            safeQuery(db.from('enc_professores').select('*', { count: 'exact', head: true }))
         ]);
 
         const alunosSemTurmaCount = alunosSemTurmaRes.count || 0;
@@ -391,10 +397,15 @@ async function loadConsistenciaModal() {
                 `).join('')
                 : '<tr><td colspan="2" class="p-4 text-center">Nenhum encontrado.</td></tr>';
         }
+
+        if (totalAlunosCountEl) totalAlunosCountEl.textContent = totalAlunosRes.count ?? 0;
+        if (totalProfessoresCountEl) totalProfessoresCountEl.textContent = totalProfessoresRes.count ?? 0;
     } catch (err) {
         console.error('Erro ao carregar consistencia:', err);
         if (alunosSemTurmaCountEl) alunosSemTurmaCountEl.textContent = 'Erro';
         if (alunosSemMatriculaCountEl) alunosSemMatriculaCountEl.textContent = 'Erro';
+        if (totalAlunosCountEl) totalAlunosCountEl.textContent = 'Erro';
+        if (totalProfessoresCountEl) totalProfessoresCountEl.textContent = 'Erro';
         if (alunosSemTurmaTable) alunosSemTurmaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
         if (alunosSemMatriculaTable) alunosSemMatriculaTable.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar.</td></tr>';
     }
