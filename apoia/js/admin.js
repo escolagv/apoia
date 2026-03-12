@@ -1426,21 +1426,123 @@ export async function renderChamadasPanel() {
     if (!emptyState) return;
     emptyState.textContent = 'Carregando chamadas...';
     emptyState.classList.remove('hidden');
-    if (resumoContainer) resumoContainer.classList.add('hidden');
+    if (resumoContainer) {
+        resumoContainer.classList.add('hidden');
+        resumoContainer.innerHTML = '';
+    }
 
-    const { count, error } = await safeQuery(
-        db.from('presencas').select('*', { count: 'exact', head: true })
+    const now = new Date();
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - 30);
+    const startDateStr = startDate.toISOString().split('T')[0];
+
+    const { data, error } = await safeQuery(
+        db.from('presencas')
+            .select('data, registrado_em, status, justificativa, turma_id, registrado_por_uid, turmas ( nome_turma ), usuarios ( nome )')
+            .gte('data', startDateStr)
+            .order('data', { ascending: false })
+            .order('registrado_em', { ascending: false })
+            .limit(2000)
     );
     if (error) {
         emptyState.textContent = 'Erro ao carregar chamadas.';
         return;
     }
-    if (!count) {
+    if (!data || data.length === 0) {
         emptyState.textContent = 'Ainda não foram realizadas chamadas.';
         return;
     }
+
+    const grupos = new Map();
+    data.forEach((row) => {
+        const key = `${row.data}|${row.turma_id}|${row.registrado_por_uid || 'null'}`;
+        const existing = grupos.get(key) || {
+            data: row.data,
+            turmaId: row.turma_id,
+            turma: row.turmas?.nome_turma || '-',
+            professor: row.usuarios?.nome || '-',
+            registradoEm: row.registrado_em,
+            presentes: 0,
+            faltas: 0,
+            faltasJustificadas: 0
+        };
+        if (row.status === 'presente') existing.presentes += 1;
+        if (row.status === 'falta') {
+            existing.faltas += 1;
+            if (row.justificativa === 'Falta justificada') existing.faltasJustificadas += 1;
+        }
+        if (!existing.registradoEm || (row.registrado_em && row.registrado_em > existing.registradoEm)) {
+            existing.registradoEm = row.registrado_em;
+        }
+        grupos.set(key, existing);
+    });
+
+    const formatHora = (value) => value ? new Date(value).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-';
+    const formatData = (value) => value ? new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR') : '-';
+
+    const rows = Array.from(grupos.values())
+        .sort((a, b) => {
+            if (a.data !== b.data) return a.data < b.data ? 1 : -1;
+            if (!a.registradoEm && b.registradoEm) return 1;
+            if (a.registradoEm && !b.registradoEm) return -1;
+            if (!a.registradoEm && !b.registradoEm) return 0;
+            return a.registradoEm < b.registradoEm ? 1 : -1;
+        })
+        .slice(0, 50);
+
+    const totalChamadas = rows.length;
+    const totalPresencas = rows.reduce((sum, r) => sum + r.presentes, 0);
+    const totalFaltas = rows.reduce((sum, r) => sum + r.faltas, 0);
+
+    if (resumoContainer) {
+        resumoContainer.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 text-center">
+                <div class="p-3 rounded border bg-gray-50">
+                    <div class="text-xs text-gray-500">Chamadas (últimos 30 dias)</div>
+                    <div class="text-xl font-bold">${totalChamadas}</div>
+                </div>
+                <div class="p-3 rounded border bg-gray-50">
+                    <div class="text-xs text-gray-500">Presenças</div>
+                    <div class="text-xl font-bold text-green-700">${totalPresencas}</div>
+                </div>
+                <div class="p-3 rounded border bg-gray-50">
+                    <div class="text-xs text-gray-500">Faltas</div>
+                    <div class="text-xl font-bold text-red-700">${totalFaltas}</div>
+                </div>
+            </div>
+            <div class="text-xs text-gray-500 mb-3">Mostrando as 50 últimas chamadas registradas.</div>
+            <div class="table-scroll">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-3 text-left">Data</th>
+                            <th class="p-3 text-left">Turma</th>
+                            <th class="p-3 text-left">Professor</th>
+                            <th class="p-3 text-center">Presenças</th>
+                            <th class="p-3 text-center">Faltas</th>
+                            <th class="p-3 text-center">Justificadas</th>
+                            <th class="p-3 text-center">Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows.map((r) => `
+                            <tr class="border-t">
+                                <td class="p-3">${formatData(r.data)}</td>
+                                <td class="p-3">${r.turma}</td>
+                                <td class="p-3">${r.professor}</td>
+                                <td class="p-3 text-center">${r.presentes}</td>
+                                <td class="p-3 text-center">${r.faltas}</td>
+                                <td class="p-3 text-center">${r.faltasJustificadas}</td>
+                                <td class="p-3 text-center">${formatHora(r.registradoEm)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        resumoContainer.classList.remove('hidden');
+    }
     emptyState.classList.add('hidden');
-    if (resumoContainer) resumoContainer.classList.remove('hidden');
 }
 
 export async function handleGerarRelatorio() {
@@ -2406,7 +2508,7 @@ export async function generateAssiduidadeReport() {
             const alunoId = document.getElementById('assiduidade-aluno-aluno').value;
             const periodoTexto = buildPeriodoTexto(dataInicio, dataFim, 'Periodo: Todos os registros');
 
-            let query = db.from('presencas').select('status, justificativa, alunos!inner(nome_completo), turmas!inner(nome_turma, ano_letivo)');
+            let query = db.from('presencas').select('status, justificativa, alunos!inner(id, nome_completo), turmas!inner(id, nome_turma, ano_letivo)');
             if (dataInicio) query = query.gte('data', dataInicio);
             if (dataFim) query = query.lte('data', dataFim);
             if (ano) query = query.eq('turmas.ano_letivo', ano);
@@ -2416,9 +2518,17 @@ export async function generateAssiduidadeReport() {
 
             const agrupado = {};
             (data || []).forEach(item => {
-                const key = `${item.alunos.nome_completo}__${item.turmas.nome_turma}`;
+                const key = `${item.alunos.id}__${item.turmas.id}`;
                 if (!agrupado[key]) {
-                    agrupado[key] = { aluno: item.alunos.nome_completo, turma: item.turmas.nome_turma, presencas: 0, faltasJ: 0, faltasI: 0 };
+                    agrupado[key] = {
+                        aluno: item.alunos.nome_completo,
+                        turma: item.turmas.nome_turma,
+                        aluno_id: item.alunos.id,
+                        turma_id: item.turmas.id,
+                        presencas: 0,
+                        faltasJ: 0,
+                        faltasI: 0
+                    };
                 }
                 if (item.status === 'presente') agrupado[key].presencas++;
                 if (item.status === 'falta' && item.justificativa === 'Falta justificada') agrupado[key].faltasJ++;
@@ -2430,9 +2540,33 @@ export async function generateAssiduidadeReport() {
             const totalFaltasJ = rows.reduce((s, r) => s + r.faltasJ, 0);
             const totalFaltasI = rows.reduce((s, r) => s + r.faltasI, 0);
 
+            let autoMap = new Map();
+            const alunoIds = Array.from(new Set(rows.map(r => r.aluno_id).filter(Boolean)));
+            if (alunoIds.length > 0) {
+                const { data: autoData } = await safeQuery(
+                    db.from('apoia_encaminhamentos')
+                        .select('aluno_id, auto_regra')
+                        .eq('auto_faltas', true)
+                        .in('aluno_id', alunoIds)
+                );
+                autoMap = new Map((autoData || []).map(a => [a.aluno_id, a.auto_regra]));
+            }
+
+            const formatAutoRegra = (regra) => {
+                if (!regra) return '-';
+                if (regra === 'faltas_consecutivas_5') return '5 seguidas';
+                if (regra === 'faltas_intercaladas_7_30d') return '7/30 dias';
+                return 'Auto';
+            };
+
             const tableRows = rows.map(r => {
                 const total = r.presencas + r.faltasJ + r.faltasI;
                 const assiduidade = total ? Math.round((r.presencas / total) * 100) : 0;
+                const autoRegra = autoMap.get(r.aluno_id);
+                const autoLabel = formatAutoRegra(autoRegra);
+                const autoHtml = autoRegra
+                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-700">Apoia (${autoLabel})</span>`
+                    : '-';
                 return `
                     <tr>
                         <td class="p-3">${r.aluno}</td>
@@ -2441,11 +2575,12 @@ export async function generateAssiduidadeReport() {
                         <td class="p-3 text-center">${r.faltasJ}</td>
                         <td class="p-3 text-center">${r.faltasI}</td>
                         <td class="p-3 text-center">${assiduidade}%</td>
+                        <td class="p-3 text-center">${autoHtml}</td>
                     </tr>
                 `;
             }).join('');
 
-            const reportHTML = `<div class="print-header"><img src="./logo.png"><div class="print-header-info"><h2>Relatorio de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatorio de Assiduidade de Alunos</h1><p class="text-sm text-gray-600">${periodoTexto}</p><div class="flex gap-2"><button onclick="preparePrint('simple')" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Imprimir simples</button><button onclick="preparePrint('full')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir completa</button></div></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md print-full-only"><div style="height: 320px; position: relative;"><canvas id="assiduidadeChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Detalhes da Frequencia</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Aluno</th><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presencas</th><th class="p-3 text-center">Faltas Just.</th><th class="p-3 text-center">Faltas Injust.</th><th class="p-3 text-center">Assiduidade</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
+            const reportHTML = `<div class="print-header"><img src="./logo.png"><div class="print-header-info"><h2>Relatorio de Assiduidade de Alunos</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatorio de Assiduidade de Alunos</h1><p class="text-sm text-gray-600">${periodoTexto}</p><div class="flex gap-2"><button onclick="preparePrint('simple')" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Imprimir simples</button><button onclick="preparePrint('full')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir completa</button></div></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md print-full-only"><div style="height: 320px; position: relative;"><canvas id="assiduidadeChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Detalhes da Frequencia</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Aluno</th><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presencas</th><th class="p-3 text-center">Faltas Just.</th><th class="p-3 text-center">Faltas Injust.</th><th class="p-3 text-center">Assiduidade</th><th class="p-3 text-center">Acompanhamento</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
             const chartScriptContent = `
                 const ensureChart = (fn, tries = 0) => {
                     if (window.Chart) return fn();
@@ -2501,7 +2636,7 @@ export async function generateAssiduidadeReport() {
             (data || []).forEach(item => {
                 const key = `${item.turmas.nome_turma}`;
                 if (!agrupado[key]) {
-                    agrupado[key] = { turma: item.turmas.nome_turma, presencas: 0, faltas: 0 };
+                    agrupado[key] = { turma: item.turmas.nome_turma, turma_id: item.turmas.id, presencas: 0, faltas: 0 };
                 }
                 if (item.status === 'presente') agrupado[key].presencas++;
                 if (item.status === 'falta') agrupado[key].faltas++;
@@ -2511,20 +2646,38 @@ export async function generateAssiduidadeReport() {
             const totalPresencas = rows.reduce((s, r) => s + r.presencas, 0);
             const totalFaltas = rows.reduce((s, r) => s + r.faltas, 0);
 
+            let autoByTurma = new Map();
+            const turmaIdsAuto = Array.from(new Set(rows.map(r => r.turma_id).filter(Boolean)));
+            if (turmaIdsAuto.length > 0) {
+                const { data: autoData } = await safeQuery(
+                    db.from('apoia_encaminhamentos')
+                        .select('aluno_id, alunos!inner(turma_id)')
+                        .eq('auto_faltas', true)
+                        .in('alunos.turma_id', turmaIdsAuto)
+                );
+                (autoData || []).forEach(item => {
+                    const tid = item.alunos?.turma_id;
+                    if (!tid) return;
+                    autoByTurma.set(tid, (autoByTurma.get(tid) || 0) + 1);
+                });
+            }
+
             const tableRows = rows.map(r => {
                 const total = r.presencas + r.faltas;
                 const assiduidade = total ? Math.round((r.presencas / total) * 100) : 0;
+                const autoCount = autoByTurma.get(r.turma_id) || 0;
                 return `
                     <tr>
                         <td class="p-3">${r.turma}</td>
                         <td class="p-3 text-center">${r.presencas}</td>
                         <td class="p-3 text-center">${r.faltas}</td>
                         <td class="p-3 text-center">${assiduidade}%</td>
+                        <td class="p-3 text-center">${autoCount}</td>
                     </tr>
                 `;
             }).join('');
 
-            const reportHTML = `<div class="print-header"><img src="./logo.png"><div class="print-header-info"><h2>Relatorio de Assiduidade por Turma</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatorio de Assiduidade por Turma</h1><p class="text-sm text-gray-600">${periodoTexto}</p><div class="flex gap-2"><button onclick="preparePrint('simple')" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Imprimir simples</button><button onclick="preparePrint('full')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir completa</button></div></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md print-full-only"><div style="height: 320px; position: relative;"><canvas id="assiduidadeTurmaChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dados Consolidados</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presencas</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
+            const reportHTML = `<div class="print-header"><img src="./logo.png"><div class="print-header-info"><h2>Relatorio de Assiduidade por Turma</h2><p>${periodoTexto}</p></div></div><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold">Relatorio de Assiduidade por Turma</h1><p class="text-sm text-gray-600">${periodoTexto}</p><div class="flex gap-2"><button onclick="preparePrint('simple')" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Imprimir simples</button><button onclick="preparePrint('full')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Imprimir completa</button></div></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md print-full-only"><div style="height: 320px; position: relative;"><canvas id="assiduidadeTurmaChart"></canvas></div></div><div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md"><h3 class="font-bold mb-4">Dados Consolidados</h3><div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="bg-gray-50 sticky top-0"><tr><th class="p-3 text-left">Turma</th><th class="p-3 text-center">Presencas</th><th class="p-3 text-center">Faltas</th><th class="p-3 text-center">Assiduidade</th><th class="p-3 text-center">Acomp. APOIA</th></tr></thead><tbody>${tableRows}</tbody></table></div></div></div>`;
             const chartScriptContent = `
                 const ensureChart = (fn, tries = 0) => {
                     if (window.Chart) return fn();
@@ -2623,6 +2776,21 @@ export async function generateAssiduidadeReport() {
                 if (turmasError) throw turmasError;
                 turmaMap = new Map((turmasData || []).map(t => [t.id, t.nome_turma || String(t.id)]));
             }
+
+            let autoByTurma = new Map();
+            if (turmaIds.length > 0) {
+                const { data: autoData } = await safeQuery(
+                    db.from('apoia_encaminhamentos')
+                        .select('aluno_id, alunos!inner(turma_id)')
+                        .eq('auto_faltas', true)
+                        .in('alunos.turma_id', turmaIds)
+                );
+                (autoData || []).forEach(item => {
+                    const tid = item.alunos?.turma_id;
+                    if (!tid) return;
+                    autoByTurma.set(tid, (autoByTurma.get(tid) || 0) + 1);
+                });
+            }
             const { data: eventos, error: eventosError } = await safeQuery(
                 db.from('eventos')
                     .select('data, data_fim, abrangencia, turmas_ids')
@@ -2675,10 +2843,11 @@ export async function generateAssiduidadeReport() {
                 });
                 const total = lancadas + naoLancadas;
                 const assiduidade = total ? Math.round((lancadas / total) * 100) : 0;
+                const autoCount = turmas.reduce((s, turmaId) => s + (autoByTurma.get(turmaId) || 0), 0);
                 const baseName = p.nome || 'Professor';
                 const suffix = p.status === 'inativo' ? ' <span class="text-xs text-gray-500">(inativo)</span>' : '';
                 const professorLabel = (turmas.length === 0 ? `${baseName} - não vinculado` : baseName) + suffix;
-                return { professor: professorLabel, lancadas, naoLancadas, assiduidade, detalhes, sortKey: baseName };
+                return { professor: professorLabel, lancadas, naoLancadas, assiduidade, detalhes, autoCount, sortKey: baseName };
             });
             rows.sort((a, b) => (a.sortKey || '').localeCompare((b.sortKey || ''), undefined, { sensitivity: 'base' }));
 
@@ -2723,6 +2892,7 @@ export async function generateAssiduidadeReport() {
                         <div class="font-semibold">${r.naoLancadas}</div>
                         <div class="mt-2">${detailNaoLancadas || ''}</div>
                     </td>
+                    <td class="p-3 text-center">${r.autoCount}</td>
                     <td class="p-3 text-center">${r.assiduidade}%</td>
                 </tr>
                 `;
@@ -2732,6 +2902,7 @@ export async function generateAssiduidadeReport() {
                     <td class="p-3">${r.professor}</td>
                     <td class="p-3 text-center">${r.lancadas}</td>
                     <td class="p-3 text-center">${r.naoLancadas}</td>
+                    <td class="p-3 text-center">${r.autoCount}</td>
                     <td class="p-3 text-center">${r.assiduidade}%</td>
                 </tr>
             `).join('');
@@ -2756,7 +2927,10 @@ export async function generateAssiduidadeReport() {
                                 <div><span class="font-semibold">${r.naoLancadas}</span> não lançadas</div>
                                 <div class="mt-2">${detailNaoLancadas || ''}</div>
                             </div>
-                            <div><span class="font-semibold">${r.lancadas + r.naoLancadas}</span> total</div>
+                            <div>
+                                <div><span class="font-semibold">${r.lancadas + r.naoLancadas}</span> total</div>
+                                <div class="mt-2 text-xs text-gray-600">Acomp. APOIA: ${r.autoCount}</div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -2799,6 +2973,7 @@ export async function generateAssiduidadeReport() {
                                     <th class="p-3 text-left">Professor</th>
                                     <th class="p-3 text-center">Chamadas lancadas</th>
                                     <th class="p-3 text-center">Chamadas nao lancadas</th>
+                                    <th class="p-3 text-center">Acomp. APOIA</th>
                                     <th class="p-3 text-center">Assiduidade</th>
                                 </tr>
                             </thead>
@@ -2850,6 +3025,7 @@ export async function generateAssiduidadeReport() {
                                             <th class="p-3 text-left">Professor</th>
                                             <th class="p-3 text-center">Chamadas lancadas</th>
                                             <th class="p-3 text-center">Chamadas nao lancadas</th>
+                                            <th class="p-3 text-center">Acomp. APOIA</th>
                                             <th class="p-3 text-center">Assiduidade</th>
                                         </tr>
                                     </thead>

@@ -8,7 +8,9 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 $pages = @(
     (Join-Path $root "encaminhamentos\\dashboard.html"),
+    (Join-Path $root "encaminhamentos\\cadastros.html"),
     (Join-Path $root "encaminhamentos\\encaminhamento.html"),
+    (Join-Path $root "encaminhamentos\\fila.html"),
     (Join-Path $root "encaminhamentos\\consulta.html"),
     (Join-Path $root "encaminhamentos\\relatorios.html")
 )
