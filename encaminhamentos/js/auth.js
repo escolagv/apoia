@@ -20,7 +20,7 @@ export async function requireAdminSession() {
                 .eq('user_uid', session.user.id)
                 .maybeSingle()
         );
-        if (!data || data.status !== 'ativo' || data.papel !== 'admin') {
+        if (!data || data.status !== 'ativo' || !['admin', 'suporte'].includes(data.papel)) {
             await signOut();
             return { session: null, profile: null };
         }

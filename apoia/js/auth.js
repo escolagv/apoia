@@ -51,7 +51,7 @@ export async function handleAuthChange(event, session) {
         let mustChange = !!data.precisa_trocar_senha;
         let avisoCount = data.senha_aviso_count || 0;
         const usedDefaultPassword = state.lastLoginPassword === '123456';
-        if (papel === 'admin') {
+        if (papel === 'admin' || papel === 'suporte') {
             const adminInfo = document.getElementById('admin-info');
             const adminView = document.getElementById('admin-view');
             if (!adminInfo || !adminView) {
@@ -59,8 +59,11 @@ export async function handleAuthChange(event, session) {
                 await signOutUser();
                 return;
             }
-            document.body.dataset.userRole = 'admin';
-            adminInfo.textContent = nome || state.currentUser.email;
+            const isSupport = papel === 'suporte';
+            document.body.dataset.userRole = isSupport ? 'suporte' : 'admin';
+            adminInfo.textContent = isSupport
+                ? `${nome || state.currentUser.email} (SUPORTE)`
+                : (nome || state.currentUser.email);
             await loadAdminData();
             await renderDashboardPanel();
             await loadNotifications();

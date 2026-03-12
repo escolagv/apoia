@@ -182,7 +182,12 @@ BEGIN
         SELECT 1
         FROM public.admin_uids a
         WHERE a.user_uid = p_uid
-    ) INTO v_exists;
+    ) OR EXISTS (
+        SELECT 1
+        FROM public.suporte_uids s
+        WHERE s.user_uid = p_uid
+    )
+    INTO v_exists;
     RETURN v_exists;
 END;
 $$;
