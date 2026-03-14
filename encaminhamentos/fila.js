@@ -926,12 +926,8 @@ function extractCheckedLabels(data, ctx, defs, imageWidth) {
     defs.forEach(def => {
         const line = findBestLineForDef(lines, def, bounds);
         if (!line) return;
-        if (lineHasTextMark(line.text)) {
-            checked.push(def.label);
-            return;
-        }
         if (!line.bbox) return;
-        if (imageWidth && line.bbox.x0 > imageWidth * 0.75) return;
+        if (imageWidth && line.bbox.x0 > imageWidth * 0.65) return;
         const isChecked = detectMarkLeft(ctx, line.bbox);
         if (isChecked) checked.push(def.label);
     });
@@ -999,16 +995,6 @@ function getSectionBounds(lines, imageHeight) {
     return bounds;
 }
 
-function lineHasTextMark(text) {
-    const raw = (text || '').trim();
-    if (!raw) return false;
-    const compact = raw.replace(/\s+/g, '');
-    if (/\([xXvV\/\\*\+\-✓]\)/.test(compact)) return true;
-    if (/\[[xXvV\/\\*\+\-✓]\]/.test(compact)) return true;
-    if (/^[xXvV✓]\b/.test(raw)) return true;
-    return false;
-}
-
 function detectMarkLeft(ctx, bbox) {
     const { x0, y0, x1, y1 } = bbox;
     const height = y1 - y0;
@@ -1016,18 +1002,11 @@ function detectMarkLeft(ctx, bbox) {
     const y = Math.max(0, y0 - 3);
     const h = Math.max(10, height + 6);
 
-    const lineWidth = Math.max(8, x1 - x0);
-    const markW = Math.max(10, Math.floor(lineWidth * 0.2));
-    const markX = Math.max(0, x0);
-    if (isRegionCenterMarked(ctx, markX, y, markW, h, 0.06)) return true;
-    if (isRegionInk(ctx, markX, y, markW, h, 0.015, 40)) return true;
-
     const x = Math.max(0, x0 - width - 14);
     const w = Math.max(10, width);
-    if (isRegionCenterMarked(ctx, x, y, w, h, 0.08)) return true;
-    if (isRegionCenterMarked(ctx, x, y, w, h, 0.14, 0.35)) return true;
-    if (isRegionDark(ctx, x, y, w, h, 0.1)) return true;
-    return isRegionInk(ctx, x, y, w, h, 0.02, 60);
+    if (isRegionCenterMarked(ctx, x, y, w, h, 0.12)) return true;
+    if (isRegionCenterMarked(ctx, x, y, w, h, 0.2, 0.35)) return true;
+    return isRegionInk(ctx, x, y, w, h, 0.03, 80);
 }
 
 function isRegionDark(ctx, x, y, w, h, threshold) {
