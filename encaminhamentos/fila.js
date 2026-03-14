@@ -380,12 +380,29 @@ async function runVisionOcrForJob(job) {
     if (!job?.storage_path) return null;
     if (job?.ocr_json?.fields?.estudante && job?.ocr_json?.fields?.professor) return null;
     try {
-        const { data, error } = await db.functions.invoke('enc_vision_ocr', {
-            body: { storage_path: job.storage_path }
+        const { data: sessionData } = await db.auth.getSession();
+        const accessToken = sessionData?.session?.access_token || '';
+        if (!accessToken) return null;
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/enc_vision_ocr`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({ storage_path: job.storage_path })
         });
-        if (error) throw error;
-        if (!data) return null;
-        return data;
+        const text = await resp.text();
+        if (!resp.ok) {
+            console.warn('Vision OCR HTTP', resp.status, text);
+            return null;
+        }
+        try {
+            return JSON.parse(text);
+        } catch (err) {
+            console.warn('Vision OCR JSON inválido:', err?.message || err);
+            return null;
+        }
     } catch (err) {
         console.warn('Falha no OCR Vision:', err?.message || err);
         return null;

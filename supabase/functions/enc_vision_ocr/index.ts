@@ -8,6 +8,16 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
+function respondError(status: number, message: string, details?: unknown) {
+  const payload: Record<string, unknown> = { error: message };
+  if (details) payload.details = details;
+  console.error('enc_vision_ocr error:', message, details ?? '');
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
+
 async function getAccessToken(clientEmail: string, privateKey: string) {
   const now = Math.floor(Date.now() / 1000);
   const key = await importPKCS8(privateKey, 'RS256');
@@ -110,6 +120,59 @@ function extractHeaderFields(rawText: string) {
   return { professor, estudante, matricula, data };
 }
 
+type VisionWord = { text: string; x: number; y: number };
+
+function getWordText(word: any) {
+  const symbols = Array.isArray(word?.symbols) ? word.symbols : [];
+  return symbols.map((s: any) => s?.text || '').join('');
+}
+
+function getBBoxCenter(vertices: any[] = []) {
+  if (!vertices.length) return { x: 0, y: 0 };
+  const xs = vertices.map(v => Number(v?.x || 0));
+  const ys = vertices.map(v => Number(v?.y || 0));
+  const x = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const y = ys.reduce((a, b) => a + b, 0) / ys.length;
+  return { x, y };
+}
+
+function extractHeaderTextFromVision(visionJson: any) {
+  const full = visionJson?.responses?.[0]?.fullTextAnnotation;
+  const page = full?.pages?.[0];
+  if (!page) return '';
+  const height = Number(page.height || 0);
+  const headerLimit = height ? height * 0.42 : 0;
+  const words: VisionWord[] = [];
+
+  for (const block of page.blocks || []) {
+    for (const para of block.paragraphs || []) {
+      for (const word of para.words || []) {
+        const text = getWordText(word);
+        if (!text) continue;
+        const { x, y } = getBBoxCenter(word?.boundingBox?.vertices || []);
+        if (headerLimit && y > headerLimit) continue;
+        words.push({ text, x, y });
+      }
+    }
+  }
+
+  if (!words.length) return '';
+  const lineThreshold = height ? Math.max(10, height * 0.015) : 12;
+  const sorted = words.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+  const lines: { y: number; words: VisionWord[] }[] = [];
+  for (const word of sorted) {
+    const last = lines[lines.length - 1];
+    if (!last || Math.abs(word.y - last.y) > lineThreshold) {
+      lines.push({ y: word.y, words: [word] });
+    } else {
+      last.words.push(word);
+    }
+  }
+  return lines
+    .map(line => line.words.sort((a, b) => a.x - b.x).map(w => w.text).join(' '))
+    .join('\n');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -122,16 +185,10 @@ serve(async (req) => {
     const visionCredsRaw = Deno.env.get('GOOGLE_VISION_CREDENTIALS');
 
     if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-      return new Response(JSON.stringify({ error: 'Missing Supabase env vars.' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return respondError(500, 'Missing Supabase env vars.');
     }
     if (!visionCredsRaw) {
-      return new Response(JSON.stringify({ error: 'Missing GOOGLE_VISION_CREDENTIALS.' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return respondError(500, 'Missing GOOGLE_VISION_CREDENTIALS.');
     }
 
     const authHeader = req.headers.get('Authorization') ?? '';
@@ -141,10 +198,7 @@ serve(async (req) => {
 
     const { data: userData, error: userError } = await userClient.auth.getUser();
     if (userError || !userData?.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized.' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return respondError(401, 'Unauthorized.', userError?.message || null);
     }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
@@ -156,28 +210,19 @@ serve(async (req) => {
       .eq('user_uid', userData.user.id)
       .maybeSingle();
     if (!adminProfile || adminProfile.status !== 'ativo' || !['admin', 'suporte'].includes(adminProfile.papel)) {
-      return new Response(JSON.stringify({ error: 'Forbidden.' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return respondError(403, 'Forbidden.');
     }
 
     const payload = await req.json();
     const storagePath = payload?.storage_path as string;
     if (!storagePath) {
-      return new Response(JSON.stringify({ error: 'Missing storage_path.' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return respondError(400, 'Missing storage_path.');
     }
 
     const supaAdmin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
     const { data: fileData, error: fileError } = await supaAdmin.storage.from('enc_temp').download(storagePath);
     if (fileError || !fileData) {
-      return new Response(JSON.stringify({ error: fileError?.message || 'Falha ao baixar arquivo.' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return respondError(400, 'Falha ao baixar arquivo.', fileError?.message || null);
     }
     const arrayBuffer = await fileData.arrayBuffer();
 
@@ -185,10 +230,7 @@ serve(async (req) => {
     const clientEmail = creds.client_email;
     const privateKey = String(creds.private_key || '').replace(/\\n/g, '\n');
     if (!clientEmail || !privateKey) {
-      return new Response(JSON.stringify({ error: 'Invalid GOOGLE_VISION_CREDENTIALS.' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return respondError(500, 'Invalid GOOGLE_VISION_CREDENTIALS.');
     }
 
     const accessToken = await getAccessToken(clientEmail, privateKey);
@@ -211,23 +253,19 @@ serve(async (req) => {
     });
     const visionJson = await visionResp.json();
     if (!visionResp.ok) {
-      return new Response(JSON.stringify({ error: visionJson?.error?.message || 'Falha no OCR do Vision.' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return respondError(400, 'Falha no OCR do Vision.', visionJson?.error || visionJson);
     }
 
-    const rawText = visionJson?.responses?.[0]?.fullTextAnnotation?.text || '';
-    const fields = extractHeaderFields(rawText);
+    const rawTextFull = visionJson?.responses?.[0]?.fullTextAnnotation?.text || '';
+    const headerText = extractHeaderTextFromVision(visionJson);
+    const fields = extractHeaderFields(headerText || rawTextFull);
 
     return new Response(JSON.stringify({
       fields,
-      raw_text: rawText
+      raw_text: headerText || rawTextFull,
+      header_text: headerText
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err?.message || 'Unexpected error.' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return respondError(500, err?.message || 'Unexpected error.');
   }
 });
