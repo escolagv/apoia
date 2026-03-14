@@ -127,6 +127,8 @@ function getWordText(word: any) {
   return symbols.map((s: any) => s?.text || '').join('');
 }
 
+type VisionWordBox = { text: string; x0: number; x1: number; y: number };
+
 function getBBoxCenter(vertices: any[] = []) {
   if (!vertices.length) return { x: 0, y: 0 };
   const xs = vertices.map(v => Number(v?.x || 0));
@@ -134,6 +136,16 @@ function getBBoxCenter(vertices: any[] = []) {
   const x = xs.reduce((a, b) => a + b, 0) / xs.length;
   const y = ys.reduce((a, b) => a + b, 0) / ys.length;
   return { x, y };
+}
+
+function getBBoxMinMax(vertices: any[] = []) {
+  if (!vertices.length) return { x0: 0, x1: 0, y: 0 };
+  const xs = vertices.map(v => Number(v?.x || 0));
+  const ys = vertices.map(v => Number(v?.y || 0));
+  const x0 = Math.min(...xs);
+  const x1 = Math.max(...xs);
+  const y = ys.reduce((a, b) => a + b, 0) / ys.length;
+  return { x0, x1, y };
 }
 
 function extractHeaderTextFromVision(visionJson: any) {
@@ -171,6 +183,65 @@ function extractHeaderTextFromVision(visionJson: any) {
   return lines
     .map(line => line.words.sort((a, b) => a.x - b.x).map(w => w.text).join(' '))
     .join('\n');
+}
+
+function buildWordBoxes(visionJson: any) {
+  const full = visionJson?.responses?.[0]?.fullTextAnnotation;
+  const page = full?.pages?.[0];
+  if (!page) return { words: [] as VisionWordBox[], height: 0, width: 0 };
+  const height = Number(page.height || 0);
+  const width = Number(page.width || 0);
+  const words: VisionWordBox[] = [];
+  for (const block of page.blocks || []) {
+    for (const para of block.paragraphs || []) {
+      for (const word of para.words || []) {
+        const text = getWordText(word);
+        if (!text) continue;
+        const { x0, x1, y } = getBBoxMinMax(word?.boundingBox?.vertices || []);
+        words.push({ text, x0, x1, y });
+      }
+    }
+  }
+  return { words, height, width };
+}
+
+function extractLineValue(words: VisionWordBox[], label: VisionWordBox, lineThreshold: number) {
+  const sameLine = words.filter(w => Math.abs(w.y - label.y) <= lineThreshold && w.x0 > (label.x1 + 4));
+  if (!sameLine.length) return '';
+  return sameLine.sort((a, b) => a.x0 - b.x0).map(w => w.text).join(' ').trim();
+}
+
+function extractFieldsFromWordBoxes(visionJson: any) {
+  const { words, height, width } = buildWordBoxes(visionJson);
+  if (!words.length) return { professor: '', estudante: '', matricula: '', data: '' };
+  const headerMax = height ? height * 0.35 : Infinity;
+  const headerMin = height ? height * 0.12 : 0;
+  const headerWords = words.filter(w => w.y >= headerMin && w.y <= headerMax);
+  const lineThreshold = height ? Math.max(8, height * 0.015) : 10;
+
+  const labelMaxX = width ? width * 0.45 : Infinity;
+  const findLabel = (regex: RegExp) =>
+    headerWords.find(w => regex.test(normalizeText(w.text)) && w.x0 <= labelMaxX);
+
+  const professorLabel = findLabel(/^(professor|professora|profes+sor|profe+sor|profes0r)$/i);
+  const alunoLabel = findLabel(/^(aluno|alun0|estudante)$/i);
+  const matriculaLabel = findLabel(/^matr/i);
+  const dataLabel = findLabel(/^data$/i);
+
+  let professor = professorLabel ? extractLineValue(headerWords, professorLabel, lineThreshold) : '';
+  let estudante = alunoLabel ? extractLineValue(headerWords, alunoLabel, lineThreshold) : '';
+  let matricula = matriculaLabel ? extractLineValue(headerWords, matriculaLabel, lineThreshold) : '';
+  let data = dataLabel ? extractLineValue(headerWords, dataLabel, lineThreshold) : '';
+
+  if (matricula) {
+    const digits = matricula.replace(/\D+/g, '').trim();
+    matricula = digits.length >= 4 ? digits : '';
+  }
+  if (data) {
+    data = extractDateFromText(data);
+  }
+
+  return { professor, estudante, matricula, data };
 }
 
 serve(async (req) => {
@@ -258,7 +329,14 @@ serve(async (req) => {
 
     const rawTextFull = visionJson?.responses?.[0]?.fullTextAnnotation?.text || '';
     const headerText = extractHeaderTextFromVision(visionJson);
-    const fields = extractHeaderFields(headerText || rawTextFull);
+    const fieldsFromBoxes = extractFieldsFromWordBoxes(visionJson);
+    const fieldsFallback = extractHeaderFields(headerText || rawTextFull);
+    const fields = {
+      professor: fieldsFromBoxes.professor || fieldsFallback.professor || '',
+      estudante: fieldsFromBoxes.estudante || fieldsFallback.estudante || '',
+      matricula: fieldsFromBoxes.matricula || fieldsFallback.matricula || '',
+      data: fieldsFromBoxes.data || fieldsFallback.data || ''
+    };
 
     return new Response(JSON.stringify({
       fields,
