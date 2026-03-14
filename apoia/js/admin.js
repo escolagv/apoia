@@ -2286,6 +2286,25 @@ export async function renderConfigPanel() {
         const defaultApkUrl = new URL('../appprof/downloads/appprof.apk', window.location.href).toString();
         if (appprofVersionInput) appprofVersionInput.value = config.appprof_versao || '';
         if (appprofApkInput) appprofApkInput.value = config.appprof_apk_url || defaultApkUrl;
+
+        const metricsLink = document.getElementById('supabase-metrics-link');
+        if (metricsLink) {
+            const projectRef = (() => {
+                try {
+                    const url = new URL(SUPABASE_URL);
+                    return (url.hostname || '').split('.')[0];
+                } catch {
+                    return '';
+                }
+            })();
+            if (projectRef) {
+                metricsLink.href = `https://supabase.com/dashboard/project/${projectRef}`;
+                metricsLink.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                metricsLink.href = '#';
+                metricsLink.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
     } catch (err) {
         console.warn('Falha ao carregar configuracoes:', err?.message || err);
     }

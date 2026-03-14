@@ -642,8 +642,11 @@ function prefillAlunoByMatricula(matricula) {
 function applyOcrPrefill(ocrJson) {
     const ocr = ocrJson || {};
     const fields = ocr.fields || {};
-    const estudante = sanitizeOcrName(fields.estudante || '');
-    const professor = sanitizeOcrName(fields.professor || '');
+    const rawText = ocr.raw_text || ocr.header_text || '';
+    const estudanteRaw = fields.estudante || extractNameFromRawText(rawText, /(aluno|estudante)/i);
+    const professorRaw = fields.professor || extractNameFromRawText(rawText, /(professor|professora)/i);
+    const estudante = sanitizeOcrName(estudanteRaw || '');
+    const professor = sanitizeOcrName(professorRaw || '');
     const dataTexto = (fields.data || '').trim();
 
     if (dataTexto) {
@@ -689,6 +692,21 @@ function sanitizeOcrName(value) {
     return text;
 }
 
+function extractNameFromRawText(rawText, labelPattern) {
+    const lines = (rawText || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+    if (!lines.length) return '';
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        if (!labelPattern.test(normalizeText(line))) continue;
+        const sameLine = line.replace(labelPattern, '').replace(/^[\s:;.\-|_]+/, '').trim();
+        if (sameLine) return sameLine;
+        const nextLine = lines[i + 1] || '';
+        if (nextLine && !labelPattern.test(normalizeText(nextLine))) return nextLine;
+        return '';
+    }
+    return '';
+}
+
 function normalizeText(value) {
     return (value || '')
         .toLowerCase()
@@ -700,9 +718,7 @@ function normalizeText(value) {
 }
 
 function prefillAlunoByName(name) {
-    const norm = normalizeText(name);
-    if (!norm) return;
-    const aluno = state.alunos.find(a => normalizeText(a.nome_completo || '').includes(norm));
+    const aluno = findBestNameMatch(state.alunos, a => a.nome_completo || '', name);
     if (!aluno) return;
     ensureSelectOption('estudante', aluno.id, aluno.nome_completo || `Aluno ${aluno.id}`);
     const select = document.getElementById('estudante');
@@ -711,13 +727,40 @@ function prefillAlunoByName(name) {
 }
 
 function prefillProfessorByName(name) {
-    const norm = normalizeText(name);
-    if (!norm) return;
-    const prof = state.professores.find(p => normalizeText(p.nome || '').includes(norm));
+    const prof = findBestNameMatch(state.professores, p => p.nome || '', name);
     if (!prof) return;
     ensureSelectOption('professor', prof.user_uid, prof.nome || prof.user_uid);
     const select = document.getElementById('professor');
     if (select) select.value = String(prof.user_uid);
+}
+
+function findBestNameMatch(list, getName, ocrName) {
+    const norm = normalizeText(ocrName || '');
+    if (!norm) return null;
+    const tokens = norm.split(' ').filter(t => t.length >= 2);
+    let best = null;
+    let bestScore = 0;
+    let bestLen = Infinity;
+
+    for (const item of list) {
+        const candidate = normalizeText(getName(item) || '');
+        if (!candidate) continue;
+        let score = 0;
+        for (const token of tokens) {
+            if (candidate.includes(token)) score += 1;
+        }
+        if (score === 0 && candidate.includes(norm)) score = Math.max(score, 1);
+        if (score > bestScore || (score === bestScore && candidate.length < bestLen)) {
+            bestScore = score;
+            best = item;
+            bestLen = candidate.length;
+        }
+    }
+
+    if (!best) return null;
+    if (tokens.length >= 2 && bestScore < Math.min(2, tokens.length)) return null;
+    if (tokens.length === 1 && bestScore < 1) return null;
+    return best;
 }
 
 function parseDateToIso(value) {

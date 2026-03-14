@@ -355,32 +355,18 @@ body { font-family: 'Inter', sans-serif; }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    padding: 2px 10px;
-    border-radius: 9999px;
+    padding: 4px 10px;
+    border-radius: 0.375rem;
     border: 1px solid #d1d5db;
-    background: #f9fafb;
+    background: #ffffff;
     color: #374151;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-.filter-chip-blue {
-    background: #f9fafb;
-    color: #374151;
-    border-color: #d1d5db;
-}
-
-.filter-chip-green {
-    background: #f9fafb;
-    color: #374151;
-    border-color: #d1d5db;
-}
-
-.filter-chip-red {
-    background: #f9fafb;
-    color: #374151;
-    border-color: #d1d5db;
+.filter-chip:hover {
+    background: #f3f4f6;
 }
 
 #chamadas-periodo-label {

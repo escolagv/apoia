@@ -251,6 +251,7 @@ document.querySelectorAll('.queue-select-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         if (!id) return;
+        await ensureOcrBeforeRedirect(id, btn);
         const params = new URLSearchParams(window.location.search);
         const editId = params.get('editId');
         const target = editId
@@ -346,6 +347,52 @@ async function reprocessOcr(jobId, button) {
         if (button) {
             button.disabled = false;
             button.textContent = originalText;
+            button.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+}
+
+async function ensureOcrBeforeRedirect(jobId, button) {
+    const job = state.jobs.find(item => String(item.id) === String(jobId));
+    if (!job) return;
+    const fields = job.ocr_json?.fields || {};
+    if (fields.estudante && fields.professor) return;
+    if (!window.Tesseract) return;
+    const previewUrl = state.signedUrls.get(job.id);
+    if (!previewUrl) return;
+
+    const originalText = button?.textContent || '';
+    if (button) {
+        button.disabled = true;
+        button.textContent = 'Processando OCR...';
+        button.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
+    try {
+        const response = await fetch(previewUrl);
+        if (!response.ok) throw new Error('Falha ao baixar a imagem.');
+        const blob = await response.blob();
+        const ocrJson = await runOcrFromBlob(blob);
+        if (!ocrJson) throw new Error('OCR não retornou dados.');
+
+        const updatePayload = { ocr_json: ocrJson };
+        if (ocrJson.fields?.matricula) {
+            updatePayload.aluno_matricula = ocrJson.fields.matricula;
+        }
+        await safeQuery(
+            db.from('enc_scan_jobs')
+                .update(updatePayload)
+                .eq('id', jobId)
+        );
+
+        job.ocr_json = ocrJson;
+        if (ocrJson.fields?.matricula) job.aluno_matricula = ocrJson.fields.matricula;
+    } catch (err) {
+        console.warn('OCR na seleção falhou:', err?.message || err);
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = originalText || 'Selecionar para cadastro';
             button.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     }
